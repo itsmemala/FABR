@@ -74,6 +74,7 @@ class Appr(object):
             self.optimizer=self._get_optimizer(lr,which_type)
 
             # Loop epochs
+            self.nepochs=2
             for e in range(self.nepochs):
                 # Train
                 clock0=time.time()
@@ -136,11 +137,16 @@ class Appr(object):
                 task=torch.autograd.Variable(torch.LongTensor([t]).cuda(),volatile=False)
                 mask=self.model.ac.mask(task,s=self.smax)
                 mask = torch.autograd.Variable(mask.data.clone(),requires_grad=False)
+                # if step==0:
+                    # print(mask.size)
+                    # print(mask)
+                # Commented out the masking operation - start (1 of 2)
                 for n,p in self.model.named_parameters():
                     if n in rnn_weights:
                         # print('n: ',n)
                         # print('p: ',p.grad.size())
                         p.grad.data*=self.model.get_view_for(n,mask)
+                # Commented out the masking operation - end
 
             # Compensate embedding gradients
             for n,p in self.model.ac.named_parameters():
@@ -160,7 +166,7 @@ class Appr(object):
 
         return
 
-    def eval(self,t,data,which_type):
+    def eval(self,t,data,which_type,my_debug=0,input_tokens=None):
         total_loss=0
         total_acc=0
         total_num=0
@@ -184,5 +190,63 @@ class Appr(object):
             total_loss+=loss.data.cpu().numpy().item()*real_b
             total_acc+=hits.sum().data.cpu().numpy().item()
             total_num+=real_b
+            
+            if my_debug==1:
+                print('step:',step)
+                occ_mask = torch.ones((input_ids.shape[1]-2,input_ids.shape[1])).to('cuda:0')
+                for token in range(input_ids.shape[1]-2):
+                    occ_mask[token,token+1] = 0 # replace with padding token
+
+                for i in range(len(input_ids)): # loop through each input in the batch
+                    temp_input_ids = input_ids[i:i+1,:].detach().clone().to('cuda:0') # using input_ids[:1,:] instead of input_ids[0] maintains the 2D shape of the tensor
+                    my_input_ids = (temp_input_ids*occ_mask).long()
+                    my_segment_ids = segment_ids[i:i+1,:].repeat(segment_ids.shape[1]-2,1)
+                    my_input_mask = input_mask[i:i+1,:].repeat(input_mask.shape[1]-2,1)
+                    # print('--------------------------')
+                    # print(input_ids.shape)
+                    occ_output = self.model.forward(task,my_input_ids, my_segment_ids, my_input_mask, which_type, s=self.smax)[t]
+                    occ_output = torch.nn.Softmax(dim=1)(occ_output)
+                    actual_output = self.model.forward(task,input_ids[i:i+1,:], segment_ids[i:i+1,:], input_mask[i:i+1,:], which_type, s=self.smax)[t]
+                    actual_output = torch.nn.Softmax(dim=1)(actual_output)
+                    occ_output = torch.cat((actual_output,occ_output,actual_output), axis=0) # placeholder for CLS and SEP such that their attribution scores are 0
+                    _,actual_pred = actual_output.max(1)
+                    _,occ_pred=occ_output.max(1)
+                    # print(occ_output)
+                    # print(actual_output)
+                    attributions_occ1_b = torch.subtract(actual_output,occ_output)[:,[actual_pred.item()]] # attributions towards the predicted class
+                    attributions_occ1_b = torch.transpose(attributions_occ1_b, 0, 1)
+                    attributions_occ1_b = attributions_occ1_b.detach().cpu()
+                    
+                    if step==0 and i==0:
+                        attributions_occ1 = attributions_occ1_b
+                        predictions = actual_pred
+                        class_targets = targets[i:i+1]
+                    else:
+                        attributions_occ1 = torch.cat((attributions_occ1,attributions_occ1_b), axis=0)
+                        predictions = torch.cat((predictions,actual_pred), axis=0)
+                        class_targets = torch.cat((class_targets,targets[i:i+1]), axis=0)
+            
+            else:
+                if step==0:
+                    predictions = pred
+                    class_targets = targets
+                else:
+                    predictions = torch.cat((predictions,pred), axis=0)
+                    class_targets = torch.cat((class_targets,targets), axis=0)
+
+            if my_debug==2:
+                activations_b = self.model.forward(task,input_ids, segment_ids, input_mask,which_type,s=self.smax,my_debug=2)
+                activations_b = activations_b.detach().cpu()
+                if step==0:
+                    activations = activations_b
+                else:
+                    activations = torch.cat((activations,activations_b), axis=0)
+                
+
+        # After looping through all batches
+        if my_debug==1:    
+            return class_targets, predictions, attributions_occ1
+        if my_debug==2:    
+            return class_targets, predictions, activations
 
         return total_loss/total_num,total_acc/total_num

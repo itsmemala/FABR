@@ -1,5 +1,6 @@
 import sys,os,argparse,time
 import numpy as np
+import pickle
 import torch
 from config import set_args
 import utils
@@ -24,7 +25,7 @@ logger = logging.getLogger(__name__)
 args = set_args()
 
 if args.output=='':
-    args.output='./res/'+args.experiment+'_'+args.approach+'_'+str(args.note)+'.txt'
+    args.output='LifelongSentClass/res/'+args.experiment+'_'+args.approach+'_'+str(args.note)+'.txt'
 
 performance_output=args.output+'_performance'
 performance_output_forward=args.output+'_forward_performance'
@@ -54,6 +55,13 @@ elif  args.experiment=='bert_gen' or args.experiment=='bert_gen_single':
     from dataloaders import bert_gen as dataloader
 elif args.experiment=='bert_sep':
     from dataloaders import bert_sep as dataloader
+# Added this to mirror Taskdrop setup
+elif args.experiment=='bert_dis':
+    args.ntasks=6
+    from dataloaders import bert_dis as dataloader
+elif args.experiment=='bert_news':
+    args.ntasks=6
+    from dataloaders import bert_news as dataloader
 
 
 # Args -- Approach
@@ -95,6 +103,8 @@ appr=approach.Appr(net,logger=logger,args=args)
 acc=np.zeros((len(taskcla),len(taskcla)),dtype=np.float32)
 lss=np.zeros((len(taskcla),len(taskcla)),dtype=np.float32)
 
+my_save_path = '/content/gdrive/MyDrive/s200_kan_myocc_attributions_bymask/' #Activations
+
 for t,ncla in taskcla:
     print('*'*100)
     print('Task {:2d} ({:s})'.format(t,data[t]['name']))
@@ -130,6 +140,10 @@ for t,ncla in taskcla:
     valid_sampler = SequentialSampler(valid)
     valid_dataloader = DataLoader(valid, sampler=valid_sampler, batch_size=args.eval_batch_size)
 
+    with open(my_save_path+str(args.note)+'_seed'+str(args.seed)+"_inputtokens_task"+str(t)+".txt", "wb") as internal_filename:
+        pickle.dump(data[t]['train_tokens'], internal_filename)
+    with open(my_save_path+str(args.note)+'_seed'+str(args.seed)+"_inputtokens_task"+str(t)+"_test.txt", "wb") as internal_filename:
+        pickle.dump(data[t]['test_tokens'], internal_filename)
 
     appr.train(task,train_dataloader,valid_dataloader,args)
     print('-'*100)
@@ -148,6 +162,29 @@ for t,ncla in taskcla:
         print('>>> Test on task {:2d} - {:15s}: loss={:.3f}, acc={:5.1f}% <<<'.format(u,data[u]['name'],test_loss,100*test_acc))
         acc[t,u]=test_acc
         lss[t,u]=test_loss
+        
+        # Test data attributions
+        # # if (t<=4 and u==t) or (t==5):
+        # # Calculate attributions on current task after training
+        # targets, predictions, attributions_occ1 = appr.eval(u,test_dataloader,'mcl'
+                                                                                # ,my_debug=1,input_tokens=data[u]['test_tokens'])
+        # np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_testattributions_model'+str(t)+'task'+str(u)
+                            # ,targets=targets.cpu()
+                            # ,predictions=predictions.cpu()
+                            # ,attributions_occ1=attributions_occ1
+                            # # ,attributions_occ2=attributions_ig.cpu()
+                            # # ,attributions_ig=attributions_ig.detach().cpu()
+                            # # ,attributions_ig_indices=attributions_ig_indices.cpu()
+                            # #,attributions_lrp=attributions_lrp
+                            # )
+
+        # Test data activations
+        targets, predictions, activations = appr.eval(u,test_dataloader,'mcl',my_debug=2,input_tokens=data[u]['test_tokens'])
+        np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_testactivations_model'+str(t)+'task'+str(u)
+                            ,targets=targets.cpu()
+                            ,predictions=predictions.cpu()
+                            ,activations=activations
+                            )
 
     # Save
     print('Save at '+args.output)
@@ -155,6 +192,9 @@ for t,ncla in taskcla:
 
     # appr.decode(train_dataloader)
     # break
+    
+    if t==1: # Only first 2 tasks
+        break
 
 # Done
 print('*'*100)

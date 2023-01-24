@@ -35,16 +35,20 @@ class Net(torch.nn.Module):
 
         return
 
-    def forward(self,t, input_ids, segment_ids, input_mask, which_type,s):
-        sequence_output, pooled_output = \
-            self.bert(input_ids=input_ids, token_type_ids=segment_ids, attention_mask=input_mask)
+    def forward(self,t, input_ids, segment_ids, input_mask, which_type,s,my_debug=0):
+        # sequence_output, pooled_output = \
+            # self.bert(input_ids=input_ids, token_type_ids=segment_ids, attention_mask=input_mask)
+        res = self.bert(input_ids=input_ids, token_type_ids=segment_ids, attention_mask=input_mask)
+        sequence_output = res['last_hidden_state'] # Added this to fix err: 'str' object has no attribute 'size'
 
         gfc=self.ac.mask(t=t,s=s)
 
         if which_type == 'mcl':
             mcl_output,mcl_hidden = self.mcl.gru(sequence_output)
+            # Commented out the masking operation - start (2 of 2)
             if t == 0: mcl_hidden = mcl_hidden*torch.ones_like(gfc.expand_as(mcl_hidden)) # everyone open
             else: mcl_hidden=mcl_hidden*gfc.expand_as(mcl_hidden)
+            # Commented out the masking operation - end
 
             h=self.relu(mcl_hidden)
 
@@ -59,6 +63,9 @@ class Net(torch.nn.Module):
         y=[]
         for t,i in self.taskcla:
             y.append(self.last[t](h))
+        if my_debug==2:
+            # print('activations size (current batch):',h.size())
+            return h
         return y
 
     def get_view_for(self,n,mask):
