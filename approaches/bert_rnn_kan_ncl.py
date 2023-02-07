@@ -74,7 +74,7 @@ class Appr(object):
             self.optimizer=self._get_optimizer(lr,which_type)
 
             # Loop epochs
-            self.nepochs=2
+            # self.nepochs=2
             for e in range(self.nepochs):
                 # Train
                 clock0=time.time()
@@ -141,11 +141,11 @@ class Appr(object):
                     # print(mask.size)
                     # print(mask)
                 # Commented out the masking operation - start (1 of 2)
-                for n,p in self.model.named_parameters():
-                    if n in rnn_weights:
-                        # print('n: ',n)
-                        # print('p: ',p.grad.size())
-                        p.grad.data*=self.model.get_view_for(n,mask)
+                # for n,p in self.model.named_parameters():
+                    # if n in rnn_weights:
+                        # # print('n: ',n)
+                        # # print('p: ',p.grad.size())
+                        # p.grad.data*=self.model.get_view_for(n,mask)
                 # Commented out the masking operation - end
 
             # Compensate embedding gradients
@@ -235,7 +235,7 @@ class Appr(object):
                     class_targets = torch.cat((class_targets,targets), axis=0)
 
             if my_debug==2:
-                activations_b = self.model.forward(task,input_ids, segment_ids, input_mask,which_type,s=self.smax,my_debug=2)
+                activations_b,mask = self.model.forward(task,input_ids, segment_ids, input_mask,which_type,s=self.smax,my_debug=2)
                 activations_b = activations_b.detach().cpu()
                 if step==0:
                     activations = activations_b
@@ -247,6 +247,6 @@ class Appr(object):
         if my_debug==1:    
             return class_targets, predictions, attributions_occ1
         if my_debug==2:    
-            return class_targets, predictions, activations
+            return class_targets, predictions, activations, mask
 
         return total_loss/total_num,total_acc/total_num
