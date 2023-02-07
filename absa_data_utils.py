@@ -178,6 +178,7 @@ class AscProcessor(DataProcessor):
         examples = self._create_examples(
             self._read_json(os.path.join(data_dir, fn)), "train")
         # return examples
+        # return examples[100:200] + examples[-200:][:100] # Use this for taking different subsets of 100 samples per class
         return examples[:100] + examples[-100:]
 
     def get_dev_examples(self, data_dir, fn="dev.json"):

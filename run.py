@@ -4,6 +4,7 @@ import pickle
 import torch
 from config import set_args
 import utils
+import attribution_utils
 from torch.utils.data import TensorDataset, random_split
 from torch.utils.data import RandomSampler
 from torch.utils.data.distributed import DistributedSampler
@@ -103,7 +104,10 @@ appr=approach.Appr(net,logger=logger,args=args)
 acc=np.zeros((len(taskcla),len(taskcla)),dtype=np.float32)
 lss=np.zeros((len(taskcla),len(taskcla)),dtype=np.float32)
 
-my_save_path = '/content/gdrive/MyDrive/s200_kan_myocc_attributions_bymask/' #Activations
+# my_save_path = '/content/gdrive/MyDrive/s200_kan_myocc_attributions_bymask/' #NoMask
+my_save_path = '/content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/' #NoMask
+
+global_attr = {}
 
 for t,ncla in taskcla:
     print('*'*100)
@@ -145,9 +149,13 @@ for t,ncla in taskcla:
     with open(my_save_path+str(args.note)+'_seed'+str(args.seed)+"_inputtokens_task"+str(t)+"_test.txt", "wb") as internal_filename:
         pickle.dump(data[t]['test_tokens'], internal_filename)
 
-    appr.train(task,train_dataloader,valid_dataloader,args)
+    # Train
+    if (t==0) or (args.lfa is None):
+        appr.train(task,train_dataloader,valid_dataloader,args,my_save_path)
+    else:
+        appr.train(task,train_dataloader,valid_dataloader,args,my_save_path,data[t]['train_tokens'],global_attr)
+    # appr.train(task,train_dataloader,valid_dataloader,args,my_save_path,data[t]['train_tokens'],global_attr=None) # Use this for FABR-Test0 (4 of 4)
     print('-'*100)
-    #
 
     # Test
     for u in range(t+1):
@@ -163,38 +171,62 @@ for t,ncla in taskcla:
         acc[t,u]=test_acc
         lss[t,u]=test_loss
         
-        # Test data attributions
-        # # if (t<=4 and u==t) or (t==5):
+        # Load saved model and check that test acc and loss are the same
+        check_appr=approach.Appr(net,logger=logger,args=args)
+        check_appr.model.load_state_dict(torch.load(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_model'+str(t)))
+        check_loss,check_acc=check_appr.eval(u,test_dataloader,'mcl')
+        assert check_loss==test_loss and check_acc==test_acc
+        
+        # Train data attributions
+        # Calculate attributions on all previous tasks and current task after training
+        train = data[u]['train']
+        train_sampler = SequentialSampler(train) # Retain the order of the dataset, i.e. no shuffling
+        train_dataloader = DataLoader(train, sampler=train_sampler, batch_size=args.train_batch_size)
+        targets, predictions, attributions_occ1 = appr.eval(u,train_dataloader,'mcl',my_debug=1,input_tokens=data[u]['train_tokens'])
+        np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_attributions_model'+str(t)+'task'+str(u)
+                            ,targets=targets.cpu()
+                            ,predictions=predictions.cpu()
+                            ,attributions_occ1=attributions_occ1
+                            )
+                            
+        # # Train data activations
+        # targets, predictions, activations, mask = appr.eval(u,train_dataloader,'mcl',my_debug=2,input_tokens=data[u]['train_tokens'])
+        # np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_activations_model'+str(t)+'task'+str(u)
+                            # ,activations=activations
+                            # ,mask=mask.detach().cpu()
+                            # )
+        
+        # # Test data attributions
         # # Calculate attributions on current task after training
-        # targets, predictions, attributions_occ1 = appr.eval(u,test_dataloader,'mcl'
-                                                                                # ,my_debug=1,input_tokens=data[u]['test_tokens'])
+        # targets, predictions, attributions_occ1 = appr.eval(u,test_dataloader,'mcl',my_debug=1,input_tokens=data[u]['test_tokens'])
         # np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_testattributions_model'+str(t)+'task'+str(u)
                             # ,targets=targets.cpu()
                             # ,predictions=predictions.cpu()
                             # ,attributions_occ1=attributions_occ1
-                            # # ,attributions_occ2=attributions_ig.cpu()
-                            # # ,attributions_ig=attributions_ig.detach().cpu()
-                            # # ,attributions_ig_indices=attributions_ig_indices.cpu()
-                            # #,attributions_lrp=attributions_lrp
                             # )
 
-        # Test data activations
-        targets, predictions, activations = appr.eval(u,test_dataloader,'mcl',my_debug=2,input_tokens=data[u]['test_tokens'])
-        np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_testactivations_model'+str(t)+'task'+str(u)
-                            ,targets=targets.cpu()
-                            ,predictions=predictions.cpu()
-                            ,activations=activations
-                            )
+        # # Test data activations
+        # targets, predictions, activations, mask = appr.eval(u,test_dataloader,'mcl',my_debug=2,input_tokens=data[u]['test_tokens'])
+        # np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_testactivations_model'+str(t)+'task'+str(u)
+                            # ,activations=activations
+                            # ,mask=mask.detach().cpu()
+                            # )
+
+        # Save global attributions for using when training the next task
+        if u==t: # Only for the current task
+            # global_attr = None
+            global_attr[t] = attribution_utils.aggregate_local_to_global(attributions_occ1,predictions.cpu(),targets.cpu(),data[t]['train_tokens'])
 
     # Save
     print('Save at '+args.output)
     np.savetxt(args.output,acc,'%.4f',delimiter='\t')
+    np.savetxt(my_save_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'.txt',acc,'%.4f',delimiter='\t')
 
     # appr.decode(train_dataloader)
     # break
     
-    if t==1: # Only first 2 tasks
-        break
+    # if t==1: # Only first 2 tasks
+        # break
 
 # Done
 print('*'*100)

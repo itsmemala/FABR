@@ -134,19 +134,19 @@ class Appr(object):
             input_ids, segment_ids, input_mask, targets,_= batch
             s=(self.smax-1/self.smax)*step/len(data)+1/self.smax
             task=torch.autograd.Variable(torch.LongTensor([t]).cuda(),volatile=True)
-            
+
             # Forward
             outputs=self.model.forward(task,input_ids, segment_ids, input_mask,which_type,s) #,get_emb_ip=True)
             output=outputs[t]
             loss_ce=self.criterion(output,targets)
 
-            # if (lfa is not None) and (t>0) and (which_type=='mcl'):
-            if (lfa is not None) and (which_type=='mcl'): # Use this for FABR-Test0 (1 of 3)
+            if (lfa is not None) and (t>0) and (which_type=='mcl'):
+            # if (lfa is not None) and (which_type=='mcl'): # Use this for FABR-Test0 (1 of 4)
                 print('step:',step)
                 
                 _,pred=output.max(1)
                 true_pred_idx = torch.where(pred==targets)[0]
-                print("Number of true predictions in batch:",len(true_pred_idx))
+                print("Number of predictions in batch:",len(true_pred_idx))
                 
                 batch_tokens = task_tokens[batch_start_track:(batch_start_track+len(input_ids))]
                 batch_start_track += len(input_ids)
@@ -156,7 +156,7 @@ class Appr(object):
                     occ_mask[token,token+1] = 0 # replace with padding token
 
                 # for i in true_pred_idx: # loop through inputs in the batch with true predictions
-                for i in range(len(input_ids)): # loop through each input in the batch # Use this for FABR-Test0 (2 of 3) # Think about this
+                for i in range(len(input_ids)): # loop through each input in the batch # Use this for FABR-Test0 (2 of 4)  # Think about this
                     temp_input_ids = input_ids[i:i+1,:] #.detach().clone().to('cuda:0') # using input_ids[:1,:] instead of input_ids[0] maintains the 2D shape of the tensor
                     my_input_ids = (temp_input_ids*occ_mask).long()
                     my_segment_ids = segment_ids[i:i+1,:].repeat(segment_ids.shape[1]-2,1)
@@ -168,7 +168,8 @@ class Appr(object):
                     occ_output = torch.cat((actual_output,occ_output,actual_output), axis=0) # placeholder for CLS and SEP such that their attribution scores are 0
                     _,actual_pred = actual_output.max(1)
                     _,occ_pred=occ_output.max(1)
-                    attributions_occ1_b = torch.subtract(actual_output,occ_output)[:,[actual_pred.item()]] # attributions towards the predicted class
+                    # attributions_occ1_b = torch.subtract(actual_output,occ_output)[:,[actual_pred.item()]] # attributions towards the predicted class
+                    attributions_occ1_b = torch.subtract(actual_output,occ_output)[:,[targets[i].item()]] # attributions towards the actual class
                     attributions_occ1_b = torch.transpose(attributions_occ1_b, 0, 1)
                     attributions_occ1_b = attributions_occ1_b #.detach().cpu()
                     if i==0:
@@ -176,9 +177,15 @@ class Appr(object):
                     else:
                         attributions_occ1 = torch.cat((attributions_occ1,attributions_occ1_b), axis=0)
                 
-                batch_attr_targets = torch.zeros_like(attributions_occ1)
+                # if len(true_pred_idx)>0:
+                    # # batch_global_attr = attribution_utils.aggregate_local_to_global(attributions_occ1,pred,targets,batch_tokens)
+                    # batch_attr_targets = attribution_utils.get_batch_targets(attributions_occ1,pred[true_pred_idx],batch_tokens[true_pred_idx],global_attr)
+                    # # batch_attr_targets = torch.zeros_like(attributions_occ1) # Use this for FABR-Test0 (3 of 4)
+                batch_attr_targets = attribution_utils.get_batch_targets(attributions_occ1,targets,batch_tokens,global_attr)
 
                 loss_fa = lfa_lambda*torch.square(torch.sum(torch.abs(batch_attr_targets-attributions_occ1)))
+                # else:
+                    # loss_fa=torch.Tensor([0])
                 
                 # loss_fa_pos = A_pos*torch.autograd.grad(output[:,0], embedded_input, torch.ones_like(output[:,0]))
                 # print(len(output[:,0]),len(loss_fa_pos[0]))
