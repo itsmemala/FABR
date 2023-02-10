@@ -13,30 +13,30 @@ from absa_data_utils import ABSATokenizer
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 import math
 datasets = [
-    'LifelongSentClass/dat/dsc_json/Amazon_Instant_Video',
-    'LifelongSentClass/dat/dsc_json/Apps_for_Android',
-    'LifelongSentClass/dat/dsc_json/Automotive',
-    'LifelongSentClass/dat/dsc_json/Baby',
-    'LifelongSentClass/dat/dsc_json/Beauty',
-    'LifelongSentClass/dat/dsc_json/Books',
-    'LifelongSentClass/dat/dsc_json/CDs_and_Vinyl',
-    'LifelongSentClass/dat/dsc_json/Cell_Phones_and_Accessories',
-    'LifelongSentClass/dat/dsc_json/Clothing_Shoes_and_Jewelry',
-    'LifelongSentClass/dat/dsc_json/Digital_Music',
-    'LifelongSentClass/dat/dsc_json/Electronics',
-    'LifelongSentClass/dat/dsc_json/Grocery_and_Gourmet_Food',
-    'LifelongSentClass/dat/dsc_json/Health_and_Personal_Care',
-    'LifelongSentClass/dat/dsc_json/Home_and_Kitchen',
-    'LifelongSentClass/dat/dsc_json/Kindle_Store',
-    'LifelongSentClass/dat/dsc_json/Movies_and_TV',
-    'LifelongSentClass/dat/dsc_json/Musical_Instruments',
-    'LifelongSentClass/dat/dsc_json/Office_Products',
-    'LifelongSentClass/dat/dsc_json/Patio_Lawn_and_Garden',
-    'LifelongSentClass/dat/dsc_json/Pet_Supplies',
-    'LifelongSentClass/dat/dsc_json/Sports_and_Outdoors',
-    'LifelongSentClass/dat/dsc_json/Tools_and_Home_Improvement',
-    'LifelongSentClass/dat/dsc_json/Toys_and_Games',
-    'LifelongSentClass/dat/dsc_json/Video_Games',
+    'FABR/dat/dsc_json/Amazon_Instant_Video',
+    'FABR/dat/dsc_json/Apps_for_Android',
+    'FABR/dat/dsc_json/Automotive',
+    'FABR/dat/dsc_json/Baby',
+    'FABR/dat/dsc_json/Beauty',
+    'FABR/dat/dsc_json/Books',
+    'FABR/dat/dsc_json/CDs_and_Vinyl',
+    'FABR/dat/dsc_json/Cell_Phones_and_Accessories',
+    'FABR/dat/dsc_json/Clothing_Shoes_and_Jewelry',
+    'FABR/dat/dsc_json/Digital_Music',
+    'FABR/dat/dsc_json/Electronics',
+    'FABR/dat/dsc_json/Grocery_and_Gourmet_Food',
+    'FABR/dat/dsc_json/Health_and_Personal_Care',
+    'FABR/dat/dsc_json/Home_and_Kitchen',
+    'FABR/dat/dsc_json/Kindle_Store',
+    'FABR/dat/dsc_json/Movies_and_TV',
+    'FABR/dat/dsc_json/Musical_Instruments',
+    'FABR/dat/dsc_json/Office_Products',
+    'FABR/dat/dsc_json/Patio_Lawn_and_Garden',
+    'FABR/dat/dsc_json/Pet_Supplies',
+    'FABR/dat/dsc_json/Sports_and_Outdoors',
+    'FABR/dat/dsc_json/Tools_and_Home_Improvement',
+    'FABR/dat/dsc_json/Toys_and_Games',
+    'FABR/dat/dsc_json/Video_Games',
             ]
 
 
@@ -68,15 +68,15 @@ domains = [
         ]
 
 def get(logger=None,args=None):
-    if os.path.exists('LifelongSentClass/dat/bin/data_dis6'+'_'+str(args.idrandom)+'.pt') and os.path.exists('LifelongSentClass/dat/bin/taskcla_dis6'+'_'+str(args.idrandom)+'.pt'):
-        data = torch.load('LifelongSentClass/dat/bin/data_dis6'+'_'+str(args.idrandom)+'.pt')
-        taskcla = torch.load('LifelongSentClass/dat/bin/taskcla_dis6'+'_'+str(args.idrandom)+'.pt')
+    if os.path.exists('FABR/dat/bin/data_dis6'+'_'+str(args.idrandom)+'.pt') and os.path.exists('FABR/dat/bin/taskcla_dis6'+'_'+str(args.idrandom)+'.pt'):
+        data = torch.load('FABR/dat/bin/data_dis6'+'_'+str(args.idrandom)+'.pt')
+        taskcla = torch.load('FABR/dat/bin/taskcla_dis6'+'_'+str(args.idrandom)+'.pt')
         return data,taskcla
     data={}
     taskcla=[]
 
     # Others
-    f_name = 'LifelongSentClass/asc_random_dis'
+    f_name = 'FABR/asc_random_dis'
 
     with open(f_name,'r') as f_random_seq:
         fseq=f_random_seq.readlines()
@@ -194,8 +194,8 @@ def get(logger=None,args=None):
     for t in range(args.ntasks):
         data2[t]=data[args.ntasks-1-t]
         taskcla2.append(taskcla[args.ntasks-1-t])
-    torch.save(data,'LifelongSentClass/dat/bin/data_dis6'+'_'+str(args.idrandom)+'.pt')
-    torch.save(taskcla,'LifelongSentClass/dat/bin/taskcla_dis6'+'_'+str(args.idrandom)+'.pt')
+    torch.save(data,'FABR/dat/bin/data_dis6'+'_'+str(args.idrandom)+'.pt')
+    torch.save(taskcla,'FABR/dat/bin/taskcla_dis6'+'_'+str(args.idrandom)+'.pt')
     return data,taskcla
 
 

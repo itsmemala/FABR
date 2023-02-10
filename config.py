@@ -5,8 +5,42 @@ import multiprocessing
 import utils
 
 def asc_config(parser):
+    # CTR args
+    # Source: https://github.com/ZixuanKe/PyContinual/blob/54dd15de566b110c9bc8d8316205de63a4805190/src/config.py
+    parser.add_argument('--build_adapter', action='store_true')
+    parser.add_argument('--build_adapter_ucl', action='store_true')
+    parser.add_argument('--build_adapter_owm', action='store_true')
+    parser.add_argument('--build_adapter_mask', action='store_true')
+    parser.add_argument('--build_adapter_capsule_mask', action='store_true')
+    parser.add_argument('--build_adapter_capsule', action='store_true')
+    parser.add_argument('--apply_bert_output', action='store_true')
+    parser.add_argument('--apply_bert_attention_output', action='store_true')
+    parser.add_argument('--apply_one_layer_shared', action='store_true')
+    parser.add_argument('--use_imp', action='store_true')
+    parser.add_argument('--use_gelu', action='store_true')
+    parser.add_argument('--transfer_route',action='store_true')
+    parser.add_argument('--share_conv', action='store_true')
+    parser.add_argument('--larger_as_share',action='store_true')
+    parser.add_argument('--bert_mask_adapter_size',default=2000,type=int,required=False,help='(default=%(default)d)')
+    parser.add_argument('--bert_adapter_size',default=2000,type=int,required=False,help='(default=%(default)d)')
+    parser.add_argument('--semantic_cap_size',default=3,type=int,required=False,help='(default=%(default)d)')
+    parser.add_argument('--num_semantic_cap',default=3,type=int,required=False,help='(default=%(default)d)')
+    parser.add_argument('--larger_as_list', action='store_true')
+    parser.add_argument('--no_tsv_mask', action='store_true')
+    parser.add_argument('--exp', type=str, default='')
+    parser.add_argument('--temp', type=float, default=1,
+                        help='temperature for loss function')
+    parser.add_argument('--base_temp', type=float, default=1,
+                        help='temperature for loss function')
+    parser.add_argument('--scenario',default='',type=str,required=True,help='(default=%(default)s)')
+    # FABR dev args
+    parser.add_argument('--mlp_depth',default=1,type=int,required=False,help='(default=%(default)s)')
+    parser.add_argument('--save_metadata',default=None,type=str,required=False,help='(default=%(default)s)')
+    parser.add_argument('--valid_loss_es',default=0.0,type=float,required=False,help='(default=%(default)s)')
+    parser.add_argument('--lr_patience',default=3,type=int,required=False,help='(default=%(default)s)')
     parser.add_argument('--lfa_lambda',default=1.0,type=float,required=False,help='(default=%(default)s)')
     parser.add_argument('--lfa',default=None,type=str,required=False,help='(default=%(default)s)')
+    # Orig args
     parser.add_argument('--experiment',default='',type=str,required=True,help='(default=%(default)s)')
     parser.add_argument('--approach',default='',type=str,required=True,help='(default=%(default)s)')
     parser.add_argument('--output',default='',type=str,required=False,help='(default=%(default)s)')

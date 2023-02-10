@@ -1,0 +1,12 @@
+Alcohol		Smoking		Drug		Exercise	Medicine	Anxiety
+Alcohol		Exercise	Medicine	Smoking		Drug		Anxiety
+Exercise	Medicine	Alcohol		Smoking		Drug		Anxiety
+Exercise	Drug		Medicine	Smoking		Alcohol		Anxiety
+Smoking		Exercise	Drug		Medicine	Alcohol		Anxiety
+Smoking		Alcohol		Exercise	Drug		Medicine	Anxiety
+Drug		Smoking		Exercise	Medicine	Alcohol		Anxiety
+Drug		Alcohol		Exercise	Smoking		Medicine	Anxiety
+Medicine	Alcohol		Smoking		Drug		Exercise	Anxiety
+Medicine	Alcohol		Exercise	Drug		Smoking		Anxiety
+Anxiety		Medicine	Alcohol		Exercise	Smoking		Drug
+Anxiety		Drug		Alcohol		Smoking		Exercise	Medicine

@@ -2,6 +2,7 @@ import sys,time
 import math
 import numpy as np
 import torch
+from sklearn.metrics import f1_score
 # from copy import deepcopy
 
 import utils
@@ -19,7 +20,7 @@ rnn_weights = [
     'mcl.gru.rnn.bias_hh_l0']
 
 class Appr(object):
-    def __init__(self,model,nepochs=100,sbatch=64,lr=0.05,lr_min=1e-4,lr_factor=3,lr_patience=1,clipgrad=10000,args=None,logger=None):
+    def __init__(self,model,nepochs=100,sbatch=64,lr=0.05,lr_min=1e-4,lr_factor=3,clipgrad=10000,args=None,logger=None):
     # def __init__(self,model,nepochs=100,sbatch=64,lr=0.05,lr_min=1e-4,lr_factor=3,lr_patience=3,clipgrad=10000,args=None,logger=None): # Commented this to reduce patience
     # def __init__(self,model,nepochs=100,sbatch=64,lr=0.001,lr_min=1e-5,lr_factor=2,lr_patience=3,clipgrad=10000,args=None,logger=None): # Already commented in orig
         self.model=model
@@ -31,7 +32,7 @@ class Appr(object):
         self.lr=lr
         self.lr_min=lr_min
         self.lr_factor=lr_factor
-        self.lr_patience=lr_patience
+        self.lr_patience=args.lr_patience
         self.clipgrad=clipgrad
 
         self.criterion=torch.nn.CrossEntropyLoss()
@@ -88,16 +89,16 @@ class Appr(object):
                 iter_bar = tqdm(train, desc='Train Iter (loss=X.XXX, ce loss=X.XXX, fa loss=X.XXX)')
                 self.train_epoch(t,train,iter_bar,which_type,lfa=args.lfa,lfa_lambda=args.lfa_lambda,task_tokens=task_tokens,global_attr=global_attr)
                 clock1=time.time()
-                train_loss,train_acc=self.eval(t,train,which_type)
+                train_loss,train_acc,_=self.eval(t,train,which_type)
                 clock2=time.time()
                 print('| Epoch {:3d}, time={:5.1f}ms/{:5.1f}ms | Train: loss={:.3f}, acc={:5.1f}% |'.format(e+1,
                     1000*self.sbatch*(clock1-clock0)/len(train),1000*self.sbatch*(clock2-clock1)/len(train),train_loss,100*train_acc),end='')
                 # Valid
-                valid_loss,valid_acc=self.eval(t,valid,which_type)
+                valid_loss,valid_acc,_=self.eval(t,valid,which_type)
                 print(' Valid: loss={:.3f}, acc={:5.1f}% |'.format(valid_loss,100*valid_acc),end='')
                 # Adapt lr
                 # if valid_loss<best_loss: #Commented this as it trains for many epochs with no visible improvement in valid_loss and valid_acc
-                if best_loss-valid_loss > 0.002:
+                if best_loss-valid_loss > args.valid_loss_es:
                     best_loss=valid_loss
                     best_model=utils.get_model(self.model)
                     patience=self.lr_patience
@@ -333,4 +334,4 @@ class Appr(object):
         if my_debug==2:    
             return class_targets, predictions, activations, mask
 
-        return total_loss/total_num,total_acc/total_num
+        return total_loss/total_num,total_acc/total_num,f1_score(class_targets.detach().cpu(), predictions.detach().cpu(), average='macro', zero_division=1)

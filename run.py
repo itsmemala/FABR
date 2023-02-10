@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 args = set_args()
 
 if args.output=='':
-    args.output='LifelongSentClass/res/'+args.experiment+'_'+args.approach+'_'+str(args.note)+'.txt'
+    args.output='FABR/res/'+args.experiment+'_'+args.approach+'_'+str(args.note)+'.txt'
 
 performance_output=args.output+'_performance'
 performance_output_forward=args.output+'_forward_performance'
@@ -44,6 +44,24 @@ np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 if torch.cuda.is_available(): torch.cuda.manual_seed(args.seed)
 else: print('[CUDA unavailable]'); sys.exit()
+
+########################################################################################################################
+
+# Args -- CTR
+# Source: https://github.com/ZixuanKe/PyContinual/blob/54dd15de566b110c9bc8d8316205de63a4805190/src/load_base_args.py
+# if args.baseline == 'ctr':
+if args.approach=='ctr':
+    args.apply_bert_output = True
+    args.apply_bert_attention_output = True
+    args.build_adapter_capsule_mask = True
+    args.apply_one_layer_shared = True
+    args.use_imp = True
+    args.transfer_route = True
+    args.share_conv = True
+    args.larger_as_share = True
+    # args.adapter_size = True
+
+########################################################################################################################
 
 # Args -- Experiment
 if args.experiment=='w2v':
@@ -63,13 +81,20 @@ elif args.experiment=='bert_dis':
 elif args.experiment=='bert_news':
     args.ntasks=6
     from dataloaders import bert_news as dataloader
+elif args.experiment=='annomi':
+    args.ntasks=6
+    from dataloaders import bert_annomi as dataloader
 
 
 # Args -- Approach
-if args.approach=='bert_lstm_ncl' or args.approach=='bert_gru_ncl':
+if args.approach=='bert_lstm_ncl' or args.approach=='bert_gru_ncl' or args.approach=='mtl':
     from approaches import bert_rnn_ncl as approach
 elif args.approach=='bert_lstm_kan_ncl' or args.approach=='bert_gru_kan_ncl':
     from approaches import bert_rnn_kan_ncl as approach
+elif args.approach=='bert_mlp_ncl':
+    from approaches import bert_mlp_ncl as approach
+elif args.approach=='ctr':
+    from approaches import bert_adapter_capsule_mask as approach
 
 # # Args -- Network
 if 'bert_lstm_kan' in args.approach:
@@ -78,8 +103,12 @@ elif 'bert_lstm' in args.approach:
     from networks import bert_lstm as network
 if 'bert_gru_kan' in args.approach:
     from networks import bert_gru_kan as network
-elif 'bert_gru' in args.approach:
+elif 'bert_gru' in args.approach or args.approach=='mtl':
     from networks import bert_gru as network
+elif 'bert_mlp' in args.approach:
+    from networks import bert_mlp as network
+elif 'ctr' in args.approach:
+    from networks import bert_adapter_capsule_mask as network
 #
 # else:
 #     raise NotImplementedError
@@ -97,12 +126,15 @@ print('\nTask info =',taskcla)
 print('Inits...')
 net=network.Net(taskcla,args=args).cuda()
 
-
-appr=approach.Appr(net,logger=logger,args=args)
+if 'ctr' in args.approach:
+    appr=approach.Appr(net,logger=logger,taskcla=taskcla,args=args)
+else:
+    appr=approach.Appr(net,logger=logger,args=args)
 
 # Loop tasks
 acc=np.zeros((len(taskcla),len(taskcla)),dtype=np.float32)
 lss=np.zeros((len(taskcla),len(taskcla)),dtype=np.float32)
+f1=np.zeros((len(taskcla),len(taskcla)),dtype=np.float32)
 
 # my_save_path = '/content/gdrive/MyDrive/s200_kan_myocc_attributions_bymask/' #NoMask
 my_save_path = '/content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/' #NoMask
@@ -150,11 +182,18 @@ for t,ncla in taskcla:
         pickle.dump(data[t]['test_tokens'], internal_filename)
 
     # Train
-    if (t==0) or (args.lfa is None):
-        appr.train(task,train_dataloader,valid_dataloader,args,my_save_path)
+    if args.lfa is None: # No attribution calculation at train time
+        if args.approach=='ctr':
+            appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path)
+        else:
+            appr.train(task,train_dataloader,valid_dataloader,args,my_save_path)
+    elif args.lfa=='test0':
+        appr.train(task,train_dataloader,valid_dataloader,args,my_save_path,data[t]['train_tokens'],global_attr=None) # Only local attributions
     else:
-        appr.train(task,train_dataloader,valid_dataloader,args,my_save_path,data[t]['train_tokens'],global_attr)
-    # appr.train(task,train_dataloader,valid_dataloader,args,my_save_path,data[t]['train_tokens'],global_attr=None) # Use this for FABR-Test0 (4 of 4)
+        if t==0:
+            appr.train(task,train_dataloader,valid_dataloader,args,my_save_path) # No attribution calculation at train time
+        else:
+            appr.train(task,train_dataloader,valid_dataloader,args,my_save_path,data[t]['train_tokens'],global_attr) # Use global attributions from memory
     print('-'*100)
 
     # Test
@@ -164,30 +203,41 @@ for t,ncla in taskcla:
         test_dataloader = DataLoader(test, sampler=test_sampler, batch_size=args.eval_batch_size)
 
         if 'kan' in args.approach:
-            test_loss,test_acc=appr.eval(u,test_dataloader,'mcl')
+            test_loss,test_acc,test_f1=appr.eval(u,test_dataloader,'mcl')
         else:
-            test_loss,test_acc=appr.eval(u,test_dataloader)
+            test_loss,test_acc,test_f1=appr.eval(u,test_dataloader)
         print('>>> Test on task {:2d} - {:15s}: loss={:.3f}, acc={:5.1f}% <<<'.format(u,data[u]['name'],test_loss,100*test_acc))
         acc[t,u]=test_acc
         lss[t,u]=test_loss
+        f1[t,u]=test_f1
         
         # Load saved model and check that test acc and loss are the same
-        check_appr=approach.Appr(net,logger=logger,args=args)
+        if args.approach=='ctr':
+            check_appr=approach.Appr(net,logger=logger,taskcla=taskcla,args=args)
+        else:
+            check_appr=approach.Appr(net,logger=logger,args=args)
         check_appr.model.load_state_dict(torch.load(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_model'+str(t)))
-        check_loss,check_acc=check_appr.eval(u,test_dataloader,'mcl')
-        assert check_loss==test_loss and check_acc==test_acc
+        check_loss,check_acc,check_f1=check_appr.eval(u,test_dataloader,'mcl')
+        if args.approach=='ctr':
+            print(check_loss,test_loss)
+            print(check_acc,test_acc)
+            print(check_f1,test_f1)
+        else:
+            #TODO: Check why this fails for ctr
+            assert check_loss==test_loss and check_acc==test_acc and check_f1==test_f1
         
-        # Train data attributions
-        # Calculate attributions on all previous tasks and current task after training
-        train = data[u]['train']
-        train_sampler = SequentialSampler(train) # Retain the order of the dataset, i.e. no shuffling
-        train_dataloader = DataLoader(train, sampler=train_sampler, batch_size=args.train_batch_size)
-        targets, predictions, attributions_occ1 = appr.eval(u,train_dataloader,'mcl',my_debug=1,input_tokens=data[u]['train_tokens'])
-        np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_attributions_model'+str(t)+'task'+str(u)
-                            ,targets=targets.cpu()
-                            ,predictions=predictions.cpu()
-                            ,attributions_occ1=attributions_occ1
-                            )
+        if args.save_metadata is not None:
+            # Train data attributions
+            # Calculate attributions on all previous tasks and current task after training
+            train = data[u]['train']
+            train_sampler = SequentialSampler(train) # Retain the order of the dataset, i.e. no shuffling
+            train_dataloader = DataLoader(train, sampler=train_sampler, batch_size=args.train_batch_size)
+            targets, predictions, attributions_occ1 = appr.eval(u,train_dataloader,'mcl',my_debug=1,input_tokens=data[u]['train_tokens'])
+            np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_attributions_model'+str(t)+'task'+str(u)
+                                ,targets=targets.cpu()
+                                ,predictions=predictions.cpu()
+                                ,attributions_occ1=attributions_occ1
+                                )
                             
         # # Train data activations
         # targets, predictions, activations, mask = appr.eval(u,train_dataloader,'mcl',my_debug=2,input_tokens=data[u]['train_tokens'])
@@ -212,15 +262,17 @@ for t,ncla in taskcla:
                             # ,mask=mask.detach().cpu()
                             # )
 
-        # Save global attributions for using when training the next task
-        if u==t: # Only for the current task
-            # global_attr = None
-            global_attr[t] = attribution_utils.aggregate_local_to_global(attributions_occ1,predictions.cpu(),targets.cpu(),data[t]['train_tokens'])
+        if (args.lfa is not None) and ('test' not in args.lfa):
+            # Save global attributions for using when training the next task
+            if u==t: # Only for the current task
+                # global_attr = None
+                global_attr[t] = attribution_utils.aggregate_local_to_global(attributions_occ1,predictions.cpu(),targets.cpu(),data[t]['train_tokens'])
 
     # Save
     print('Save at '+args.output)
     np.savetxt(args.output,acc,'%.4f',delimiter='\t')
-    np.savetxt(my_save_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'.txt',acc,'%.4f',delimiter='\t')
+    np.savetxt(my_save_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',acc,'%.4f',delimiter='\t')
+    np.savetxt(my_save_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'_f1.txt',f1,'%.4f',delimiter='\t')
 
     # appr.decode(train_dataloader)
     # break

@@ -46,8 +46,8 @@ class Net(torch.nn.Module):
         if which_type == 'mcl':
             mcl_output,mcl_hidden = self.mcl.gru(sequence_output)
             # Commented out the masking operation - start (2 of 3)
-            # if t == 0: mcl_hidden = mcl_hidden*torch.ones_like(gfc.expand_as(mcl_hidden)) # everyone open
-            # else: mcl_hidden=mcl_hidden*gfc.expand_as(mcl_hidden)
+            if t == 0: mcl_hidden = mcl_hidden*torch.ones_like(gfc.expand_as(mcl_hidden)) # everyone open
+            else: mcl_hidden=mcl_hidden*gfc.expand_as(mcl_hidden)
             # Commented out the masking operation - end
 
             h=self.relu(mcl_hidden)
