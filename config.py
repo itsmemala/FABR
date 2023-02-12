@@ -5,6 +5,9 @@ import multiprocessing
 import utils
 
 def asc_config(parser):
+    # TaskDrop args
+    # Source: https://github.com/zylMozart/TaskDrop/blob/main/config.py
+    parser.add_argument('--multi_mask',type=int,default=1,help='for random mask only')
     # CTR args
     # Source: https://github.com/ZixuanKe/PyContinual/blob/54dd15de566b110c9bc8d8316205de63a4805190/src/config.py
     parser.add_argument('--build_adapter', action='store_true')
@@ -40,7 +43,8 @@ def asc_config(parser):
     parser.add_argument('--lr_patience',default=3,type=int,required=False,help='(default=%(default)s)')
     parser.add_argument('--lfa_lambda',default=1.0,type=float,required=False,help='(default=%(default)s)')
     parser.add_argument('--lfa',default=None,type=str,required=False,help='(default=%(default)s)')
-    # Orig args
+    # KAN args
+    # Source: 
     parser.add_argument('--experiment',default='',type=str,required=True,help='(default=%(default)s)')
     parser.add_argument('--approach',default='',type=str,required=True,help='(default=%(default)s)')
     parser.add_argument('--output',default='',type=str,required=False,help='(default=%(default)s)')

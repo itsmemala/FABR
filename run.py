@@ -95,6 +95,10 @@ elif args.approach=='bert_mlp_ncl':
     from approaches import bert_mlp_ncl as approach
 elif args.approach=='ctr':
     from approaches import bert_adapter_capsule_mask as approach
+elif args.approach=='taskdrop':
+    from approaches import taskdrop as approach
+elif args.approach=='mtl_bert_fine_tune':
+    from approaches import bert_mtl as approach
 
 # # Args -- Network
 if 'bert_lstm_kan' in args.approach:
@@ -109,6 +113,10 @@ elif 'bert_mlp' in args.approach:
     from networks import bert_mlp as network
 elif 'ctr' in args.approach:
     from networks import bert_adapter_capsule_mask as network
+elif 'taskdrop' in args.approach:
+    from networks import taskdrop as network
+elif args.approach=='mtl_bert_fine_tune':
+    from networks import bert as network
 #
 # else:
 #     raise NotImplementedError
@@ -126,7 +134,7 @@ print('\nTask info =',taskcla)
 print('Inits...')
 net=network.Net(taskcla,args=args).cuda()
 
-if 'ctr' in args.approach:
+if 'ctr' in args.approach or 'mtl_bert_fine_tune' in args.approach:
     appr=approach.Appr(net,logger=logger,taskcla=taskcla,args=args)
 else:
     appr=approach.Appr(net,logger=logger,args=args)
@@ -183,7 +191,7 @@ for t,ncla in taskcla:
 
     # Train
     if args.lfa is None: # No attribution calculation at train time
-        if args.approach=='ctr':
+        if args.approach=='ctr' or args.approach=='mtl_bert_fine_tune':
             appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path)
         else:
             appr.train(task,train_dataloader,valid_dataloader,args,my_save_path)
@@ -212,7 +220,7 @@ for t,ncla in taskcla:
         f1[t,u]=test_f1
         
         # Load saved model and check that test acc and loss are the same
-        if args.approach=='ctr':
+        if args.approach=='ctr' or args.approach=='mtl_bert_fine_tune':
             check_appr=approach.Appr(net,logger=logger,taskcla=taskcla,args=args)
         else:
             check_appr=approach.Appr(net,logger=logger,args=args)
@@ -223,7 +231,7 @@ for t,ncla in taskcla:
             print(check_acc,test_acc)
             print(check_f1,test_f1)
         else:
-            #TODO: Check why this fails for ctr
+            #TODO: Check why check_loss==test_loss fails for ctr
             assert check_loss==test_loss and check_acc==test_acc and check_f1==test_f1
         
         if args.save_metadata is not None:
