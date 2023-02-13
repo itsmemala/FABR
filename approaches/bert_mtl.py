@@ -25,13 +25,14 @@ class Appr(object):
         random.seed(args.seed)
         np.random.seed(args.seed)
         torch.manual_seed(args.seed)
-        print('before:',args.output_dir)
-        args.output_dir = args.output_dir.replace(
-            '[PT_OUTPUT_DIR]', os.getenv('PT_OUTPUT_DIR', ''))
-        print('after:',args.output_dir)
-        os.makedirs(args.output_dir, exist_ok=True)
-        json.dump(args.__dict__, open(os.path.join(
-            args.output_dir, 'opt.json'), 'w'), sort_keys=True, indent=2)
+        # Commented block as not sure what this does - args.__data__ is not defined in config.py on the repo
+        # # print('before:',args.output_dir)
+        # args.output_dir = args.output_dir.replace(
+            # '[PT_OUTPUT_DIR]', os.getenv('PT_OUTPUT_DIR', ''))
+        # # print('after:',args.output_dir)
+        # os.makedirs(args.output_dir, exist_ok=True)
+        # json.dump(args.__dict__, open(os.path.join(
+            # args.output_dir, 'opt.json'), 'w'), sort_keys=True, indent=2)
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.n_gpu = torch.cuda.device_count()
@@ -45,14 +46,20 @@ class Appr(object):
         self.train_batch_size=args.train_batch_size
         self.eval_batch_size=args.eval_batch_size
         self.args=args
-        self.criterion=torch.nn.CrossEntropyLoss()
+        if args.experiment=='annomi' and args.use_cls_wgts==True:
+            print('Using cls wgts')
+            class_weights = [0.41, 0.89, 0.16] #'change': 0, 'sustain': 1, 'neutral': 2
+            class_weights = torch.FloatTensor(class_weights).cuda()
+            self.criterion = torch.nn.CrossEntropyLoss(weight=class_weights)
+        else:
+            self.criterion=torch.nn.CrossEntropyLoss()
 
         print('DIL BERT MTL')
 
         return
 
     # def train(self,t,train,valid,num_train_steps,train_data,valid_data): # Commented as last 2 arguments aren't used
-    def train(self,t,train,valid,num_train_steps,save_path):
+    def train(self,t,train,valid,args,num_train_steps,save_path):
         self.model=deepcopy(self.initial_model) # Restart model
 
         global_step = 0

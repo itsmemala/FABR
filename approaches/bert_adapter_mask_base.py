@@ -68,7 +68,13 @@ class Appr(object):
         self.train_batch_size=args.train_batch_size
         self.eval_batch_size=args.eval_batch_size
         self.args=args
-        self.ce=torch.nn.CrossEntropyLoss()
+        if args.experiment=='annomi' and args.use_cls_wgts==True:
+            print('Using cls wgts')
+            class_weights = [0.41, 0.89, 0.16] #'change': 0, 'sustain': 1, 'neutral': 2
+            class_weights = torch.FloatTensor(class_weights).cuda()
+            self.ce = torch.nn.CrossEntropyLoss(weight=class_weights)
+        else:
+            self.ce=torch.nn.CrossEntropyLoss()
         self.soft_ce=SoftCrossEntropy()
         self.sup_con = SupConLoss(temperature=args.temp,base_temperature=args.base_temp)
         self.kd = DistillKL(4)

@@ -37,6 +37,7 @@ def asc_config(parser):
                         help='temperature for loss function')
     parser.add_argument('--scenario',default='',type=str,required=True,help='(default=%(default)s)')
     # FABR dev args
+    parser.add_argument('--use_cls_wgts',default=False,type=bool,required=False,help='(default=%(default)s)')
     parser.add_argument('--mlp_depth',default=1,type=int,required=False,help='(default=%(default)s)')
     parser.add_argument('--save_metadata',default=None,type=str,required=False,help='(default=%(default)s)')
     parser.add_argument('--valid_loss_es',default=0.0,type=float,required=False,help='(default=%(default)s)')
