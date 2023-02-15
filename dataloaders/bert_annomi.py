@@ -12,7 +12,16 @@ import absa_data_utils as data_utils
 from absa_data_utils import ABSATokenizer
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 import math
-datasets = [
+
+datasets_wc = [
+    'FABR/dat/annomi_withcontext_json/Alcohol',
+    'FABR/dat/annomi_withcontext_json/Smoking',
+    'FABR/dat/annomi_withcontext_json/Drug',
+    'FABR/dat/annomi_withcontext_json/Exercise',
+    'FABR/dat/annomi_withcontext_json/Medicine',
+    'FABR/dat/annomi_withcontext_json/Anxiety'
+            ]
+datasets_single = [
     'FABR/dat/annomi_json/Alcohol',
     'FABR/dat/annomi_json/Smoking',
     'FABR/dat/annomi_json/Drug',
@@ -32,6 +41,10 @@ domains = [
         ]
 
 def get(logger=None,args=None):
+    if args.withcontext==True:
+        datasets = datasets_wc
+    else:
+        datasets = datasets_single
     if os.path.exists('FABR/dat/bin/data_annomi'+'_'+str(args.idrandom)+'.pt') and os.path.exists('FABR/dat/bin/taskcla_annomi'+'_'+str(args.idrandom)+'.pt'):
         data = torch.load('FABR/dat/bin/data_annomi'+'_'+str(args.idrandom)+'.pt')
         taskcla = torch.load('FABR/dat/bin/taskcla_annomi'+'_'+str(args.idrandom)+'.pt')

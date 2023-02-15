@@ -47,6 +47,22 @@ else: print('[CUDA unavailable]'); sys.exit()
 
 ########################################################################################################################
 
+# Args -- DER++
+# Source: https://github.com/ZixuanKe/PyContinual/blob/54dd15de566b110c9bc8d8316205de63a4805190/src/load_base_args.py
+if 'bert_adapter' in args.backbone:
+    args.apply_bert_output = True
+    args.apply_bert_attention_output = True
+if args.baseline == 'derpp' or args.baseline == 'derpp_fabr':
+    args.buffer_size = 28
+    args.buffer_percent = 0.02
+    args.alpha = 0.5
+    args.beta = 0.5
+if args.baseline=='derpp_fabr':
+    args.lfa_lambda = 0.00001
+########################################################################################################################
+
+########################################################################################################################
+
 # Args -- CTR
 # Source: https://github.com/ZixuanKe/PyContinual/blob/54dd15de566b110c9bc8d8316205de63a4805190/src/load_base_args.py
 # if args.baseline == 'ctr':
@@ -97,8 +113,15 @@ elif args.approach=='ctr':
     from approaches import bert_adapter_capsule_mask as approach
 elif args.approach=='taskdrop':
     from approaches import taskdrop as approach
-elif args.approach=='mtl_bert_fine_tune':
+elif args.approach=='mtl_bert_fine_tune' or args.approach=='bert_fine_tune':
     from approaches import bert_mtl as approach
+if args.backbone == 'bert_adapter':
+    if args.baseline == 'derpp':
+        from approaches import bert_adapter_derpp as approach
+        from networks import bert_adapter as network
+    elif args.baseline == 'derpp_fabr':
+        from approaches import bert_adapter_derpp_fabr as approach
+        from networks import bert_adapter as network
 
 # # Args -- Network
 if 'bert_lstm_kan' in args.approach:
@@ -115,7 +138,7 @@ elif 'ctr' in args.approach:
     from networks import bert_adapter_capsule_mask as network
 elif 'taskdrop' in args.approach:
     from networks import taskdrop as network
-elif args.approach=='mtl_bert_fine_tune':
+elif args.approach=='mtl_bert_fine_tune' or args.approach=='bert_fine_tune':
     from networks import bert as network
 #
 # else:
@@ -134,7 +157,7 @@ print('\nTask info =',taskcla)
 print('Inits...')
 net=network.Net(taskcla,args=args).cuda()
 
-if 'ctr' in args.approach or 'mtl_bert_fine_tune' in args.approach:
+if 'ctr' in args.approach or 'bert_fine_tune' in args.approach:
     appr=approach.Appr(net,logger=logger,taskcla=taskcla,args=args)
 else:
     appr=approach.Appr(net,logger=logger,args=args)
@@ -154,7 +177,8 @@ for t,ncla in taskcla:
     print('Task {:2d} ({:s})'.format(t,data[t]['name']))
     print('*'*100)
 
-    # if t>1: exit()
+    if args.transfer_acc==True and t>0: break # Only train on first task
+    
 
     if 'mtl' in args.approach:
         # Get data. We do not put it to GPU
@@ -191,8 +215,10 @@ for t,ncla in taskcla:
 
     # Train
     if args.lfa is None: # No attribution calculation at train time
-        if args.approach=='ctr' or args.approach=='mtl_bert_fine_tune':
+        if 'ctr' in args.approach or 'bert_fine_tune' in args.approach:
             appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path)
+        elif 'bert_adapter_derpp' in args.approach:
+            appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path,train,valid)
         else:
             appr.train(task,train_dataloader,valid_dataloader,args,my_save_path)
     elif args.lfa=='test0':
@@ -205,7 +231,12 @@ for t,ncla in taskcla:
     print('-'*100)
 
     # Test
-    for u in range(t+1):
+    # for u in range(t+1):
+    for u in range(len(taskcla)):
+        
+        if args.transfer_acc==False and u>t:
+            continue
+        
         test=data[u]['test']
         test_sampler = SequentialSampler(test)
         test_dataloader = DataLoader(test, sampler=test_sampler, batch_size=args.eval_batch_size)
@@ -220,7 +251,7 @@ for t,ncla in taskcla:
         f1[t,u]=test_f1
         
         # Load saved model and check that test acc and loss are the same
-        if args.approach=='ctr' or args.approach=='mtl_bert_fine_tune':
+        if 'ctr' in args.approach or 'bert_fine_tune' in args.approach:
             check_appr=approach.Appr(net,logger=logger,taskcla=taskcla,args=args)
         else:
             check_appr=approach.Appr(net,logger=logger,args=args)

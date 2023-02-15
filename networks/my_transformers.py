@@ -794,7 +794,7 @@ class MyBertModel(BertModel):
         head_mask = self.get_head_mask(head_mask, self.config.num_hidden_layers)
 
         embedding_output = self.embeddings(
-            input_ids=input_ids, position_ids=position_ids,  token_type_ids=token_type_ids, inputs_embeds=inputs_embeds
+            input_ids=input_ids.long(), position_ids=position_ids,  token_type_ids=token_type_ids, inputs_embeds=inputs_embeds
         )
 
         encoder_outputs,x_list,h_list = self.compute_encoder_outputs(

@@ -5,6 +5,17 @@ import multiprocessing
 import utils
 
 def asc_config(parser):
+    # DER++ args
+    # Source: https://github.com/ZixuanKe/PyContinual/blob/54dd15de566b110c9bc8d8316205de63a4805190/src/config.py
+    # Defaults: https://github.com/ZixuanKe/PyContinual/blob/54dd15de566b110c9bc8d8316205de63a4805190/src/load_base_args.py
+    parser.add_argument('--backbone',default='',type=str,required=False,help='(default=%(default)s)')
+    parser.add_argument('--baseline',default='',type=str,required=True,help='(default=%(default)s)')
+    parser.add_argument('--buffer_percent', default=0.02, type=float, required=False,
+                        help='The size of the memory buffer.')
+    parser.add_argument('--buffer_size', default=128, type=int, required=False,
+                        help='The size of the memory buffer.')
+    parser.add_argument('--alpha', default=0.5, type=float, help='(default=%(default)f)')
+    parser.add_argument('--beta', default=0.5, type=float, help='(default=%(default)f)')
     # TaskDrop args
     # Source: https://github.com/zylMozart/TaskDrop/blob/main/config.py
     parser.add_argument('--multi_mask',type=int,default=1,help='for random mask only')
@@ -37,6 +48,9 @@ def asc_config(parser):
                         help='temperature for loss function')
     parser.add_argument('--scenario',default='',type=str,required=True,help='(default=%(default)s)')
     # FABR dev args
+    parser.add_argument('--fa_method',default='ig',type=str,required=False,help='(default=%(default)s)')
+    parser.add_argument('--transfer_acc',default=False,type=bool,required=False,help='(default=%(default)s)')
+    parser.add_argument('--withcontext',default=False,type=bool,required=False,help='(default=%(default)s)')
     parser.add_argument('--use_cls_wgts',default=False,type=bool,required=False,help='(default=%(default)s)')
     parser.add_argument('--mlp_depth',default=1,type=int,required=False,help='(default=%(default)s)')
     parser.add_argument('--save_metadata',default=None,type=str,required=False,help='(default=%(default)s)')
