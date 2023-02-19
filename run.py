@@ -103,7 +103,7 @@ elif args.experiment=='annomi':
 
 
 # Args -- Approach
-if args.approach=='bert_lstm_ncl' or args.approach=='bert_gru_ncl' or args.approach=='mtl':
+if args.approach=='bert_lstm_ncl' or args.approach=='bert_gru_ncl' or args.approach=='mtl_gru':
     from approaches import bert_rnn_ncl as approach
 elif args.approach=='bert_lstm_kan_ncl' or args.approach=='bert_gru_kan_ncl':
     from approaches import bert_rnn_kan_ncl as approach
@@ -130,7 +130,7 @@ elif 'bert_lstm' in args.approach:
     from networks import bert_lstm as network
 if 'bert_gru_kan' in args.approach:
     from networks import bert_gru_kan as network
-elif 'bert_gru' in args.approach or args.approach=='mtl':
+elif 'bert_gru' in args.approach or args.approach=='mtl_gru':
     from networks import bert_gru as network
 elif 'bert_mlp' in args.approach:
     from networks import bert_mlp as network
@@ -278,28 +278,28 @@ for t,ncla in taskcla:
                                 ,attributions_occ1=attributions_occ1
                                 )
                             
-        # # Train data activations
-        # targets, predictions, activations, mask = appr.eval(u,train_dataloader,'mcl',my_debug=2,input_tokens=data[u]['train_tokens'])
-        # np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_activations_model'+str(t)+'task'+str(u)
-                            # ,activations=activations
-                            # ,mask=mask.detach().cpu()
-                            # )
-        
-        # # Test data attributions
-        # # Calculate attributions on current task after training
-        # targets, predictions, attributions_occ1 = appr.eval(u,test_dataloader,'mcl',my_debug=1,input_tokens=data[u]['test_tokens'])
-        # np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_testattributions_model'+str(t)+'task'+str(u)
-                            # ,targets=targets.cpu()
-                            # ,predictions=predictions.cpu()
-                            # ,attributions_occ1=attributions_occ1
-                            # )
+            # Train data activations
+            targets, predictions, activations, mask = appr.eval(u,train_dataloader,'mcl',my_debug=2,input_tokens=data[u]['train_tokens'])
+            np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_activations_model'+str(t)+'task'+str(u)
+                                ,activations=activations
+                                ,mask=mask.detach().cpu()
+                                )
+            
+            # Test data attributions
+            # Calculate attributions on current task after training
+            targets, predictions, attributions_occ1 = appr.eval(u,test_dataloader,'mcl',my_debug=1,input_tokens=data[u]['test_tokens'])
+            np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_testattributions_model'+str(t)+'task'+str(u)
+                                ,targets=targets.cpu()
+                                ,predictions=predictions.cpu()
+                                ,attributions_occ1=attributions_occ1
+                                )
 
-        # # Test data activations
-        # targets, predictions, activations, mask = appr.eval(u,test_dataloader,'mcl',my_debug=2,input_tokens=data[u]['test_tokens'])
-        # np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_testactivations_model'+str(t)+'task'+str(u)
-                            # ,activations=activations
-                            # ,mask=mask.detach().cpu()
-                            # )
+            # Test data activations
+            targets, predictions, activations, mask = appr.eval(u,test_dataloader,'mcl',my_debug=2,input_tokens=data[u]['test_tokens'])
+            np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_testactivations_model'+str(t)+'task'+str(u)
+                                ,activations=activations
+                                ,mask=mask.detach().cpu()
+                                )
 
         if (args.lfa is not None) and ('test' not in args.lfa):
             # Save global attributions for using when training the next task

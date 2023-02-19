@@ -147,7 +147,9 @@ class Appr(ApprBase):
                 buf_task_inputs = buf_inputs.long().to('cuda')
                 buf_task_segment = buf_segment_ids.long().to('cuda')
                 buf_task_mask = buf_input_mask.long().to('cuda')
-                buf_task_labels = buf_labels.long().to('cuda')
+                buf_labels = buf_labels.long().to('cuda')
+                buf_task_labels = buf_task_labels.long().to('cuda')
+                # buf_task_labels = buf_labels.long().to('cuda')
                 buf_task_logits = buf_logits.to('cuda')
 
                 output_dict = self.model.forward(buf_task_inputs, buf_task_segment, buf_task_mask)
@@ -156,10 +158,12 @@ class Appr(ApprBase):
                     cur_task_output=output_dict['y']
                 elif 'til' in self.args.scenario:
                     outputs=output_dict['y']
-                    cur_task_output = outputs[t]
+                    # cur_task_output = outputs[t] # This will use the current task head for all samples in the buffer - not right!
 
-                loss += self.args.beta * self.ce(cur_task_output, buf_task_labels)
-                loss += self.args.alpha * self.mse(cur_task_output, buf_task_logits)
+                # loss += self.args.beta * self.ce(cur_task_output, buf_task_labels)
+                # loss += self.args.alpha * self.mse(cur_task_output, buf_task_logits)
+                loss += self.args.beta * self.criterion_train(buf_task_labels,outputs,buf_labels) # Added this to ensure the correct head is used for each buffer sample
+                loss += self.args.alpha * self.criterion_train(buf_task_labels,outputs,buf_task_logits,'mse')
 
 
 
@@ -211,4 +215,22 @@ class Appr(ApprBase):
             f1=self.f1_compute_fn(y_pred=torch.cat(pred_list,0),y_true=torch.cat(target_list,0),average='macro')
 
         return total_loss/total_num,total_acc/total_num,f1
+        
+    def criterion_train(self,tasks,outputs,targets,loss_type='ce'):
+        loss=0
+        for t in np.unique(tasks.data.cpu().numpy()):
+            t=int(t)
+            # output = outputs  # shared head
+
+            if 'dil' in self.args.scenario:
+                output=outputs #always shared head
+            elif 'til' in self.args.scenario:
+                output = outputs[t]
+
+            idx=(tasks==t).data.nonzero().view(-1)
+            if loss_type=='ce':
+                loss+=self.ce(output[idx,:],targets[idx])*len(idx)
+            else:
+                loss+=self.mse(output[idx,:],targets[idx])*len(idx)
+        return loss/targets.size(0)
 
