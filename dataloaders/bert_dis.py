@@ -105,6 +105,24 @@ def get(logger=None,args=None):
         label_list = processor.get_labels()
         tokenizer = ABSATokenizer.from_pretrained(args.bert_model)
         train_examples = processor.get_train_examples(dataset)
+        if args.subset_data is not None:
+            pos_guids = []
+            neg_guids = []
+            for example in train_examples:
+                if example.label=='positive':
+                    pos_guids.append(example.guid)
+                elif example.label=='negative':
+                    neg_guids.append(example.guid)
+            # Select random samples
+            random.seed(args.subset_data) # Set the seed so it always returns the same random subset
+            pos_sample_guids = random.sample(pos_guids,int(args.subset_data/2))
+            neg_sample_guids = random.sample(neg_guids,int(args.subset_data/2))
+            subset_train_examples = []
+            for example in train_examples:
+                if (example.guid in pos_sample_guids) or (example.guid in neg_sample_guids):
+                    subset_train_examples.append(example)
+            train_examples = subset_train_examples
+            print('Using a subset of train:',len(train_examples))
         num_train_steps = int(math.ceil(len(train_examples) / args.train_batch_size)) * args.num_train_epochs
         # num_train_steps = int(len(train_examples) / args.train_batch_size) * args.num_train_epochs
 

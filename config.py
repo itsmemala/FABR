@@ -5,6 +5,9 @@ import multiprocessing
 import utils
 
 def asc_config(parser):
+    # EWC args
+    # Source: https://github.com/ZixuanKe/PyContinual/blob/54dd15de566b110c9bc8d8316205de63a4805190/src/config.py
+    parser.add_argument('--lamb',default=5000,type=float,required=False,help='(default=%(default)f)')
     # DER++ args
     # Source: https://github.com/ZixuanKe/PyContinual/blob/54dd15de566b110c9bc8d8316205de63a4805190/src/config.py
     # Defaults: https://github.com/ZixuanKe/PyContinual/blob/54dd15de566b110c9bc8d8316205de63a4805190/src/load_base_args.py
@@ -48,6 +51,7 @@ def asc_config(parser):
                         help='temperature for loss function')
     parser.add_argument('--scenario',default='',type=str,required=True,help='(default=%(default)s)')
     # FABR dev args
+    parser.add_argument('--subset_data',default=None,type=int,required=False,help='(default=%(default)s)')
     parser.add_argument('--fa_method',default='ig',type=str,required=False,help='(default=%(default)s)')
     parser.add_argument('--transfer_acc',default=False,type=bool,required=False,help='(default=%(default)s)')
     parser.add_argument('--withcontext',default=False,type=bool,required=False,help='(default=%(default)s)')

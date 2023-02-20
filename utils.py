@@ -148,3 +148,37 @@ def is_number(s):
 
     return False
 ########################################################################################################################
+
+def fisher_matrix_diag_bert(t,train,device,model,criterion,sbatch=20):
+    # Init
+    fisher={}
+    for n,p in model.named_parameters():
+        fisher[n]=0*p.data
+    # Compute
+    model.train()
+
+    for i in tqdm(range(0,len(train),sbatch),desc='Fisher diagonal',ncols=100,ascii=True):
+        b=torch.LongTensor(np.arange(i,np.min([i+sbatch,len(train)]))).cuda()
+        batch=train[b]
+        batch = [
+            bat.to(device) if bat is not None else None for bat in batch]
+        input_ids, segment_ids, input_mask, targets,_= batch
+
+        # Forward and backward
+        model.zero_grad()
+        output_dict=model.forward(input_ids, segment_ids, input_mask)
+        outputs = output_dict['y']
+
+        loss=criterion(t,outputs[t],targets)
+        loss.backward()
+        # Get gradients
+        for n,p in model.named_parameters():
+            if p.grad is not None:
+                fisher[n]+=sbatch*p.grad.data.pow(2)
+    # Mean
+    for n,_ in model.named_parameters():
+        fisher[n]=fisher[n]/len(train)
+        fisher[n]=torch.autograd.Variable(fisher[n],requires_grad=False)
+    return fisher
+
+########################################################################################################################

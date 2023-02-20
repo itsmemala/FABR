@@ -180,6 +180,7 @@ class Appr(object):
         # Regularization for all previous tasks
         loss_reg=0
         if t>0:
+            # print(self.model.named_parameters(),self.model_old.named_parameters())
             for (name,param),(_,param_old) in zip(self.model.named_parameters(),self.model_old.named_parameters()):
                 loss_reg+=torch.sum(self.fisher[name]*(param_old-param).pow(2))/2
 
