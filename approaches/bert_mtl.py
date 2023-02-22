@@ -48,7 +48,10 @@ class Appr(object):
         self.args=args
         if args.experiment=='annomi' and args.use_cls_wgts==True:
             print('Using cls wgts')
-            class_weights = [0.41, 0.89, 0.16] #'change': 0, 'sustain': 1, 'neutral': 2
+            if args.convert_to_binary is None:
+                class_weights = [0.41, 0.89, 0.16] #'change': 0, 'sustain': 1, 'neutral': 2
+            elif args.convert_to_binary=='neutral_vs_other':
+                class_weights = [0.28, 0.16] #'change/sustain': 0, 'neutral': 1
             class_weights = torch.FloatTensor(class_weights).cuda()
             self.criterion = torch.nn.CrossEntropyLoss(weight=class_weights)
         else:
@@ -217,6 +220,8 @@ class Appr(object):
                 output = outputs[t]
 
             idx=(tasks==t).data.nonzero().view(-1)
+            # print('Debugging:',output.shape,output[0])
+            # print('Debugging:',targets.shape,targets[0])
             loss+=self.criterion(output[idx,:],targets[idx])*len(idx)
         return loss/targets.size(0)
 

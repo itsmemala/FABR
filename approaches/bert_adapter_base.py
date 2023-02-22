@@ -64,6 +64,10 @@ class Appr(object):
         if args.baseline=='ewc':
             self.lamb=args.lamb                      # Grid search = [500,1000,2000,5000,10000,20000,50000]; best was 5000
             self.fisher=None
+        
+        if args.baseline=='ewc_fabr':
+            self.buffer = Attr_Buffer(self.args.buffer_size, 'cpu') # using cpu to avoid cuda memory err
+            self.mse = torch.nn.MSELoss()
 
         #OWM ============
         if args.baseline=='owm':
@@ -89,6 +93,10 @@ class Appr(object):
 
         if  args.baseline=='derpp_fabr':
             self.buffer = Attr_Buffer(self.args.buffer_size, 'cpu') # using cpu to avoid cuda memory err
+            self.mse = torch.nn.MSELoss()
+        
+        if  args.baseline=='replay':
+            self.buffer = Buffer(self.args.buffer_size, 'cpu') # using cpu to avoid cuda memory err
             self.mse = torch.nn.MSELoss()
 
         if  args.baseline=='gem':
@@ -185,4 +193,12 @@ class Appr(object):
                 loss_reg+=torch.sum(self.fisher[name]*(param_old-param).pow(2))/2
 
         return self.ce(output,targets)+self.lamb*loss_reg
+    
+    def criterion_fabr(self,t,output,targets,attributions,buffer_attributions):
+        # Feature Attribution Based Regularization
+        loss_fabr=0
+        if t>0:
+            pass
+
+        return self.args.lamba*loss_fabr
 

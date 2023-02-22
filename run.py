@@ -47,12 +47,12 @@ else: print('[CUDA unavailable]'); sys.exit()
 
 ########################################################################################################################
 
-# Args -- DER++, EWC
+# Args -- DER++, EWC, REPLAY
 # Source: https://github.com/ZixuanKe/PyContinual/blob/54dd15de566b110c9bc8d8316205de63a4805190/src/load_base_args.py
 if 'bert_adapter' in args.backbone:
     args.apply_bert_output = True
     args.apply_bert_attention_output = True
-if args.baseline == 'derpp' or args.baseline == 'derpp_fabr':
+if args.baseline == 'derpp' or args.baseline == 'derpp_fabr' or args.baseline == 'replay':
     args.buffer_size = 28
     args.buffer_percent = 0.02
     args.alpha = 0.5
@@ -124,6 +124,9 @@ if args.backbone == 'bert_adapter':
         from networks import bert_adapter as network
     elif args.baseline == 'ewc':
         from approaches import bert_adapter_ewc as approach
+        from networks import bert_adapter as network
+    elif args.baseline == 'replay':
+        from approaches import bert_adapter_replay as approach
         from networks import bert_adapter as network
 
 # # Args -- Network
@@ -220,7 +223,7 @@ for t,ncla in taskcla:
     if args.lfa is None: # No attribution calculation at train time
         if 'ctr' in args.approach or 'bert_fine_tune' in args.approach:
             appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path)
-        elif 'bert_adapter_derpp' in args.approach or 'bert_adapter_ewc' in args.approach:
+        elif 'bert_adapter_derpp' in args.approach or 'bert_adapter_ewc' in args.approach or 'bert_adapter_replay' in args.approach:
             appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path,train,valid)
         else:
             appr.train(task,train_dataloader,valid_dataloader,args,my_save_path)
@@ -288,7 +291,7 @@ for t,ncla in taskcla:
                                 ,attributions_occ1=attributions_occ1
                                 )
                             
-            # Train data activations
+            # Train data activations # Only for KAN
             targets, predictions, activations, mask = appr.eval(eval_head,train_dataloader,'mcl',my_debug=2,input_tokens=data[u]['train_tokens'])
             np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_activations_model'+str(t)+'task'+str(u)
                                 ,activations=activations
@@ -304,7 +307,7 @@ for t,ncla in taskcla:
                                 ,attributions_occ1=attributions_occ1
                                 )
 
-            # Test data activations
+            # Test data activations # Only for KAN
             targets, predictions, activations, mask = appr.eval(eval_head,test_dataloader,'mcl',my_debug=2,input_tokens=data[u]['test_tokens'])
             np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_testactivations_model'+str(t)+'task'+str(u)
                                 ,activations=activations

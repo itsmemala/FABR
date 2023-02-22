@@ -295,14 +295,16 @@ class StringProcessor(DataProcessor):
                 InputExample(text_a=text_a))
         return examples
 
-def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer, mode, dataset=''):
+def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer, mode, dataset='',convert_to_binary=None):
     """Loads a data file into a list of `InputBatch`s.""" #check later if we can merge this function with the SQuAD preprocessing 
     # label_map = {}
     # for (i, label) in enumerate(label_list):
     #     label_map[label] = i
 
-    if dataset=='annomi':
+    if dataset=='annomi' and convert_to_binary is None:
         label_map={'change': 0, 'sustain': 1, 'neutral': 2}
+    elif dataset=='annomi' and convert_to_binary=='neutral_vs_other':
+        label_map={'change': 0, 'sustain': 0, 'neutral': 1}
     else:
         label_map={'+': 0,'positive': 0, '-': 1, 'negative': 1, 'neutral': 2}
 
