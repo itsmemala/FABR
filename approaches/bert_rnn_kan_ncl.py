@@ -248,7 +248,8 @@ class Appr(object):
         total_loss=0
         total_acc=0
         total_num=0
-        self.model.eval()
+        if my_debug==0:
+            self.model.eval() #fixes params and randomness in the model # Do this only once after model is trained to ensure repeatable results when called for attribution calc
 
 
         for step, batch in enumerate(data):

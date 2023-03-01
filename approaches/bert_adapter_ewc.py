@@ -105,8 +105,13 @@ class Appr(ApprBase):
         if t>0:
             # Watch out! We do not want to keep t models (or fisher diagonals) in memory, therefore we have to merge fisher diagonals
             for n,_ in self.model.named_parameters():
-                self.fisher[n]=(self.fisher[n]+fisher_old[n]*t)/(t+1)       # Checked: it is better than the other option
-                #self.fisher[n]=0.5*(self.fisher[n]+fisher_old[n])
+                if self.args.fisher_combine=='avg': #default
+                    self.fisher[n]=(self.fisher[n]+fisher_old[n]*t)/(t+1)       # Checked: it is better than the other option
+                    #self.fisher[n]=0.5*(self.fisher[n]+fisher_old[n])
+                elif self.args.fisher_combine=='max':
+                    self.fisher[n]=torch.maximum(self.fisher[n],fisher_old[n])
+                elif self.args.fisher_combine=='sum':
+                    self.fisher[n]=torch.add(self.fisher[n],fisher_old[n])
 
         return
 

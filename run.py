@@ -128,6 +128,9 @@ if args.backbone == 'bert_adapter':
     elif args.baseline == 'replay':
         from approaches import bert_adapter_replay as approach
         from networks import bert_adapter as network
+    elif args.baseline == 'ewc_fabr':
+        from approaches import bert_adapter_ewc_fabr as approach
+        from networks import bert_adapter as network
 
 # # Args -- Network
 if 'bert_lstm_kan' in args.approach:
@@ -174,7 +177,8 @@ lss=np.zeros((len(taskcla),len(taskcla)),dtype=np.float32)
 f1=np.zeros((len(taskcla),len(taskcla)),dtype=np.float32)
 
 # my_save_path = '/content/gdrive/MyDrive/s200_kan_myocc_attributions_bymask/' #NoMask
-my_save_path = '/content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/' #NoMask
+# my_save_path = '/content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200r - EWC Adapter BERT (train_attributions)/'
+my_save_path = '/content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/'
 
 global_attr = {}
 
@@ -277,20 +281,24 @@ for t,ncla in taskcla:
             else:
                 #TODO: Check why check_loss==test_loss fails for ctr
                 assert check_loss==test_loss and check_acc==test_acc and check_f1==test_f1
-        
-        if args.save_metadata is not None:
+                   
+        if args.save_metadata=='all' or args.save_metadata=='train_attributions':
             # Train data attributions
             # Calculate attributions on all previous tasks and current task after training
             train = data[u]['train']
             train_sampler = SequentialSampler(train) # Retain the order of the dataset, i.e. no shuffling
             train_dataloader = DataLoader(train, sampler=train_sampler, batch_size=args.train_batch_size)
-            targets, predictions, attributions_occ1 = appr.eval(eval_head,train_dataloader,'mcl',my_debug=1,input_tokens=data[u]['train_tokens'])
-            np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_attributions_model'+str(t)+'task'+str(u)
-                                ,targets=targets.cpu()
-                                ,predictions=predictions.cpu()
-                                ,attributions_occ1=attributions_occ1
-                                )
-                            
+            if args.approach=='bert_adapter_ewc_fabr':
+                targets, predictions, attributions = appr.get_attributions(eval_head,train_dataloader)
+            else:
+                targets, predictions, attributions = appr.eval(eval_head,train_dataloader,'mcl',my_debug=1,input_tokens=data[u]['train_tokens'])
+            # np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_attributions_model'+str(t)+'task'+str(u)
+                                # ,targets=targets.cpu()
+                                # ,predictions=predictions.cpu()
+                                # ,attributions=attributions.cpu()
+                                # )
+        
+        if args.save_metadata=='all':
             # Train data activations # Only for KAN
             targets, predictions, activations, mask = appr.eval(eval_head,train_dataloader,'mcl',my_debug=2,input_tokens=data[u]['train_tokens'])
             np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_activations_model'+str(t)+'task'+str(u)
@@ -300,11 +308,11 @@ for t,ncla in taskcla:
             
             # Test data attributions
             # Calculate attributions on current task after training
-            targets, predictions, attributions_occ1 = appr.eval(eval_head,test_dataloader,'mcl',my_debug=1,input_tokens=data[u]['test_tokens'])
+            targets, predictions, attributions = appr.eval(eval_head,test_dataloader,'mcl',my_debug=1,input_tokens=data[u]['test_tokens'])
             np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_testattributions_model'+str(t)+'task'+str(u)
                                 ,targets=targets.cpu()
                                 ,predictions=predictions.cpu()
-                                ,attributions_occ1=attributions_occ1
+                                ,attributions=attributions
                                 )
 
             # Test data activations # Only for KAN

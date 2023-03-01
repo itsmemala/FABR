@@ -66,6 +66,7 @@ class Appr(object):
             self.fisher=None
         
         if args.baseline=='ewc_fabr':
+            self.lamb=args.lamb # Remove if not using ewc loss
             self.buffer = Attr_Buffer(self.args.buffer_size, 'cpu') # using cpu to avoid cuda memory err
             self.mse = torch.nn.MSELoss()
 
