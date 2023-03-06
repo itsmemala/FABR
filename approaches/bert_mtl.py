@@ -9,6 +9,7 @@ from tqdm import tqdm, trange
 import random
 import json
 import os
+import math
 
 class Appr(object):
 
@@ -205,7 +206,83 @@ class Appr(object):
 
         return total_loss/total_num,total_acc/total_num,f1
 
+    def get_attributions(self,t,data,input_tokens=None):
+        # This is used for the test. All tasks separately
+        total_loss=0
+        total_acc=0
+        total_num=0
+        # self.model.eval() #fixes params and randomness in the model # Do this only once after model is trained to ensure repeatable results when called for attribution calc
+        target_list = []
+        pred_list = []
+        
+        for step, batch in enumerate(data):
+            batch = [
+                bat.to(self.device) if bat is not None else None for bat in batch]
+            input_ids, segment_ids, input_mask, targets, _= batch
+            real_b=input_ids.size(0)
 
+            output_dict = self.model.forward(input_ids, segment_ids, input_mask)
+            if 'dil' in self.args.scenario:
+                output=output_dict['y']
+            elif 'til' in self.args.scenario:
+                outputs=output_dict['y']
+                output = outputs[t]
+            # Forward
+            # output=outputs #shared head
+            # loss=self.criterion(output,targets)
+
+            _,pred=output.max(1)
+            hits=(pred==targets).float()
+            target_list.append(targets)
+            pred_list.append(pred)
+            # Log
+            # total_loss+=loss.data.cpu().numpy().item()*real_b
+            total_acc+=hits.sum().data.cpu().numpy().item()
+            total_num+=real_b
+            
+            print('step:',step)
+            occ_mask = torch.ones((input_ids.shape[1]-2,input_ids.shape[1])).to('cuda:0')
+            for token in range(input_ids.shape[1]-2):
+                occ_mask[token,token+1] = 0 # replace with padding token
+
+            for i in range(len(input_ids)): # loop through each input in the batch
+                temp_input_ids = input_ids[i:i+1,:].detach().clone().to('cuda:0') # using input_ids[:1,:] instead of input_ids[0] maintains the 2D shape of the tensor
+                my_input_ids = (temp_input_ids*occ_mask).long()
+                my_segment_ids = segment_ids[i:i+1,:].repeat(segment_ids.shape[1]-2,1)
+                my_input_mask = input_mask[i:i+1,:].repeat(input_mask.shape[1]-2,1)
+                # print('--------------------------')
+                # print(input_ids.shape)
+                # occ_output_b = self.model.forward(my_input_ids, my_segment_ids, my_input_mask)['y'][t]
+                loop_size=4
+                for j in range(math.ceil(my_input_ids.shape[0]/loop_size)):
+                    occ_output_b = self.model.forward(my_input_ids[j*loop_size:j*loop_size+loop_size,:]
+                                                    , my_segment_ids[j*loop_size:j*loop_size+loop_size,:]
+                                                    , my_input_mask[j*loop_size:j*loop_size+loop_size,:])['y'][t]
+                    occ_output_b = occ_output_b.detach().cpu()
+                    if j==0:
+                        occ_output = occ_output_b
+                    else:
+                        occ_output = torch.cat((occ_output,occ_output_b),axis=0)
+                # occ_output = torch.nn.Softmax(dim=1)(occ_output)
+                actual_output = self.model.forward(input_ids[i:i+1,:], segment_ids[i:i+1,:], input_mask[i:i+1,:])['y'][t]
+                actual_output = actual_output.detach().cpu()
+                # actual_output = torch.nn.Softmax(dim=1)(actual_output)
+                occ_output = torch.cat((actual_output,occ_output,actual_output), axis=0) # placeholder for CLS and SEP such that their attribution scores are 0
+                _,actual_pred = actual_output.max(1)
+                _,occ_pred=occ_output.max(1)
+                # print(occ_output)
+                # print(actual_output)
+                attributions_occ1_b = torch.subtract(actual_output,occ_output)[:,[actual_pred.item()]] # attributions towards the predicted class
+                attributions_occ1_b = torch.transpose(attributions_occ1_b, 0, 1)
+                attributions_occ1_b = attributions_occ1_b.detach().cpu()
+                
+                if step==0 and i==0:
+                    attributions_occ1 = attributions_occ1_b
+                else:
+                    attributions_occ1 = torch.cat((attributions_occ1,attributions_occ1_b), axis=0)
+            attributions = attributions_occ1
+
+        return torch.cat(target_list,0),torch.cat(pred_list,0),attributions
 
 
     def criterion_train(self,tasks,outputs,targets):

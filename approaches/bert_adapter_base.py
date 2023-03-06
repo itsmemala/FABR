@@ -23,6 +23,7 @@ sys.path.append("./approaches/")
 from .contrastive_loss import SupConLoss, CRDLoss
 from .buffer import Buffer as Buffer
 from .buffer import Attr_Buffer as Attr_Buffer
+from .buffer import RRR_Buffer as RRR_Buffer
 
 
 class Appr(object):
@@ -98,6 +99,10 @@ class Appr(object):
         
         if  args.baseline=='replay':
             self.buffer = Buffer(self.args.buffer_size, 'cpu') # using cpu to avoid cuda memory err
+            self.mse = torch.nn.MSELoss()
+        
+        if  args.baseline=='rrr':
+            self.buffer = RRR_Buffer(self.args.buffer_size, 'cpu') # using cpu to avoid cuda memory err
             self.mse = torch.nn.MSELoss()
 
         if  args.baseline=='gem':

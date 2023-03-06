@@ -23,7 +23,8 @@ class Appr(object):
         self.model=model
         # self.initial_model=deepcopy(model)
 
-        self.nepochs=nepochs
+        # self.nepochs=nepochs
+        self.nepochs=args.num_train_epochs
         self.sbatch=sbatch
         self.lr=lr
         self.lr_min=lr_min
@@ -167,6 +168,8 @@ class Appr(object):
         total_loss=0
         total_acc=0
         total_num=0
+        target_list = []
+        pred_list = []
         self.model.eval()
 
 
@@ -183,10 +186,12 @@ class Appr(object):
 
             _,pred=output.max(1)
             hits=(pred==targets).float()
+            target_list.append(targets)
+            pred_list.append(pred)
 
             # Log
             total_loss+=loss.data.cpu().numpy().item()*real_b
             total_acc+=hits.sum().data.cpu().numpy().item()
             total_num+=real_b
 
-        return total_loss/total_num,total_acc/total_num, f1_score(targets.detach().cpu(), pred.detach().cpu(), average='macro', zero_division=1)
+        return total_loss/total_num,total_acc/total_num, f1_score(torch.cat(target_list,0).cpu().numpy(), torch.cat(pred_list,0).cpu().numpy(), average='macro', zero_division=1)

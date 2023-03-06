@@ -52,12 +52,12 @@ else: print('[CUDA unavailable]'); sys.exit()
 if 'bert_adapter' in args.backbone:
     args.apply_bert_output = True
     args.apply_bert_attention_output = True
-if args.baseline == 'derpp' or args.baseline == 'derpp_fabr' or args.baseline == 'replay':
+if args.baseline == 'derpp' or args.baseline == 'derpp_fabr' or args.baseline == 'replay' or args.baseline == 'rrr':
     args.buffer_size = 28
     args.buffer_percent = 0.02
     args.alpha = 0.5
     args.beta = 0.5
-if args.baseline=='derpp_fabr':
+if args.baseline=='derpp_fabr' or args.baseline == 'rrr':
     args.lfa_lambda = 0.00001
 ########################################################################################################################
 
@@ -131,6 +131,9 @@ if args.backbone == 'bert_adapter':
     elif args.baseline == 'ewc_fabr':
         from approaches import bert_adapter_ewc_fabr as approach
         from networks import bert_adapter as network
+    elif args.baseline == 'rrr':
+        from approaches import bert_adapter_rrr as approach
+        from networks import bert_adapter as network
 
 # # Args -- Network
 if 'bert_lstm_kan' in args.approach:
@@ -178,7 +181,8 @@ f1=np.zeros((len(taskcla),len(taskcla)),dtype=np.float32)
 
 # my_save_path = '/content/gdrive/MyDrive/s200_kan_myocc_attributions_bymask/' #NoMask
 # my_save_path = '/content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200r - EWC Adapter BERT (train_attributions)/'
-my_save_path = '/content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/'
+# my_save_path = '/content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/'
+my_save_path = args.my_save_path
 
 global_attr = {}
 
@@ -227,7 +231,7 @@ for t,ncla in taskcla:
     if args.lfa is None: # No attribution calculation at train time
         if 'ctr' in args.approach or 'bert_fine_tune' in args.approach:
             appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path)
-        elif 'bert_adapter_derpp' in args.approach or 'bert_adapter_ewc' in args.approach or 'bert_adapter_replay' in args.approach:
+        elif 'bert_adapter_derpp' in args.approach or 'bert_adapter_ewc' in args.approach or 'bert_adapter_replay' in args.approach or 'bert_adapter_rrr' in args.approach:
             appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path,train,valid)
         else:
             appr.train(task,train_dataloader,valid_dataloader,args,my_save_path)
@@ -290,15 +294,30 @@ for t,ncla in taskcla:
             train_dataloader = DataLoader(train, sampler=train_sampler, batch_size=args.train_batch_size)
             if args.approach=='bert_adapter_ewc_fabr':
                 targets, predictions, attributions = appr.get_attributions(eval_head,train_dataloader)
-            else:
+            elif args.approach=='bert_fine_tune' or args.approach=='bert_adapter_rrr' or args.approach=='ctr':
+                targets, predictions, attributions = appr.get_attributions(eval_head,train_dataloader,input_tokens=data[u]['train_tokens'])
+            elif 'kan' in args.approach:
                 targets, predictions, attributions = appr.eval(eval_head,train_dataloader,'mcl',my_debug=1,input_tokens=data[u]['train_tokens'])
-            # np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_attributions_model'+str(t)+'task'+str(u)
-                                # ,targets=targets.cpu()
-                                # ,predictions=predictions.cpu()
-                                # ,attributions=attributions.cpu()
-                                # )
+            np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_attributions_model'+str(t)+'task'+str(u)
+                                ,targets=targets.cpu()
+                                ,predictions=predictions.cpu()
+                                ,attributions=attributions.cpu()
+                                )
         
-        if args.save_metadata=='all':
+        if args.save_metadata=='all' or args.save_metadata=='test_attributions':        
+            # Test data attributions
+            # Calculate attributions on current task after training
+            if args.approach=='bert_fine_tune' or args.approach=='bert_adapter_rrr' or args.approach=='ctr':
+                targets, predictions, attributions = appr.get_attributions(eval_head,test_dataloader,input_tokens=data[u]['test_tokens'])
+            elif 'kan' in args.approach:
+                targets, predictions, attributions = appr.eval(eval_head,test_dataloader,'mcl',my_debug=1,input_tokens=data[u]['test_tokens'])
+            np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_testattributions_model'+str(t)+'task'+str(u)
+                                ,targets=targets.cpu()
+                                ,predictions=predictions.cpu()
+                                ,attributions=attributions
+                                )
+        
+        if args.save_metadata=='all' and 'kan' in args.approach:
             # Train data activations # Only for KAN
             targets, predictions, activations, mask = appr.eval(eval_head,train_dataloader,'mcl',my_debug=2,input_tokens=data[u]['train_tokens'])
             np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_activations_model'+str(t)+'task'+str(u)
@@ -306,15 +325,6 @@ for t,ncla in taskcla:
                                 ,mask=mask.detach().cpu()
                                 )
             
-            # Test data attributions
-            # Calculate attributions on current task after training
-            targets, predictions, attributions = appr.eval(eval_head,test_dataloader,'mcl',my_debug=1,input_tokens=data[u]['test_tokens'])
-            np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_testattributions_model'+str(t)+'task'+str(u)
-                                ,targets=targets.cpu()
-                                ,predictions=predictions.cpu()
-                                ,attributions=attributions
-                                )
-
             # Test data activations # Only for KAN
             targets, predictions, activations, mask = appr.eval(eval_head,test_dataloader,'mcl',my_debug=2,input_tokens=data[u]['test_tokens'])
             np.savez_compressed(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_testactivations_model'+str(t)+'task'+str(u)

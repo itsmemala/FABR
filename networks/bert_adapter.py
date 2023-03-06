@@ -87,7 +87,6 @@ class Net(torch.nn.Module):
             # print(input_ids.shape)
             # print(pooled_output.shape)
             # print(output_dict['y'][tid].shape)
-            print('Oops, we should not be here !!!!!')
             return output_dict['y'][tid]
 
         return output_dict

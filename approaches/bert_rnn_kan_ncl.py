@@ -26,7 +26,8 @@ class Appr(object):
         self.model=model
         # self.initial_model=deepcopy(model)
 
-        self.nepochs=nepochs
+        #self.nepochs=nepochs
+        self.nepochs=args.num_train_epochs
         # self.sbatch=sbatch
         self.sbatch=args.train_batch_size
         self.lr=lr
