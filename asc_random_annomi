@@ -10,3 +10,7 @@ Medicine	Alcohol		Smoking		Drug		Exercise	Anxiety
 Medicine	Alcohol		Exercise	Drug		Smoking		Anxiety
 Anxiety		Medicine	Alcohol		Exercise	Smoking		Drug
 Anxiety		Drug		Alcohol		Smoking		Exercise	Medicine
+Exercise	Anxiety		Medicine	Alcohol		Drug		Smoking
+Drug		Exercise	Medicine	Smoking		Anxiety		Alcohol
+Smoking		Drug		Anxiety		Alcohol		Exercise	Medicine
+Medicine	Alcohol		Smoking		Anxiety		Drug		Exercise

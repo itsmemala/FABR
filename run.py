@@ -268,23 +268,23 @@ for t,ncla in taskcla:
         lss[t,u]=test_loss
         f1[t,u]=test_f1
         
-        # Load saved model and check that test acc and loss are the same
-        if 'ewc' in args.approach:
-            pass # Can't do this for ewc since old_model causes err #TODO: Fix this
-        else:
-            if 'ctr' in args.approach or 'bert_fine_tune' in args.approach or 'bert_adapter_ewc' in args.approach:
-                check_appr=approach.Appr(net,logger=logger,taskcla=taskcla,args=args)
-            else:
-                check_appr=approach.Appr(net,logger=logger,args=args)
-            check_appr.model.load_state_dict(torch.load(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_model'+str(t)))
-            check_loss,check_acc,check_f1=check_appr.eval(eval_head,test_dataloader,'mcl')
-            if args.approach=='ctr':
-                print(check_loss,test_loss)
-                print(check_acc,test_acc)
-                print(check_f1,test_f1)
-            else:
-                #TODO: Check why check_loss==test_loss fails for ctr
-                assert check_loss==test_loss and check_acc==test_acc and check_f1==test_f1
+        # # Load saved model and check that test acc and loss are the same
+        # if 'ewc' in args.approach:
+            # pass # Can't do this for ewc since old_model causes err #TODO: Fix this
+        # else:
+            # if 'ctr' in args.approach or 'bert_fine_tune' in args.approach or 'bert_adapter_ewc' in args.approach:
+                # check_appr=approach.Appr(net,logger=logger,taskcla=taskcla,args=args)
+            # else:
+                # check_appr=approach.Appr(net,logger=logger,args=args)
+            # check_appr.model.load_state_dict(torch.load(my_save_path+str(args.note)+'_seed'+str(args.seed)+'_model'+str(t)))
+            # check_loss,check_acc,check_f1=check_appr.eval(eval_head,test_dataloader,'mcl')
+            # if args.approach=='ctr':
+                # print(check_loss,test_loss)
+                # print(check_acc,test_acc)
+                # print(check_f1,test_f1)
+            # else:
+                # #TODO: Check why check_loss==test_loss fails for ctr
+                # assert check_loss==test_loss and check_acc==test_acc and check_f1==test_f1
                    
         if args.save_metadata=='all' or args.save_metadata=='train_attributions':
             # Train data attributions

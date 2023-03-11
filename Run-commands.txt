@@ -1,0 +1,27 @@
+NoMask
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_fine_tune --baseline None --note random0 --idrandom 0 --seed 2650 --scenario til --train_batch_size 32 --num_train_epochs 10 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200r-NoMask/
+#####################################
+TaskDrop
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach taskdrop --baseline None --note random0 --idrandom 0 --seed 2650 --scenario til --train_batch_size 32 --num_train_epochs 100 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200r-TaskDrop/
+####################################
+CTR
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach ctr --baseline None --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 10 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200r-CTR/
+#######################################
+RRR
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_rrr --baseline rrr --backbone bert_adapter --note random6 --idrandom 6 --seed 101 --scenario til --train_batch_size 32 --num_train_epochs 10 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200r-RRR/
+####################################
+EWC
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 101 --scenario til --train_batch_size 32 --num_train_epochs 10 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200r-EWC/
+#####################################
+REPLAY
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_replay --baseline replay --backbone bert_adapter --note random0 --idrandom 0 --seed 2650 --scenario til --train_batch_size 32 --num_train_epochs 10 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200r-Replay/
+############################################################################
+NoMask
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_fine_tune --baseline None --note random15 --idrandom 15 --seed 2650 --scenario til --train_batch_size 32 --use_cls_wgts True --num_train_epochs 10 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/AnnoMIStr-NoMask/
+#####################################
+REPLAY
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_replay --baseline replay --backbone bert_adapter --note random15 --idrandom 15 --seed 2650 --scenario til --train_batch_size 32 --use_cls_wgts True --num_train_epochs 10 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/AnnoMIStr-Replay/
+#####################################
+EWC
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 101 --scenario til --train_batch_size 32 --use_cls_wgts True --num_train_epochs 10 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/AnnoMIStr-EWC/
+#####################################

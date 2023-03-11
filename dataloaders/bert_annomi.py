@@ -22,12 +22,12 @@ datasets_wc = [
     'FABR/dat/annomi_withcontext_json/Anxiety'
             ]
 datasets_single = [
-    'FABR/dat/annomi_json/Alcohol',
-    'FABR/dat/annomi_json/Smoking',
-    'FABR/dat/annomi_json/Drug',
-    'FABR/dat/annomi_json/Exercise',
-    'FABR/dat/annomi_json/Medicine',
-    'FABR/dat/annomi_json/Anxiety'
+    'FABR/dat/annomi_strat_json/Alcohol',
+    'FABR/dat/annomi_strat_json/Smoking',
+    'FABR/dat/annomi_strat_json/Drug',
+    'FABR/dat/annomi_strat_json/Exercise',
+    'FABR/dat/annomi_strat_json/Medicine',
+    'FABR/dat/annomi_strat_json/Anxiety'
             ]
 
 

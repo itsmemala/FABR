@@ -84,7 +84,7 @@ class Appr(ApprBase):
         utils.set_model_(self.model,best_model)
         
         # Save model
-        torch.save(self.model.state_dict(), save_path+str(args.note)+'_seed'+str(args.seed)+'_model'+str(t))
+        # torch.save(self.model.state_dict(), save_path+str(args.note)+'_seed'+str(args.seed)+'_model'+str(t))
 
         # Update old
         self.model_old=deepcopy(self.model)
