@@ -182,3 +182,10 @@ def fisher_matrix_diag_bert(t,train,device,model,criterion,sbatch=20):
     return fisher
 
 ########################################################################################################################
+def modified_fisher(fisher,fisher_old):
+    modified_fisher = {}
+    
+    for n in fisher.keys():
+        modified_fisher[n] = fisher_old[n]
+    
+    return modified_fisher

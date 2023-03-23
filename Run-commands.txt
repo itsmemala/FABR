@@ -1,7 +1,7 @@
 NoMask
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_fine_tune --baseline None --note random0 --idrandom 0 --seed 2650 --scenario til --train_batch_size 32 --num_train_epochs 10 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200r-NoMask/
 #####################################
-TaskDrop
+TASKDROP
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach taskdrop --baseline None --note random0 --idrandom 0 --seed 2650 --scenario til --train_batch_size 32 --num_train_epochs 100 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200r-TaskDrop/
 ####################################
 CTR
@@ -15,6 +15,9 @@ EWC
 #####################################
 REPLAY
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_replay --baseline replay --backbone bert_adapter --note random0 --idrandom 0 --seed 2650 --scenario til --train_batch_size 32 --num_train_epochs 10 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200r-Replay/
+#####################################
+KAN
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_gru_kan_ncl --baseline None --note random6 --idrandom 6 --seed 2650 --scenario til --train_batch_size 32 --num_train_epochs 100 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200r-KAN/
 ############################################################################
 NoMask
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_fine_tune --baseline None --note random15 --idrandom 15 --seed 2650 --scenario til --train_batch_size 32 --use_cls_wgts True --num_train_epochs 10 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/AnnoMIStr-NoMask/
@@ -25,3 +28,17 @@ REPLAY
 EWC
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 101 --scenario til --train_batch_size 32 --use_cls_wgts True --num_train_epochs 10 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/AnnoMIStr-EWC/
 #####################################
+TASKDROP
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach taskdrop --baseline None --note random15 --idrandom 15 --seed 2650 --scenario til --train_batch_size 32 --use_cls_wgts True --num_train_epochs 100 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/AnnoMIStr-TaskDrop/
+#####################################
+CTR
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach ctr --baseline None --note random15 --idrandom 15 --seed 2650 --scenario til --use_cls_wgts True --train_batch_size 32 --num_train_epochs 10 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/AnnoMIStr-CTR/
+#####################################
+RRR
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_rrr --baseline rrr --backbone bert_adapter --note random0 --idrandom 0 --seed 101 --scenario til --train_batch_size 32 --use_cls_wgts True --num_train_epochs 10 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/AnnoMIStr-RRR/
+#####################################
+KAN
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_gru_kan_ncl --baseline None --note random15 --idrandom 15 --seed 2650 --scenario til --train_batch_size 32 --use_cls_wgts True --num_train_epochs 100 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/AnnoMIStr-KAN/
+#####################################
+DERPP
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_derpp --baseline derpp --backbone bert_adapter --note random15 --idrandom 15 --seed 2650 --scenario til --train_batch_size 32 --use_cls_wgts True --num_train_epochs 10 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/AnnoMIStr-DER++/

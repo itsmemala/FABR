@@ -125,11 +125,14 @@ if args.backbone == 'bert_adapter':
     elif args.baseline == 'ewc':
         from approaches import bert_adapter_ewc as approach
         from networks import bert_adapter as network
+    # elif args.baseline == 'ewc_fabr':
+        # from approaches import bert_adapter_ewc_fabr as approach
+        # from networks import bert_adapter as network
+    elif args.baseline == 'ewc_freeze':
+        from approaches import bert_adapter_ewc_freeze as approach
+        from networks import bert_adapter as network
     elif args.baseline == 'replay':
         from approaches import bert_adapter_replay as approach
-        from networks import bert_adapter as network
-    elif args.baseline == 'ewc_fabr':
-        from approaches import bert_adapter_ewc_fabr as approach
         from networks import bert_adapter as network
     elif args.baseline == 'rrr':
         from approaches import bert_adapter_rrr as approach
@@ -173,6 +176,9 @@ if 'ctr' in args.approach or 'bert_fine_tune' in args.approach or 'bert_adapter_
     appr=approach.Appr(net,logger=logger,taskcla=taskcla,args=args)
 else:
     appr=approach.Appr(net,logger=logger,args=args)
+
+# print('#trainable params:',sum(p.numel() for p in appr.model.parameters() if p.requires_grad))
+# sys.exit()
 
 # Loop tasks
 acc=np.zeros((len(taskcla),len(taskcla)),dtype=np.float32)
