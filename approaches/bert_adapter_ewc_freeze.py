@@ -36,35 +36,38 @@ class Appr(ApprBase):
 
     def train(self,t,train,valid,args,num_train_steps,save_path,train_data,valid_data):
 
-        global_step = 0
-        self.model.to(self.device)
-
-        param_optimizer = [(k, v) for k, v in self.model.named_parameters() if v.requires_grad==True]
-        param_optimizer = [n for n in param_optimizer if 'pooler' not in n[0]]
-        no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
-        optimizer_grouped_parameters = [
-            {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
-            {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-            ]
-        t_total = num_train_steps
-        optimizer = BertAdam(optimizer_grouped_parameters,
-                             lr=self.args.learning_rate,
-                             warmup=self.args.warmup_proportion,
-                             t_total=t_total)
-
-
-        best_loss=np.inf
-        best_model=utils.get_model(self.model)
-
         if t>0:
             train_phases = ['fo','mcl']
             # train_phases = ['mcl']
         else:
             train_phases = ['mcl']
-
+        
         for phase in train_phases:
             if phase=='fo':
                 mcl_model=utils.get_model(self.model) # Save the main model before commencing fisher overlap check
+            
+            if t>0:
+                torch.manual_seed(args.seed) # Ensure same shuffling order of dataloader and other random behaviour between fo and mcl phases
+        
+            global_step = 0
+            self.model.to(self.device)
+
+            param_optimizer = [(k, v) for k, v in self.model.named_parameters() if v.requires_grad==True]
+            param_optimizer = [n for n in param_optimizer if 'pooler' not in n[0]]
+            no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+            optimizer_grouped_parameters = [
+                {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
+                {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+                ]
+            t_total = num_train_steps
+            optimizer = BertAdam(optimizer_grouped_parameters,
+                                 lr=self.args.learning_rate,
+                                 warmup=self.args.warmup_proportion,
+                                 t_total=t_total)
+
+
+            best_loss=np.inf
+            best_model=utils.get_model(self.model)
         
             # Loop epochs
             for e in range(int(self.args.num_train_epochs)):
@@ -74,21 +77,22 @@ class Appr(ApprBase):
                 global_step=self.train_epoch(t,train,iter_bar, optimizer,t_total,global_step)
                 clock1=time.time()
 
-                train_loss,train_acc,train_f1_macro=self.eval(t,train)
-                clock2=time.time()
-                print('time: ',float((clock1-clock0)*10*25))
-                print('| Epoch {:3d}, time={:5.1f}ms/{:5.1f}ms | Train: loss={:.3f}, f1_avg={:5.1f}% |'.format(e+1,
-                    1000*self.train_batch_size*(clock1-clock0)/len(train),1000*self.train_batch_size*(clock2-clock1)/len(train),train_loss,100*train_acc),end='')
+                if phase=='mcl':
+                    train_loss,train_acc,train_f1_macro=self.eval(t,train)
+                    clock2=time.time()
+                    print('time: ',float((clock1-clock0)*10*25))
+                    print('| Epoch {:3d}, time={:5.1f}ms/{:5.1f}ms | Train: loss={:.3f}, f1_avg={:5.1f}% |'.format(e+1,
+                        1000*self.train_batch_size*(clock1-clock0)/len(train),1000*self.train_batch_size*(clock2-clock1)/len(train),train_loss,100*train_acc),end='')
 
-                valid_loss,valid_acc,valid_f1_macro=self.eval(t,valid)
-                print(' Valid: loss={:.3f}, acc={:5.1f}% |'.format(valid_loss,100*valid_acc),end='')
-                # Adapt lr
-                if valid_loss<best_loss:
-                    best_loss=valid_loss
-                    best_model=utils.get_model(self.model)
-                    print(' *',end='')
+                    valid_loss,valid_acc,valid_f1_macro=self.eval(t,valid)
+                    print(' Valid: loss={:.3f}, acc={:5.1f}% |'.format(valid_loss,100*valid_acc),end='')
+                    # Adapt lr
+                    if valid_loss<best_loss:
+                        best_loss=valid_loss
+                        best_model=utils.get_model(self.model)
+                        print(' *',end='')
 
-                print()
+                    print()
 
             # Restore best
             utils.set_model_(self.model,best_model)
@@ -96,10 +100,11 @@ class Appr(ApprBase):
             # Save model
             # torch.save(self.model.state_dict(), save_path+str(args.note)+'_seed'+str(args.seed)+'_model'+str(t))
 
-            # Update old
-            self.model_old=deepcopy(self.model)
-            self.model_old.eval()
-            utils.freeze_model(self.model_old) # Freeze the weights
+            if phase=='mcl':
+                # Update old
+                self.model_old=deepcopy(self.model)
+                self.model_old.eval()
+                utils.freeze_model(self.model_old) # Freeze the weights
 
             # Fisher ops
             if t>0 and phase=='fo':
@@ -108,14 +113,12 @@ class Appr(ApprBase):
                 for n,_ in self.model.named_parameters():
                     fisher_old[n]=self.fisher[n].clone()
 
-            if 'dil' in self.args.scenario:
-                self.fisher=utils.fisher_matrix_diag_bert_dil(t,train_data,self.device,self.model,self.criterion)
-            elif 'til' in self.args.scenario:
+            if phase!='fo':
                 self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion)
 
-            if phase=='fo':
-                # Freeze non-overlapping params (vs layers?)
-                self.fisher=utils.modified_fisher(self.fisher,fisher_old)
+            # if phase=='fo':
+                # # Freeze non-overlapping params (vs layers?)
+                # self.fisher=utils.modified_fisher(self.fisher,fisher_old)
 
             if t>0 and phase=='mcl':
                 # Watch out! We do not want to keep t models (or fisher diagonals) in memory, therefore we have to merge fisher diagonals
@@ -129,8 +132,7 @@ class Appr(ApprBase):
                         self.fisher[n]=torch.add(self.fisher[n],fisher_old[n])
 
             if phase=='fo':
-                utils.set_model_(self.model,mcl_model)
-                
+                utils.set_model_(self.model,mcl_model) # Reset to main model after fisher overlap check
 
         return
 
