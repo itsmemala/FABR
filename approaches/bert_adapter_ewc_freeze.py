@@ -113,12 +113,14 @@ class Appr(ApprBase):
                 for n,_ in self.model.named_parameters():
                     fisher_old[n]=self.fisher[n].clone()
 
-            if phase!='fo':
-                self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion)
+            # if phase!='fo':
+            self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion)
 
-            # if phase=='fo':
-                # # Freeze non-overlapping params (vs layers?)
-                # self.fisher=utils.modified_fisher(self.fisher,fisher_old)
+            if phase=='fo':
+                # Freeze non-overlapping params (vs layers?)
+                self.fisher=utils.modified_fisher(self.fisher,fisher_old
+                ,self.args.elasticity_down,self.args.elasticity_up
+                ,save_path+'modified_paramcount_'+str(args.note)+'_seed'+str(args.seed)+'model_'+str(t))
 
             if t>0 and phase=='mcl':
                 # Watch out! We do not want to keep t models (or fisher diagonals) in memory, therefore we have to merge fisher diagonals

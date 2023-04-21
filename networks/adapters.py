@@ -314,6 +314,9 @@ class CapsuleLayerImp(nn.Module): #it has its own number of capsule for output
                         decision_maker.append(score.view(-1,1))
 
                 decision_maker = torch.cat(decision_maker, 1)
+                # print(decision_maker.shape) # (32,6)
+                # print(decision_maker)
+                # decision_maker = torch.ones_like(decision_maker)
                 sim_attn = torch.cat(sim_attn, 2) #TODO: Normalized the similarity
 
                 vote_outputs = (self.tsv[t].data.view(1,1,-1,1,1) *

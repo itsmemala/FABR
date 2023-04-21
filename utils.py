@@ -3,6 +3,7 @@ import numpy as np
 from copy import deepcopy
 import torch
 from tqdm import tqdm
+import pickle
 
 ########################################################################################################################
 
@@ -182,10 +183,30 @@ def fisher_matrix_diag_bert(t,train,device,model,criterion,sbatch=20):
     return fisher
 
 ########################################################################################################################
-def modified_fisher(fisher,fisher_old):
+def modified_fisher(fisher,fisher_old,elasticity_down,elasticity_up,save_path):
     modified_fisher = {}
     
+    check_counter = {}
+    
     for n in fisher.keys():
-        modified_fisher[n] = fisher_old[n]
+        # modified_fisher[n] = fisher_old[n] # This is for comparison without modifying fisher weights in the fo phase
+        assert fisher_old[n].shape==fisher[n].shape
+        
+        if 'output.adapter' in n or 'output.LayerNorm' in n:
+            fisher_gt = torch.gt(fisher_old[n],fisher[n])
+            check_counter[n]=(torch.sum(fisher_gt))
+            modified_fisher[n] = fisher_old[n]
+            
+            # Important for previous task only -> make it less elastic 
+            modified_fisher[n][fisher_gt==True] = elasticity_down*fisher_old[n][fisher_gt==True]
+            # Other situations: Important for both or only new task or neither -> make it more elastic
+            modified_fisher[n][fisher_gt==False] = elasticity_up*fisher_old[n][fisher_gt==False]
+        
+        else:
+            modified_fisher[n] = fisher_old[n]
+    
+    print('Modified paramcount:',np.sum([v.cpu().numpy() for k,v in check_counter.items()]))
+    with open(save_path+'.pkl', 'wb') as fp:
+        pickle.dump(check_counter, fp)
     
     return modified_fisher

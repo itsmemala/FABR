@@ -131,6 +131,9 @@ if args.backbone == 'bert_adapter':
     elif args.baseline == 'ewc_freeze':
         from approaches import bert_adapter_ewc_freeze as approach
         from networks import bert_adapter as network
+    elif args.baseline == 'seq' or args.baseline == 'mtl':
+        from approaches import bert_adapter_seq as approach
+        from networks import bert_adapter as network
     elif args.baseline == 'replay':
         from approaches import bert_adapter_replay as approach
         from networks import bert_adapter as network
@@ -172,7 +175,7 @@ print('\nTask info =',taskcla)
 print('Inits...')
 net=network.Net(taskcla,args=args).cuda()
 
-if 'ctr' in args.approach or 'bert_fine_tune' in args.approach or 'bert_adapter_ewc' in args.approach:
+if 'ctr' in args.approach or 'bert_fine_tune' in args.approach or 'bert_adapter_ewc' in args.approach or 'bert_adapter_seq' in args.approach or 'bert_adapter_mtl' in args.approach:
     appr=approach.Appr(net,logger=logger,taskcla=taskcla,args=args)
 else:
     appr=approach.Appr(net,logger=logger,args=args)
@@ -237,7 +240,7 @@ for t,ncla in taskcla:
     if args.lfa is None: # No attribution calculation at train time
         if 'ctr' in args.approach or 'bert_fine_tune' in args.approach:
             appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path)
-        elif 'bert_adapter_derpp' in args.approach or 'bert_adapter_ewc' in args.approach or 'bert_adapter_replay' in args.approach or 'bert_adapter_rrr' in args.approach:
+        elif 'bert_adapter_derpp' in args.approach or 'bert_adapter_ewc' in args.approach or 'bert_adapter_replay' in args.approach or 'bert_adapter_rrr' in args.approach or 'bert_adapter_seq' in args.approach or 'bert_adapter_mtl' in args.approach:
             appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path,train,valid)
         else:
             appr.train(task,train_dataloader,valid_dataloader,args,my_save_path)
