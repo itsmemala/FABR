@@ -140,9 +140,17 @@ class Appr(ApprBase):
             if t>0:
                 for n,p in self.model.named_parameters():
                     if n in self.mask_back and p.grad is not None:
-                        p.grad.data*=self.mask_back[n]
+                        # p.grad.data*=self.mask_back[n]
+                        temp_mask=self.mask_back[n]
+                        temp_mask[temp_mask==0]=self.args.mask_scaling
+                        # print(temp_mask)
+                        p.grad.data*=temp_mask
                     elif n in self.tsv_para and p.grad is not None:
-                        p.grad.data*=self.model.get_view_for_tsv(n,t) #open for general
+                        # p.grad.data*=self.model.get_view_for_tsv(n,t) #open for general
+                        temp_mask=self.model.get_view_for_tsv(n,t)
+                        temp_mask[temp_mask==0]=self.args.mask_scaling
+                        # print(temp_mask)
+                        p.grad.data*=temp_mask
 
             # Compensate embedding gradients
             for n,p in self.model.named_parameters():

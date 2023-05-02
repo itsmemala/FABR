@@ -183,6 +183,7 @@ def fisher_matrix_diag_bert(t,train,device,model,criterion,sbatch=20):
     return fisher
 
 ########################################################################################################################
+# v3
 def modified_fisher(fisher,fisher_old,elasticity_down,elasticity_up,save_path):
     modified_fisher = {}
     
@@ -194,13 +195,15 @@ def modified_fisher(fisher,fisher_old,elasticity_down,elasticity_up,save_path):
         
         if 'output.adapter' in n or 'output.LayerNorm' in n:
             fisher_gt = torch.gt(fisher_old[n],fisher[n])
+            fisher_lt = torch.lt(fisher_old[n],fisher[n])
             check_counter[n]=(torch.sum(fisher_gt))
             modified_fisher[n] = fisher_old[n]
             
-            # Important for previous task only -> make it less elastic 
+            # Important for previous tasks only -> make it less elastic (i.e. increase fisher scaling)
             modified_fisher[n][fisher_gt==True] = elasticity_down*fisher_old[n][fisher_gt==True]
-            # Other situations: Important for both or only new task or neither -> make it more elastic
-            modified_fisher[n][fisher_gt==False] = elasticity_up*fisher_old[n][fisher_gt==False]
+            # Important for both -> keep fisher 
+            # Other situations: Important for only new task or neither -> make it more elastic (i.e. decrease fisher scaling)
+            modified_fisher[n][fisher_lt==True] = elasticity_up*fisher_old[n][fisher_lt==True]
         
         else:
             modified_fisher[n] = fisher_old[n]

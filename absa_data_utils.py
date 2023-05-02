@@ -211,7 +211,7 @@ class AscProcessor(DataProcessor):
 
 
 class MIProcessor(DataProcessor):
-    """Processor for the SemEval Aspect Sentiment Classification."""
+    """Processor for the MI Behaviour Classification."""
 
     def get_train_examples(self, data_dir, fn="train.json"):
         """See base class."""
@@ -242,6 +242,54 @@ class MIProcessor(DataProcessor):
             text_a=lines[ids]['sentence']
             text_b=None
             label = lines[ids]['polarity']
+            examples.append(
+                InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+        return examples     
+
+
+class IntentProcessor(DataProcessor):
+    """Processor for the HWU64 Intent Classification."""
+
+    def get_train_examples(self, data_dir, fn="train.json"):
+        """See base class."""
+        return self._create_examples(
+            self._read_json(os.path.join(data_dir, fn)), "train")
+
+    def get_dev_examples(self, data_dir, fn="dev.json"):
+        """See base class."""
+        return self._create_examples(
+            self._read_json(os.path.join(data_dir, fn)), "dev")
+    
+    def get_test_examples(self, data_dir, fn="test.json"):
+        """See base class."""
+        return self._create_examples(
+            self._read_json(os.path.join(data_dir, fn)), "test")
+
+    def get_labels(self):
+        """See base class."""
+        return ['music', 'quirky', 'factoid', 'remove', 'negate'
+                ,'praise', 'sendemail', 'explain', 'repeat', 'affirm'
+                ,'radio', 'confirm', 'post', 'definition', 'dontcare'
+                ,'recipe', 'podcasts', 'currency', 'events', 'commandstop'
+                ,'createoradd', 'stock', 'locations', 'hue_lightoff', 'audiobook'
+                ,'ticket', 'game', 'hue_lightchange', 'querycontact', 'likeness'
+                ,'music', 'sendemail', 'post', 'events', 'audiobook'
+                ,'quirky', 'explain', 'definition', 'commandstop', 'ticket'
+                ,'factoid', 'repeat', 'dontcare', 'createoradd', 'game'
+                ,'remove', 'affirm', 'recipe', 'stock', 'hue_lightchange'
+                ,'negate', 'radio', 'podcasts', 'locations', 'querycontact'
+                ,'praise', 'confirm', 'currency', 'hue_lightoff', 'likeness']
+    
+    def _create_examples(self, lines, set_type):
+        """Creates examples for the training and dev sets."""
+        examples = []
+        for (i, ids) in enumerate(lines):
+            guid = "%s-%s" % (set_type, ids )
+            # text_a = lines[ids]['term']
+            # text_b = lines[ids]['sentence']
+            text_a=lines[ids]['sentence']
+            text_b=None
+            label = lines[ids]['intent']
             examples.append(
                 InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples     
@@ -305,12 +353,27 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
         label_map={'change': 0, 'sustain': 1, 'neutral': 2}
     elif dataset=='annomi' and convert_to_binary=='neutral_vs_other':
         label_map={'change': 0, 'sustain': 0, 'neutral': 1}
+    elif dataset=='hwu64':
+        label_map={'music':0, 'quirky':1, 'factoid':2, 'remove':3, 'negate':4
+                ,'praise':0, 'sendemail':1, 'explain':2, 'repeat':3, 'affirm':4
+                ,'radio':0, 'confirm':1, 'post':2, 'definition':3, 'dontcare':4
+                ,'recipe':0, 'podcasts':1, 'currency':2, 'events':3, 'commandstop':4
+                ,'createoradd':0, 'stock':1, 'locations':2, 'hue_lightoff':3, 'audiobook':4
+                ,'ticket':0, 'game':1, 'hue_lightchange':2, 'querycontact':3, 'likeness':4
+                ,'music':0, 'sendemail':1, 'post':2, 'events':3, 'audiobook':4
+                ,'quirky':0, 'explain':1, 'definition':2, 'commandstop':3, 'ticket':4
+                ,'factoid':0, 'repeat':1, 'dontcare':2, 'createoradd':3, 'game':4
+                ,'remove':0, 'affirm':1, 'recipe':2, 'stock':3, 'hue_lightchange':4
+                ,'negate':0, 'radio':1, 'podcasts':2, 'locations':3, 'querycontact':4
+                ,'praise':0, 'confirm':1, 'currency':2, 'hue_lightoff':3, 'likeness':4
+                    }
     else:
         label_map={'+': 0,'positive': 0, '-': 1, 'negative': 1, 'neutral': 2}
 
     features = []
     for (ex_index, example) in enumerate(examples):
         if mode!="ae":
+            # print(ex_index,example.text_a)
             tokens_a = tokenizer.tokenize(example.text_a)
         else: #only do subword tokenization.
             tokens_a, labels_a, example.idx_map= tokenizer.subword_tokenize([token.lower() for token in example.text_a], example.label )
