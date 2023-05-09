@@ -85,7 +85,11 @@ class Appr(object):
 
         best_loss=np.inf
         best_model=utils.get_model(self.model)
-
+        patience=self.args.lr_patience
+        lr=self.args.learning_rate
+        
+        train_loss_save = []
+        valid_loss_save = []
         # Loop epochs
         for e in range(int(self.args.num_train_epochs)):
             # Train
@@ -98,17 +102,39 @@ class Appr(object):
             clock2=time.time()
             print('| Epoch {:3d}, time={:5.1f}ms/{:5.1f}ms | Train: loss={:.3f} |'.format(e+1,
                 1000*self.train_batch_size*(clock1-clock0)/len(train),1000*self.train_batch_size*(clock2-clock1)/len(train),train_loss),end='')
+            train_loss_save.append(train_loss)
 
             valid_loss=self.eval_validation(t,valid)
             print(' Valid: loss={:.3f} |'.format(valid_loss),end='')
+            valid_loss_save.append(valid_loss)
+            
             # Adapt lr
             if valid_loss<best_loss:
                 best_loss=valid_loss
                 best_model=utils.get_model(self.model)
                 print(' *',end='')
+            # if best_loss-valid_loss > args.valid_loss_es:
+                # best_loss=valid_loss
+                # best_model=utils.get_model(self.model)
+                # patience=self.args.lr_patience
+                # print(' *',end='')
+            # else:
+                # patience-=1
+                # if patience<=0:
+                    # break
+                    # # lr/=self.args.lr_factor
+                    # # print(' lr={:.1e}'.format(lr),end='')
+                    # # if lr<self.args.lr_min:
+                        # # print()
+                        # # break
+                    # # patience=self.args.lr_patience
+                    # # optimizer=self._get_optimizer(lr,which_type)
 
             print()
-            # break
+
+        np.savetxt(save_path+args.experiment+'_'+args.approach+'_train_loss_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',train_loss_save,'%.4f',delimiter='\t')
+        np.savetxt(save_path+args.experiment+'_'+args.approach+'_valid_loss_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',valid_loss_save,'%.4f',delimiter='\t')
+
         # Restore best
         utils.set_model_(self.model,best_model)
 

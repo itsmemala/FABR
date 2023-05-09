@@ -68,7 +68,11 @@ class Appr(ApprBase):
 
             best_loss=np.inf
             best_model=utils.get_model(self.model)
+            patience=self.args.lr_patience
         
+        
+            train_loss_save,train_acc_save,train_f1_macro_save = [],[],[]
+            valid_loss_save,valid_acc_save,valid_f1_macro_save = [],[],[]
             # Loop epochs
             for e in range(int(self.args.num_train_epochs)):
                 # Train
@@ -83,16 +87,42 @@ class Appr(ApprBase):
                     print('time: ',float((clock1-clock0)*10*25))
                     print('| Epoch {:3d}, time={:5.1f}ms/{:5.1f}ms | Train: loss={:.3f}, f1_avg={:5.1f}% |'.format(e+1,
                         1000*self.train_batch_size*(clock1-clock0)/len(train),1000*self.train_batch_size*(clock2-clock1)/len(train),train_loss,100*train_acc),end='')
+                    train_loss_save.append(train_loss)
+                    train_acc_save.append(train_acc)
+                    train_f1_macro_save.append(train_f1_macro)
 
-                    valid_loss,valid_acc,valid_f1_macro=self.eval(t,valid)
-                    print(' Valid: loss={:.3f}, acc={:5.1f}% |'.format(valid_loss,100*valid_acc),end='')
-                    # Adapt lr
-                    if valid_loss<best_loss:
-                        best_loss=valid_loss
-                        best_model=utils.get_model(self.model)
-                        print(' *',end='')
+                valid_loss,valid_acc,valid_f1_macro=self.eval(t,valid)
+                print(' Valid: loss={:.3f}, acc={:5.1f}% |'.format(valid_loss,100*valid_acc),end='')
+                valid_loss_save.append(valid_loss)
+                valid_acc_save.append(valid_acc)
+                valid_f1_macro_save.append(valid_f1_macro)
+                
+                # Adapt lr
+                if best_loss-valid_loss > args.valid_loss_es:
+                    best_loss=valid_loss
+                    best_model=utils.get_model(self.model)
+                    patience=self.args.lr_patience
+                    print(' *',end='')
+                else:
+                    patience-=1
+                    if patience<=0:
+                        break
+                        # lr/=self.lr_factor
+                        # print(' lr={:.1e}'.format(lr),end='')
+                        # if lr<self.lr_min:
+                            # print()
+                            # break
+                        # patience=self.args.lr_patience
+                        # self.optimizer=self._get_optimizer(lr,which_type)
 
-                    print()
+                print()
+
+            np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+'mcl_train_loss_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',train_loss_save,'%.4f',delimiter='\t')
+            np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+'mcl_train_acc_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',train_acc_save,'%.4f',delimiter='\t')
+            np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+'mcl_train_f1_macro_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',train_f1_macro_save,'%.4f',delimiter='\t')    
+            np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+phase+'_valid_loss_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',valid_loss_save,'%.4f',delimiter='\t')
+            np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+phase+'_valid_acc_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',valid_acc_save,'%.4f',delimiter='\t')
+            np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+phase+'_valid_f1_macro_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',valid_f1_macro_save,'%.4f',delimiter='\t')
 
             # Restore best
             utils.set_model_(self.model,best_model)
@@ -120,7 +150,8 @@ class Appr(ApprBase):
                 # Freeze non-overlapping params (vs layers?)
                 self.fisher=utils.modified_fisher(self.fisher,fisher_old
                 ,self.args.elasticity_down,self.args.elasticity_up
-                ,save_path+'modified_paramcount_'+str(args.note)+'_seed'+str(args.seed)+'model_'+str(t))
+                ,self.args.learning_rate,self.args.lamb
+                ,save_path+str(args.note)+'_seed'+str(args.seed)+'model_'+str(t))
 
             if t>0 and phase=='mcl':
                 # Watch out! We do not want to keep t models (or fisher diagonals) in memory, therefore we have to merge fisher diagonals
