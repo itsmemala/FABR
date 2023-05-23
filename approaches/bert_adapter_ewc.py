@@ -55,6 +55,7 @@ class Appr(ApprBase):
 
         best_loss=np.inf
         best_model=utils.get_model(self.model)
+        patience=self.args.lr_patience
 
         # Loop epochs
         for e in range(int(self.args.num_train_epochs)):
@@ -73,10 +74,17 @@ class Appr(ApprBase):
             valid_loss,valid_acc,valid_f1_macro=self.eval(t,valid)
             print(' Valid: loss={:.3f}, acc={:5.1f}% |'.format(valid_loss,100*valid_acc),end='')
             # Adapt lr
+            if best_loss-valid_loss > args.valid_loss_es:
+                patience=self.args.lr_patience
+                # print(' *',end='')
+            else:
+                patience-=1
             if valid_loss<best_loss:
                 best_loss=valid_loss
                 best_model=utils.get_model(self.model)
                 print(' *',end='')
+            if patience<=0:
+                break
 
             print()
             # break
@@ -99,8 +107,8 @@ class Appr(ApprBase):
 
         if 'dil' in self.args.scenario:
             self.fisher=utils.fisher_matrix_diag_bert_dil(t,train_data,self.device,self.model,self.criterion)
-        elif 'til' in self.args.scenario:
-            self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion)
+        elif 'til' in self.args.scenario or 'cil' in self.args.scenario:
+            self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=self.args.scenario)
 
         if t>0:
             # Watch out! We do not want to keep t models (or fisher diagonals) in memory, therefore we have to merge fisher diagonals
@@ -131,6 +139,8 @@ class Appr(ApprBase):
             elif 'til' in self.args.scenario:
                 outputs=output_dict['y']
                 output = outputs[t]
+            elif 'cil' in self.args.scenario:
+                output=output_dict['y']
             loss=self.criterion(t,output,targets)
 
             iter_bar.set_description('Train Iter (loss=%5.3f)' % loss.item())
@@ -170,6 +180,8 @@ class Appr(ApprBase):
                 elif 'til' in self.args.scenario:
                     outputs=output_dict['y']
                     output = outputs[t]
+                elif 'cil' in self.args.scenario:
+                    output=output_dict['y']
                 loss=self.criterion(t,output,targets)
 
                 _,pred=output.max(1)

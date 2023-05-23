@@ -198,7 +198,13 @@ class Appr(object):
             for (name,param),(_,param_old) in zip(self.model.named_parameters(),self.model_old.named_parameters()):
                 loss_reg+=torch.sum(self.fisher[name]*(param_old-param).pow(2))/2
 
-        return self.ce(output,targets)+self.lamb*loss_reg
+        if self.args.use_l1:
+            loss_l1=0
+            for name,param in self.model.named_parameters():
+                loss_l1+=torch.sum(torch.abs(param))
+            return self.ce(output,targets)+self.lamb*loss_reg+self.args.l1_lamb*loss_l1
+        else:
+            return self.ce(output,targets)+self.lamb*loss_reg
     
     def criterion_fabr(self,t,output,targets,attributions,buffer_attributions):
         # Feature Attribution Based Regularization

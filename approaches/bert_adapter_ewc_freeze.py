@@ -81,15 +81,14 @@ class Appr(ApprBase):
                 global_step=self.train_epoch(t,train,iter_bar, optimizer,t_total,global_step)
                 clock1=time.time()
 
-                if phase=='mcl':
-                    train_loss,train_acc,train_f1_macro=self.eval(t,train)
-                    clock2=time.time()
-                    print('time: ',float((clock1-clock0)*10*25))
-                    print('| Epoch {:3d}, time={:5.1f}ms/{:5.1f}ms | Train: loss={:.3f}, f1_avg={:5.1f}% |'.format(e+1,
-                        1000*self.train_batch_size*(clock1-clock0)/len(train),1000*self.train_batch_size*(clock2-clock1)/len(train),train_loss,100*train_acc),end='')
-                    train_loss_save.append(train_loss)
-                    train_acc_save.append(train_acc)
-                    train_f1_macro_save.append(train_f1_macro)
+                train_loss,train_acc,train_f1_macro=self.eval(t,train)
+                clock2=time.time()
+                print('time: ',float((clock1-clock0)*10*25))
+                print('| Epoch {:3d}, time={:5.1f}ms/{:5.1f}ms | Train: loss={:.3f}, f1_avg={:5.1f}% |'.format(e+1,
+                    1000*self.train_batch_size*(clock1-clock0)/len(train),1000*self.train_batch_size*(clock2-clock1)/len(train),train_loss,100*train_acc),end='')
+                train_loss_save.append(train_loss)
+                train_acc_save.append(train_acc)
+                train_f1_macro_save.append(train_f1_macro)
 
                 valid_loss,valid_acc,valid_f1_macro=self.eval(t,valid)
                 print(' Valid: loss={:.3f}, acc={:5.1f}% |'.format(valid_loss,100*valid_acc),end='')
@@ -99,14 +98,12 @@ class Appr(ApprBase):
                 
                 # Adapt lr
                 if best_loss-valid_loss > args.valid_loss_es:
-                    best_loss=valid_loss
-                    best_model=utils.get_model(self.model)
                     patience=self.args.lr_patience
-                    print(' *',end='')
+                    # print(' *',end='')
                 else:
                     patience-=1
-                    if patience<=0:
-                        break
+                    # if patience<=0:
+                        # break
                         # lr/=self.lr_factor
                         # print(' lr={:.1e}'.format(lr),end='')
                         # if lr<self.lr_min:
@@ -114,12 +111,18 @@ class Appr(ApprBase):
                             # break
                         # patience=self.args.lr_patience
                         # self.optimizer=self._get_optimizer(lr,which_type)
+                if valid_loss<best_loss:
+                    best_loss=valid_loss
+                    best_model=utils.get_model(self.model)
+                    print(' *',end='')
+                if patience<=0:
+                    break
 
                 print()
 
-            np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+'mcl_train_loss_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',train_loss_save,'%.4f',delimiter='\t')
-            np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+'mcl_train_acc_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',train_acc_save,'%.4f',delimiter='\t')
-            np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+'mcl_train_f1_macro_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',train_f1_macro_save,'%.4f',delimiter='\t')    
+            np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+phase+'_train_loss_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',train_loss_save,'%.4f',delimiter='\t')
+            np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+phase+'_train_acc_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',train_acc_save,'%.4f',delimiter='\t')
+            np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+phase+'_train_f1_macro_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',train_f1_macro_save,'%.4f',delimiter='\t')    
             np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+phase+'_valid_loss_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',valid_loss_save,'%.4f',delimiter='\t')
             np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+phase+'_valid_acc_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',valid_acc_save,'%.4f',delimiter='\t')
             np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+phase+'_valid_f1_macro_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',valid_f1_macro_save,'%.4f',delimiter='\t')
@@ -144,12 +147,15 @@ class Appr(ApprBase):
                     fisher_old[n]=self.fisher[n].clone()
 
             # if phase!='fo':
-            self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion)
+            self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=args.scenario)
 
             if phase=='fo':
                 # Freeze non-overlapping params (vs layers?)
                 self.fisher=utils.modified_fisher(self.fisher,fisher_old
+                # ,(train_loss_save[0]-train_loss_save[-1])/train_loss_save[0]
+                ,self.model,self.model_old
                 ,self.args.elasticity_down,self.args.elasticity_up
+                ,self.args.freeze_cutoff
                 ,self.args.learning_rate,self.args.lamb
                 ,save_path+str(args.note)+'_seed'+str(args.seed)+'model_'+str(t))
 
@@ -185,6 +191,8 @@ class Appr(ApprBase):
             elif 'til' in self.args.scenario:
                 outputs=output_dict['y']
                 output = outputs[t]
+            elif 'cil' in self.args.scenario:
+                output=output_dict['y']
             loss=self.criterion(t,output,targets)
 
             iter_bar.set_description('Train Iter (loss=%5.3f)' % loss.item())
@@ -224,6 +232,8 @@ class Appr(ApprBase):
                 elif 'til' in self.args.scenario:
                     outputs=output_dict['y']
                     output = outputs[t]
+                elif 'cil' in self.args.scenario:
+                    output=output_dict['y']
                 loss=self.criterion(t,output,targets)
 
                 _,pred=output.max(1)

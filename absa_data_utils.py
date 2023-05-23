@@ -343,7 +343,7 @@ class StringProcessor(DataProcessor):
                 InputExample(text_a=text_a))
         return examples
 
-def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer, mode, dataset='',convert_to_binary=None):
+def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer, mode, dataset='',convert_to_binary=None,idrandom=None):
     """Loads a data file into a list of `InputBatch`s.""" #check later if we can merge this function with the SQuAD preprocessing 
     # label_map = {}
     # for (i, label) in enumerate(label_list):
@@ -353,21 +353,24 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
         label_map={'change': 0, 'sustain': 1, 'neutral': 2}
     elif dataset=='annomi' and convert_to_binary=='neutral_vs_other':
         label_map={'change': 0, 'sustain': 0, 'neutral': 1}
-    elif dataset=='hwu64':
+    elif dataset=='hwu64' and idrandom in [0,1,2,3]:
         label_map={'music':0, 'quirky':1, 'factoid':2, 'remove':3, 'negate':4
-                ,'praise':0, 'sendemail':1, 'explain':2, 'repeat':3, 'affirm':4
-                ,'radio':0, 'confirm':1, 'post':2, 'definition':3, 'dontcare':4
-                ,'recipe':0, 'podcasts':1, 'currency':2, 'events':3, 'commandstop':4
-                ,'createoradd':0, 'stock':1, 'locations':2, 'hue_lightoff':3, 'audiobook':4
-                ,'ticket':0, 'game':1, 'hue_lightchange':2, 'querycontact':3, 'likeness':4
-                ,'music':0, 'sendemail':1, 'post':2, 'events':3, 'audiobook':4
-                ,'quirky':0, 'explain':1, 'definition':2, 'commandstop':3, 'ticket':4
-                ,'factoid':0, 'repeat':1, 'dontcare':2, 'createoradd':3, 'game':4
-                ,'remove':0, 'affirm':1, 'recipe':2, 'stock':3, 'hue_lightchange':4
-                ,'negate':0, 'radio':1, 'podcasts':2, 'locations':3, 'querycontact':4
-                ,'praise':0, 'confirm':1, 'currency':2, 'hue_lightoff':3, 'likeness':4
+                ,'praise':5, 'sendemail':6, 'explain':7, 'repeat':8, 'affirm':9
+                ,'radio':10, 'confirm':11, 'post':12, 'definition':13, 'dontcare':14
+                ,'recipe':15, 'podcasts':16, 'currency':17, 'events':18, 'commandstop':19
+                ,'createoradd':20, 'stock':21, 'locations':22, 'hue_lightoff':23, 'audiobook':24
+                ,'ticket':25, 'game':26, 'hue_lightchange':27, 'querycontact':28, 'likeness':29
+                    }
+    elif dataset=='hwu64' and idrandom in [4,5,6]:
+        label_map={'music':0, 'sendemail':1, 'post':2, 'events':3, 'audiobook':4
+                ,'quirky':5, 'explain':6, 'definition':7, 'commandstop':8, 'ticket':9
+                ,'factoid':10, 'repeat':11, 'dontcare':12, 'createoradd':13, 'game':14
+                ,'remove':15, 'affirm':16, 'recipe':17, 'stock':18, 'hue_lightchange':19
+                ,'negate':20, 'radio':21, 'podcasts':22, 'locations':23, 'querycontact':24
+                ,'praise':25, 'confirm':26, 'currency':27, 'hue_lightoff':28, 'likeness':29
                     }
     else:
+        # print('Label map not found!!')
         label_map={'+': 0,'positive': 0, '-': 1, 'negative': 1, 'neutral': 2}
 
     features = []

@@ -51,6 +51,9 @@ def asc_config(parser):
                         help='temperature for loss function')
     parser.add_argument('--scenario',default='',type=str,required=True,help='(default=%(default)s)')
     # FABR dev args
+    parser.add_argument('--l1_lamb',default=0.000001,type=float,required=False,help='(default=%(default)s)')
+    parser.add_argument('--use_l1',default=False,type=bool,required=False,help='(default=%(default)s)')
+    parser.add_argument('--freeze_cutoff',default=0.99,type=float,required=False,help='(default=%(default)s)')
     parser.add_argument('--mask_scaling',default=0.1,type=float,required=False,help='(default=%(default)s)')
     parser.add_argument('--elasticity_down',default=10,type=float,required=False,help='(default=%(default)s)')
     parser.add_argument('--elasticity_up',default=0.1,type=float,required=False,help='(default=%(default)s)')

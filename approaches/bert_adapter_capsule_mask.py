@@ -53,6 +53,7 @@ class Appr(ApprBase):
 
         best_loss=np.inf
         best_model=utils.get_model(self.model)
+        patience=self.args.lr_patience
 
         # Loop epochs
         for e in range(int(self.args.num_train_epochs)):
@@ -75,11 +76,22 @@ class Appr(ApprBase):
             # print(' Valid: loss={:.3f}, acc={:5.1f}% |'.format(valid_loss,100*valid_acc),end='')
 
             # Adapt lr
+            # if valid_loss<best_loss:
+                # best_loss=valid_loss
+                # best_model=utils.get_model(self.model)
+                # self.logger.info(' *')
+                # # print(' *',end='')
+            if best_loss-valid_loss > args.valid_loss_es:
+                patience=self.args.lr_patience
+                # print(' *',end='')
+            else:
+                patience-=1
             if valid_loss<best_loss:
                 best_loss=valid_loss
                 best_model=utils.get_model(self.model)
-                self.logger.info(' *')
-                # print(' *',end='')
+                print(' *',end='')
+            if patience<=0:
+                break
 
             print()
             # break

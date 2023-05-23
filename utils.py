@@ -4,6 +4,7 @@ from copy import deepcopy
 import torch
 from tqdm import tqdm
 import pickle
+import re
 
 ########################################################################################################################
 
@@ -150,7 +151,7 @@ def is_number(s):
     return False
 ########################################################################################################################
 
-def fisher_matrix_diag_bert(t,train,device,model,criterion,sbatch=20):
+def fisher_matrix_diag_bert(t,train,device,model,criterion,sbatch=20,scenario='til'):
     # Init
     fisher={}
     for n,p in model.named_parameters():
@@ -168,9 +169,13 @@ def fisher_matrix_diag_bert(t,train,device,model,criterion,sbatch=20):
         # Forward and backward
         model.zero_grad()
         output_dict=model.forward(input_ids, segment_ids, input_mask)
-        outputs = output_dict['y']
+        if 'til' in scenario:
+            outputs=output_dict['y']
+            output = outputs[t]
+        elif 'cil' in scenario:
+            output=output_dict['y']
 
-        loss=criterion(t,outputs[t],targets)
+        loss=criterion(t,output,targets)
         loss.backward()
         # Get gradients
         for n,p in model.named_parameters():
@@ -180,15 +185,59 @@ def fisher_matrix_diag_bert(t,train,device,model,criterion,sbatch=20):
     for n,_ in model.named_parameters():
         fisher[n]=fisher[n]/len(train)
         fisher[n]=torch.autograd.Variable(fisher[n],requires_grad=False)
+    
+    # # Normalize by layer
+    # layer_range = {}
+    # layer_min = {}
+    # for i in range(12):
+        # wgts = torch.cat([
+            # fisher['bert.encoder.layer.'+str(i)+'.attention.output.LayerNorm.weight'].flatten()
+            # ,fisher['bert.encoder.layer.'+str(i)+'.attention.output.LayerNorm.bias'].flatten()
+            # ,fisher['bert.encoder.layer.'+str(i)+'.output.LayerNorm.weight'].flatten()
+            # ,fisher['bert.encoder.layer.'+str(i)+'.output.LayerNorm.bias'].flatten()
+            # ,fisher['bert.encoder.layer.'+str(i)+'.attention.output.adapter.fc1.weight'].flatten()
+            # ,fisher['bert.encoder.layer.'+str(i)+'.attention.output.adapter.fc1.bias'].flatten()
+            # ,fisher['bert.encoder.layer.'+str(i)+'.attention.output.adapter.fc2.weight'].flatten()
+            # ,fisher['bert.encoder.layer.'+str(i)+'.attention.output.adapter.fc2.bias'].flatten()
+            # ,fisher['bert.encoder.layer.'+str(i)+'.output.adapter.fc1.weight'].flatten()
+            # ,fisher['bert.encoder.layer.'+str(i)+'.output.adapter.fc1.bias'].flatten()
+            # ,fisher['bert.encoder.layer.'+str(i)+'.output.adapter.fc2.weight'].flatten()
+            # ,fisher['bert.encoder.layer.'+str(i)+'.output.adapter.fc2.bias'].flatten()
+        # ])
+        # # wgts=torch.hstack(wgts).flatten()
+        # assert len(wgts.shape)==1 # check that it is flattened
+        # layer_min[str(i)] = torch.min(wgts)
+        # layer_range[str(i)] = torch.max(wgts)-torch.min(wgts)
+    
+    # for n,_ in model.named_parameters():
+        # if 'output.adapter' in n or 'output.LayerNorm' in n:
+            # i = re.findall("layer\.(\d+)\.",n)[0]
+            # fisher[n]=(fisher[n]-layer_min[i])/layer_range[i]
     return fisher
 
 ########################################################################################################################
-#v2.1-IC
-def modified_fisher(fisher,fisher_old,elasticity_down,elasticity_up,lr,lamb,save_path):
+#v11
+def modified_fisher(fisher,fisher_old
+                    ,model,model_old
+                    ,elasticity_down,elasticity_up
+                    ,freeze_cutoff
+                    ,lr,lamb
+                    ,save_path):
     modified_fisher = {}
     
     check_counter = {}
-    instability_counter = {}
+    
+    # Adapt elasticity_down
+    param_delta = []
+    param_delta_sig = []
+    for (name,param),(_,param_old) in zip(model.named_parameters(),model_old.named_parameters()):
+        if 'output.adapter' in name or 'output.LayerNorm' in name:
+            param_delta.append(torch.mean(torch.abs(param-param_old)).item())
+            param_delta_sig.append(torch.mean(torch.sigmoid(torch.abs(param-param_old))).item())
+    param_delta = np.mean(param_delta)
+    param_delta_sig = np.mean(param_delta_sig)
+    print('Avg param delta:',param_delta)
+    print('Avg param delta sig:',param_delta_sig)
     
     for n in fisher.keys():
         # print(n)
@@ -196,28 +245,25 @@ def modified_fisher(fisher,fisher_old,elasticity_down,elasticity_up,lr,lamb,save
         assert fisher_old[n].shape==fisher[n].shape
         
         if 'output.adapter' in n or 'output.LayerNorm' in n:
-            fisher_gt = torch.gt(fisher_old[n],fisher[n])
-            check_counter[n]=(torch.sum(fisher_gt))
+            fisher_rel = fisher_old[n]/(fisher_old[n]+fisher[n]) # Relative importance
             modified_fisher[n] = fisher_old[n]
             
-            # [1] Important for previous tasks only -> make it less elastic
-            instability_check = lr*lamb*elasticity_down*fisher_old[n][fisher_gt==True]
+            # [1] Important for previous tasks only -> make it less elastic (i.e. increase fisher scaling)
+            instability_check = lr*lamb*elasticity_down*fisher_rel*fisher_old[n]
             instability_check = instability_check>1
-            sum_instability_check = torch.sum(instability_check)
-            if sum_instability_check>0:
-                print('Unstable training!!')
-            instability_counter[n]=[sum_instability_check]
-            modified_fisher[n][fisher_gt==True] = elasticity_down*fisher_old[n][fisher_gt==True]
+            # Adjustment if out of stability region -> Reassign importance score; This essentially freezes the param
+            fisher_old[n][(fisher_rel>0.5) & (instability_check==True)] = 1/(lr*lamb*elasticity_down*fisher_rel[(fisher_rel>0.5) & (instability_check==True)])
+            modified_fisher[n][fisher_rel>0.5] = elasticity_down*fisher_rel[fisher_rel>0.5]*fisher_old[n][fisher_rel>0.5]
             
-            # [2] Other situations: Important for both or only new task or neither -> make it more elastic
-            instability_check = lr*lamb*elasticity_up*fisher_old[n][fisher_gt==False]
+            # [2] Other situations: Important for both or for only new task or neither -> make it more elastic (i.e. decrease fisher scaling)
+            instability_check = lr*lamb*elasticity_up*fisher_rel*fisher_old[n]
             instability_check = instability_check>1
-            sum_instability_check = torch.sum(instability_check)
-            if sum_instability_check>0:
-                print('Unstable training!!')
-            instability_counter[n].append(sum_instability_check)
+            # Adjustment if out of stability region -> Reassign importance score; This essentially freezes the param
+            fisher_old[n][(fisher_rel<=0.5) & (instability_check==True)] = 1/(lr*lamb*elasticity_up*fisher_rel[(fisher_rel<=0.5) & (instability_check==True)])
+            modified_fisher[n][fisher_rel<=0.5] = elasticity_up*fisher_rel[fisher_rel<=0.5]*fisher_old[n][fisher_rel<=0.5]
             
-            modified_fisher[n][fisher_gt==False] = elasticity_up*fisher_old[n][fisher_gt==False]
+            modified_paramcount = torch.sum((fisher_rel<=0.5) & (instability_check==False))
+            check_counter[n]=modified_paramcount
         
         else:
             modified_fisher[n] = fisher_old[n]
@@ -225,8 +271,6 @@ def modified_fisher(fisher,fisher_old,elasticity_down,elasticity_up,lr,lamb,save
     print('Modified paramcount:',np.sum([v.cpu().numpy() for k,v in check_counter.items()]))
     with open(save_path+'_modified_paramcount.pkl', 'wb') as fp:
         pickle.dump(check_counter, fp)
-    with open(save_path+'_instability_paramcount.pkl', 'wb') as fp:
-        pickle.dump(instability_counter, fp)
     
     return modified_fisher
     

@@ -113,10 +113,15 @@ def get(logger=None,args=None):
                     pos_guids.append(example.guid)
                 elif example.label=='negative':
                     neg_guids.append(example.guid)
+            # print('Neg samples:',len(neg_guids))
+            # print('Pos samples:',len(pos_guids))
             # Select random samples
+            num_rand_samples = int(args.subset_data/2)
+            if (len(neg_guids) < num_rand_samples) or (len(pos_guids) < num_rand_samples):
+                num_rand_samples = min(len(neg_guids),len(pos_guids))
             random.seed(args.subset_data) # Set the seed so it always returns the same random subset
-            pos_sample_guids = random.sample(pos_guids,int(args.subset_data/2))
-            neg_sample_guids = random.sample(neg_guids,int(args.subset_data/2))
+            pos_sample_guids = random.sample(pos_guids,num_rand_samples)
+            neg_sample_guids = random.sample(neg_guids,num_rand_samples)
             subset_train_examples = []
             for example in train_examples:
                 if (example.guid in pos_sample_guids) or (example.guid in neg_sample_guids):

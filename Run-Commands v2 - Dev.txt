@@ -1,0 +1,20 @@
+-------------------------------------------------Amazon Sentiment 1000-------------------------------------------------------------
+-----------
+v9.2
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 1000 --approach bert_adapter_ewc_freeze --baseline ewc_freeze --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --fisher_combine max --use_l1 True --l1_lamb 0.0000001 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s1000rME4-EWCFreeze-v9.2/
+-----------
+-------------------------------------------------Amazon Sentiment 200-------------------------------------------------------------
+-----------
+v11
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc_freeze --baseline ewc_freeze --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --fisher_combine max --use_l1 True --l1_lamb 0.0000001 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200rME4-EWCFreeze-v11/
+-----------
+-------------------------------------------------AnnoMI Behaviour-------------------------------------------------------------
+-----------
+v9.2
+
+-----------
+-------------------------------------------------HWU64 Intent Cla-------------------------------------------------------------
+-----------
+v9.2
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario cil --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 500000 --fisher_combine max --use_l1 True --l1_lamb 0.0000001 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuME4-EWCFreeze-v9.2/
+-----------

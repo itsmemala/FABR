@@ -59,6 +59,8 @@ class Net(torch.nn.Module):
             self.last=torch.nn.ModuleList()
             for t,n in self.taskcla:
                 self.last.append(torch.nn.Linear(args.bert_hidden_size,n))
+        elif 'cil' in args.scenario:
+            self.last=torch.nn.Linear(args.bert_hidden_size,sum([n for t,n in self.taskcla]))
 
 
         print('BERT ADAPTER')
@@ -79,6 +81,8 @@ class Net(torch.nn.Module):
             y=[]
             for t,i in self.taskcla:
                 y.append(self.last[t](pooled_output))
+        elif 'cil' in self.args.scenario:
+            y = self.last(pooled_output)
 
         output_dict['y'] = y
         output_dict['normalized_pooled_rep'] = F.normalize(pooled_output, dim=1)
