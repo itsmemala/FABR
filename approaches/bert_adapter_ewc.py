@@ -108,7 +108,7 @@ class Appr(ApprBase):
         if 'dil' in self.args.scenario:
             self.fisher=utils.fisher_matrix_diag_bert_dil(t,train_data,self.device,self.model,self.criterion)
         elif 'til' in self.args.scenario or 'cil' in self.args.scenario:
-            self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=self.args.scenario)
+            self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=self.args.scenario,imp=self.args.imp)
 
         if t>0:
             # Watch out! We do not want to keep t models (or fisher diagonals) in memory, therefore we have to merge fisher diagonals

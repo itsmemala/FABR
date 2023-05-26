@@ -38,9 +38,10 @@ class Appr(ApprBase):
 
         if t>0:
             train_phases = ['fo','mcl']
-            # train_phases = ['mcl']
-        else:
+        elif t==0 and self.args.regularize_t0==False:
             train_phases = ['mcl']
+        elif t==0 and self.args.regularize_t0==True:
+            train_phases = ['fo','mcl']
         
         for phase in train_phases:
             if phase=='fo':
@@ -90,7 +91,7 @@ class Appr(ApprBase):
                 train_acc_save.append(train_acc)
                 train_f1_macro_save.append(train_f1_macro)
 
-                valid_loss,valid_acc,valid_f1_macro=self.eval(t,valid)
+                valid_loss,valid_acc,valid_f1_macro=self.eval_validation(t,valid)
                 print(' Valid: loss={:.3f}, acc={:5.1f}% |'.format(valid_loss,100*valid_acc),end='')
                 valid_loss_save.append(valid_loss)
                 valid_acc_save.append(valid_acc)
@@ -147,17 +148,26 @@ class Appr(ApprBase):
                     fisher_old[n]=self.fisher[n].clone()
 
             # if phase!='fo':
-            self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=args.scenario)
+            self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=args.scenario,imp=self.args.imp)
 
             if phase=='fo':
-                # Freeze non-overlapping params (vs layers?)
-                self.fisher=utils.modified_fisher(self.fisher,fisher_old
-                # ,(train_loss_save[0]-train_loss_save[-1])/train_loss_save[0]
-                ,self.model,self.model_old
-                ,self.args.elasticity_down,self.args.elasticity_up
-                ,self.args.freeze_cutoff
-                ,self.args.learning_rate,self.args.lamb
-                ,save_path+str(args.note)+'_seed'+str(args.seed)+'model_'+str(t))
+                if t==0 and self.args.regularize_t0:
+                    pass
+                    # self.fisher=utils.modified_fisher_t0(self.fisher,
+                    # ,self.model
+                    # ,self.args.elasticity_down,self.args.elasticity_up
+                    # ,self.args.freeze_cutoff
+                    # ,self.args.learning_rate,self.args.lamb
+                    # ,save_path+str(args.note)+'_seed'+str(args.seed)+'model_'+str(t))
+                else:
+                    # Freeze non-overlapping params (vs layers?)
+                    self.fisher=utils.modified_fisher(self.fisher,fisher_old
+                    # ,(train_loss_save[0]-train_loss_save[-1])/train_loss_save[0]
+                    ,self.model,self.model_old
+                    ,self.args.elasticity_down,self.args.elasticity_up
+                    ,self.args.freeze_cutoff
+                    ,self.args.learning_rate,self.args.lamb
+                    ,save_path+str(args.note)+'_seed'+str(args.seed)+'model_'+str(t))
 
             if t>0 and phase=='mcl':
                 # Watch out! We do not want to keep t models (or fisher diagonals) in memory, therefore we have to merge fisher diagonals
@@ -235,6 +245,52 @@ class Appr(ApprBase):
                 elif 'cil' in self.args.scenario:
                     output=output_dict['y']
                 loss=self.criterion(t,output,targets)
+
+                _,pred=output.max(1)
+                hits=(pred==targets).float()
+
+                target_list.append(targets)
+                pred_list.append(pred)
+
+                # Log
+                total_loss+=loss.data.cpu().numpy().item()*real_b
+                total_acc+=hits.sum().data.cpu().numpy().item()
+                total_num+=real_b
+
+            f1=self.f1_compute_fn(y_pred=torch.cat(pred_list,0),y_true=torch.cat(target_list,0),average='macro')
+
+                # break
+
+        return total_loss/total_num,total_acc/total_num,f1
+    
+    def eval_validation(self,t,data,test=None,trained_task=None):
+        total_loss=0
+        total_acc=0
+        total_num=0
+        target_list = []
+        pred_list = []
+
+
+        with torch.no_grad():
+            self.model.eval()
+
+            for step, batch in enumerate(data):
+                batch = [
+                    bat.to(self.device) if bat is not None else None for bat in batch]
+                input_ids, segment_ids, input_mask, targets, _= batch
+                real_b=input_ids.size(0)
+
+                output_dict = self.model.forward(input_ids, segment_ids, input_mask)
+                # Forward
+                if 'dil' in self.args.scenario:
+                    output=output_dict['y']
+                elif 'til' in self.args.scenario:
+                    outputs=output_dict['y']
+                    output = outputs[t]
+                elif 'cil' in self.args.scenario:
+                    output=output_dict['y']
+                # loss=self.criterion(t,output,targets)
+                loss=self.ce(output,targets)
 
                 _,pred=output.max(1)
                 hits=(pred==targets).float()

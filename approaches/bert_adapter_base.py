@@ -26,6 +26,9 @@ from .buffer import Attr_Buffer as Attr_Buffer
 from .buffer import RRR_Buffer as RRR_Buffer
 
 
+def MyBalancedCrossEntropyLoss():
+    return 
+
 class Appr(object):
 
     def warmup_linear(self,x, warmup=0.002):
@@ -57,6 +60,8 @@ class Appr(object):
             class_weights = [0.41, 0.89, 0.16] #'change': 0, 'sustain': 1, 'neutral': 2
             class_weights = torch.FloatTensor(class_weights).cuda()
             self.ce = torch.nn.CrossEntropyLoss(weight=class_weights)
+        elif args.scenario='cil':
+            self.ce = MyBalancedCrossEntropyLoss()
         else:
             self.ce=torch.nn.CrossEntropyLoss()
         self.taskcla = taskcla
@@ -197,6 +202,12 @@ class Appr(object):
             # print(self.model.named_parameters(),self.model_old.named_parameters())
             for (name,param),(_,param_old) in zip(self.model.named_parameters(),self.model_old.named_parameters()):
                 loss_reg+=torch.sum(self.fisher[name]*(param_old-param).pow(2))/2
+        # Regularization for task0
+        if t==0 and (self.args.regularize_t0) and (self.fisher is not None):
+            for (name,param) in self.model.named_parameters():
+                loss_reg+=torch.sum(
+                                    (0.000001/(self.fisher[name]+0.00001)) * (param).pow(2)
+                                    )/2
 
         if self.args.use_l1:
             loss_l1=0

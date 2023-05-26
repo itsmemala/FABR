@@ -5,16 +5,55 @@ v9.2
 -----------
 -------------------------------------------------Amazon Sentiment 200-------------------------------------------------------------
 -----------
-v11
+v9.2
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc_freeze --baseline ewc_freeze --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --fisher_combine max --use_l1 True --l1_lamb 0.0000001 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200rME4-EWCFreeze-v11/
+-----------
+MAS
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc --imp function --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200rME4-MAS/
+-----------
+MAS-a
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc --imp function --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 50 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200rME4-MASa/
+-----------
+MAS Freeze v9.2
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 50 --fisher_combine max --use_l1 True --l1_lamb 0.0000001 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200rME4-MASFreeze-v9.2/
+-----------
+MAS-b Freeze v9.2
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 5 --fisher_combine max --use_l1 True --l1_lamb 0.0000001 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200rME4-MASbFreeze-v9.2/
+-----------
+MAS-c Freeze v9.2
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 0.5 --fisher_combine max --use_l1 True --l1_lamb 0.0000001 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200rME4-MAScFreeze-v9.2/
+-----------
+MAS-c Freeze v11
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 0.5 --fisher_combine max --use_l1 True --l1_lamb 0.0000001 --regularize_t0 True --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200rME4-MAScFreeze-v11/
+-----------
+MAS-c Freeze v12
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 0.5 --fisher_combine max --use_l1 True --l1_lamb 0.0000001 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200rME4-MAScFreeze-v12/
+-----------
+v9.2b
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc_freeze --baseline ewc_freeze --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --fisher_combine max --use_l1 True --l1_lamb 0.0000001 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200rME4-EWCFreeze-v9.2b/
+-----------
+MAS-c Freeze v12.1
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 0.5 --fisher_combine max --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200rME4-MAScFreeze-v12.1/
 -----------
 -------------------------------------------------AnnoMI Behaviour-------------------------------------------------------------
 -----------
-v9.2
-
+MAS-b Freeze v9.2
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 5 --fisher_combine max --use_l1 True --l1_lamb 0.0000001 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/AnnoMIStrME4-MASbFreeze-9.2/
+-----------
+-----------
+MAS-c Freeze v12
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 0.5 --fisher_combine max --use_l1 True --l1_lamb 0.0000001 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/AnnoMIStrME4-MAScFreeze-v12/
 -----------
 -------------------------------------------------HWU64 Intent Cla-------------------------------------------------------------
 -----------
 v9.2
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario cil --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 500000 --fisher_combine max --use_l1 True --l1_lamb 0.0000001 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuME4-EWCFreeze-v9.2/
 -----------
+MAS Freeze v9.2
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --imp function --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario cil --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 500000 --fisher_combine max --use_l1 True --l1_lamb 0.0000001 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuME4-MASFreeze-v9.2/
+-----------
+MAS-c Freeze v12
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario cil --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 50000 --fisher_combine max --use_l1 True --l1_lamb 0.0000001 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuME4-MAScFreeze-v12/
+-----------
+MAS-c Freeze v12.1
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario cil --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 50000 --fisher_combine max --use_l1 True --l1_lamb 0.00001 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuME4-MAScFreeze-v12.1/

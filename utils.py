@@ -151,7 +151,7 @@ def is_number(s):
     return False
 ########################################################################################################################
 
-def fisher_matrix_diag_bert(t,train,device,model,criterion,sbatch=20,scenario='til'):
+def fisher_matrix_diag_bert(t,train,device,model,criterion,sbatch=20,scenario='til',imp='loss'):
     # Init
     fisher={}
     for n,p in model.named_parameters():
@@ -175,16 +175,29 @@ def fisher_matrix_diag_bert(t,train,device,model,criterion,sbatch=20,scenario='t
         elif 'cil' in scenario:
             output=output_dict['y']
 
-        loss=criterion(t,output,targets)
-        loss.backward()
-        # Get gradients
-        for n,p in model.named_parameters():
-            if p.grad is not None:
-                fisher[n]+=sbatch*p.grad.data.pow(2)
+        if imp=='loss':
+            loss=criterion(t,output,targets)
+            loss.backward()
+            # Get gradients
+            for n,p in model.named_parameters():
+                if p.grad is not None:
+                    fisher[n]+=sbatch*p.grad.data.pow(2)
+        elif imp=='function':
+            # Square of the l2-norm: output.pow(2).sum(dim=1)
+            # Calculate square of the l2-norm and then sum for all samples in the batch
+            output = output.pow(2).sum(dim=1).sum()
+            output.backward()
+            # Get gradients
+            for n,p in model.named_parameters():
+                if p.grad is not None:
+                    fisher[n]+=sbatch*torch.abs(p.grad.data)
+        
     # Mean
     for n,_ in model.named_parameters():
         fisher[n]=fisher[n]/len(train)
         fisher[n]=torch.autograd.Variable(fisher[n],requires_grad=False)
+        # if 'output.adapter' in n or 'output.LayerNorm' in n:
+            # print(fisher[n])
     
     # # Normalize by layer
     # layer_range = {}
@@ -238,6 +251,51 @@ def modified_fisher(fisher,fisher_old
     param_delta_sig = np.mean(param_delta_sig)
     print('Avg param delta:',param_delta)
     print('Avg param delta sig:',param_delta_sig)
+    
+    for n in fisher.keys():
+        # print(n)
+        # modified_fisher[n] = fisher_old[n] # This is for comparison without modifying fisher weights in the fo phase
+        assert fisher_old[n].shape==fisher[n].shape
+        
+        if 'output.adapter' in n or 'output.LayerNorm' in n:
+            fisher_rel = fisher_old[n]/(fisher_old[n]+fisher[n]) # Relative importance
+            modified_fisher[n] = fisher_old[n]
+            
+            # [1] Important for previous tasks only -> make it less elastic (i.e. increase fisher scaling)
+            instability_check = lr*lamb*elasticity_down*fisher_rel*fisher_old[n]
+            instability_check = instability_check>1
+            # Adjustment if out of stability region -> Reassign importance score; This essentially freezes the param
+            fisher_old[n][(fisher_rel>0.5) & (instability_check==True)] = 1/(lr*lamb*elasticity_down*fisher_rel[(fisher_rel>0.5) & (instability_check==True)])
+            modified_fisher[n][fisher_rel>0.5] = elasticity_down*fisher_rel[fisher_rel>0.5]*fisher_old[n][fisher_rel>0.5]
+            
+            # [2] Other situations: Important for both or for only new task or neither -> make it more elastic (i.e. decrease fisher scaling)
+            instability_check = lr*lamb*elasticity_up*fisher_rel*fisher_old[n]
+            instability_check = instability_check>1
+            # Adjustment if out of stability region -> Reassign importance score; This essentially freezes the param
+            fisher_old[n][(fisher_rel<=0.5) & (instability_check==True)] = 1/(lr*lamb*elasticity_up*fisher_rel[(fisher_rel<=0.5) & (instability_check==True)])
+            modified_fisher[n][fisher_rel<=0.5] = elasticity_up*fisher_rel[fisher_rel<=0.5]*fisher_old[n][fisher_rel<=0.5]
+            
+            modified_paramcount = torch.sum((fisher_rel<=0.5) & (instability_check==False))
+            check_counter[n]=modified_paramcount
+        
+        else:
+            modified_fisher[n] = fisher_old[n]
+    
+    print('Modified paramcount:',np.sum([v.cpu().numpy() for k,v in check_counter.items()]))
+    with open(save_path+'_modified_paramcount.pkl', 'wb') as fp:
+        pickle.dump(check_counter, fp)
+    
+    return modified_fisher
+########################################################################################################################################
+def modified_fisher_t0(fisher
+                    ,model
+                    ,elasticity_down,elasticity_up
+                    ,freeze_cutoff
+                    ,lr,lamb
+                    ,save_path):
+    modified_fisher = {}
+    
+    check_counter = {}
     
     for n in fisher.keys():
         # print(n)

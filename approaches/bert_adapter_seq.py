@@ -111,6 +111,8 @@ class Appr(ApprBase):
             elif 'til' in self.args.scenario:
                 outputs=output_dict['y']
                 # output = outputs[t]
+            elif 'cil' in self.args.scenario:
+                outputs=output_dict['y']
             loss=self.criterion_train(tasks,outputs,targets)
 
             iter_bar.set_description('Train Iter (loss=%5.3f)' % loss.item())
@@ -150,6 +152,8 @@ class Appr(ApprBase):
                 elif 'til' in self.args.scenario:
                     outputs=output_dict['y']
                     output = outputs[t]
+                elif 'cil' in self.args.scenario:
+                    output=output_dict['y']
                 loss=self.ce(output,targets)
 
                 _,pred=output.max(1)
@@ -204,10 +208,14 @@ class Appr(ApprBase):
                 output=outputs #always shared head
             elif 'til' in self.args.scenario:
                 output = outputs[t]
+            elif 'cil' in self.args.scenario:
+                output = outputs
 
             idx=(tasks==t).data.nonzero().view(-1)
             # print('Debugging:',output.shape,output[0])
             # print('Debugging:',targets.shape,targets[0])
             loss+=self.ce(output[idx,:],targets[idx])*len(idx)
+        
+            loss += self.ce(output,targets)
         return loss/targets.size(0)
 
