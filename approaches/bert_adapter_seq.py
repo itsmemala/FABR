@@ -10,6 +10,7 @@ import argparse
 import random
 from tqdm import tqdm, trange
 import numpy as np
+from collections import Counter
 import torch
 from torch.utils.data import RandomSampler
 from torch.utils.data.distributed import DistributedSampler
@@ -53,6 +54,24 @@ class Appr(ApprBase):
                              t_total=t_total)
 
 
+        all_targets = []
+        for step, batch in enumerate(train):
+            batch = [
+                bat.to(self.device) if bat is not None else None for bat in batch]
+            input_ids, segment_ids, input_mask, targets, tasks= batch
+            all_targets += list(targets.cpu().numpy())
+        class_counts_dict = dict(Counter(all_targets))
+        class_counts = [class_counts_dict[k] for k in np.unique(all_targets)] # .unique() returns ordered list
+        
+        all_targets = []
+        for step, batch in enumerate(valid):
+            batch = [
+                bat.to(self.device) if bat is not None else None for bat in batch]
+            input_ids, segment_ids, input_mask, targets, tasks= batch
+            all_targets += list(targets.cpu().numpy())
+        class_counts_dict = dict(Counter(all_targets))
+        valid_class_counts = [class_counts_dict[k] for k in np.unique(all_targets)]
+
         best_loss=np.inf
         best_model=utils.get_model(self.model)
         patience=self.args.lr_patience
@@ -62,15 +81,15 @@ class Appr(ApprBase):
             # Train
             clock0=time.time()
             iter_bar = tqdm(train, desc='Train Iter (loss=X.XXX)')
-            global_step=self.train_epoch(t,train,iter_bar, optimizer,t_total,global_step)
+            global_step=self.train_epoch(t,train,iter_bar, optimizer,t_total,global_step,class_counts)
             clock1=time.time()
 
-            train_loss=self.eval_validation(t,train)
+            train_loss=self.eval_validation(t,train,class_counts)
             clock2=time.time()
             print('| Epoch {:3d}, time={:5.1f}ms/{:5.1f}ms | Train: loss={:.3f} |'.format(e+1,
                 1000*self.train_batch_size*(clock1-clock0)/len(train),1000*self.train_batch_size*(clock2-clock1)/len(train),train_loss),end='')
 
-            valid_loss=self.eval_validation(t,valid)
+            valid_loss=self.eval_validation(t,valid,valid_class_counts)
             print(' Valid: loss={:.3f} |'.format(valid_loss),end='')
             # Adapt lr
             if best_loss-valid_loss > args.valid_loss_es:
@@ -95,9 +114,10 @@ class Appr(ApprBase):
 
         return
 
-    def train_epoch(self,t,data,iter_bar,optimizer,t_total,global_step):
+    def train_epoch(self,t,data,iter_bar,optimizer,t_total,global_step,class_counts):
         self.num_labels = self.taskcla[t][1]
         self.model.train()
+        
         for step, batch in enumerate(iter_bar):
             # print('step: ',step)
             batch = [
@@ -107,13 +127,13 @@ class Appr(ApprBase):
             output_dict = self.model.forward(input_ids, segment_ids, input_mask)
             # Forward
             if 'dil' in self.args.scenario:
-                output=output_dict['y']
+                outputs=output_dict['y']
             elif 'til' in self.args.scenario:
                 outputs=output_dict['y']
                 # output = outputs[t]
             elif 'cil' in self.args.scenario:
                 outputs=output_dict['y']
-            loss=self.criterion_train(tasks,outputs,targets)
+            loss=self.criterion_train(tasks,outputs,targets,class_counts)
 
             iter_bar.set_description('Train Iter (loss=%5.3f)' % loss.item())
             loss.backward()
@@ -154,7 +174,11 @@ class Appr(ApprBase):
                     output = outputs[t]
                 elif 'cil' in self.args.scenario:
                     output=output_dict['y']
-                loss=self.ce(output,targets)
+                
+                if 'cil' in self.args.scenario and self.args.use_rbs:
+                    loss=self.ce(t,output,targets)
+                else:
+                    loss=self.ce(output,targets)
 
                 _,pred=output.max(1)
                 hits=(pred==targets).float()
@@ -173,7 +197,7 @@ class Appr(ApprBase):
 
         return total_loss/total_num,total_acc/total_num,f1
     
-    def eval_validation(self,_,data):
+    def eval_validation(self,_,data,class_counts):
         total_loss=0
         total_num=0
         self.model.eval()
@@ -189,7 +213,7 @@ class Appr(ApprBase):
                 outputs = output_dict['y']
 
                 # Forward
-                loss=self.criterion_train(tasks,outputs,targets)
+                loss=self.criterion_train(tasks,outputs,targets,class_counts)
 
                 # Log
                 total_loss+=loss.data.cpu().numpy().item()*real_b
@@ -198,8 +222,9 @@ class Appr(ApprBase):
 
         return total_loss/total_num
 
-    def criterion_train(self,tasks,outputs,targets):
+    def criterion_train(self,tasks,outputs,targets,class_counts):
         loss=0
+        # loss2=0
         for t in np.unique(tasks.data.cpu().numpy()):
             t=int(t)
             # output = outputs  # shared head
@@ -214,8 +239,16 @@ class Appr(ApprBase):
             idx=(tasks==t).data.nonzero().view(-1)
             # print('Debugging:',output.shape,output[0])
             # print('Debugging:',targets.shape,targets[0])
-            loss+=self.ce(output[idx,:],targets[idx])*len(idx)
+            if 'cil' in self.args.scenario and self.args.use_rbs:
+                loss+=self.ce(t,output[idx,:],targets[idx],class_counts)*len(idx)
+            else:
+                loss+=self.ce(output[idx,:],targets[idx])*len(idx)                
+            
+            # loss2+=self.ce2(output[idx,:],targets[idx])*len(idx)
+        # try:
+            # assert loss.item()==loss2.item()
+        # except AssertionError:
+            # print(loss.item(),loss2.item()) #TODO: Check why there is variation after the 4th decimal
         
-            loss += self.ce(output,targets)
         return loss/targets.size(0)
 

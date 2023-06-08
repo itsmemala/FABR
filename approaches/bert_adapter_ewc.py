@@ -71,7 +71,7 @@ class Appr(ApprBase):
             print('| Epoch {:3d}, time={:5.1f}ms/{:5.1f}ms | Train: loss={:.3f}, f1_avg={:5.1f}% |'.format(e+1,
                 1000*self.train_batch_size*(clock1-clock0)/len(train),1000*self.train_batch_size*(clock2-clock1)/len(train),train_loss,100*train_acc),end='')
 
-            valid_loss,valid_acc,valid_f1_macro=self.eval(t,valid)
+            valid_loss,valid_acc,valid_f1_macro=self.eval_validation(t,valid)
             print(' Valid: loss={:.3f}, acc={:5.1f}% |'.format(valid_loss,100*valid_acc),end='')
             # Adapt lr
             if best_loss-valid_loss > args.valid_loss_es:
@@ -105,10 +105,11 @@ class Appr(ApprBase):
             for n,_ in self.model.named_parameters():
                 fisher_old[n]=self.fisher[n].clone()
 
-        if 'dil' in self.args.scenario:
-            self.fisher=utils.fisher_matrix_diag_bert_dil(t,train_data,self.device,self.model,self.criterion)
-        elif 'til' in self.args.scenario or 'cil' in self.args.scenario:
-            self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=self.args.scenario,imp=self.args.imp)
+        # if 'dil' in self.args.scenario:
+            # self.fisher=utils.fisher_matrix_diag_bert_dil(t,train_data,self.device,self.model,self.criterion)
+        # elif 'til' in self.args.scenario or 'cil' in self.args.scenario:
+            # self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=self.args.scenario,imp=self.args.imp)
+        self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=args.scenario,imp=self.args.imp)
 
         if t>0:
             # Watch out! We do not want to keep t models (or fisher diagonals) in memory, therefore we have to merge fisher diagonals
@@ -183,6 +184,52 @@ class Appr(ApprBase):
                 elif 'cil' in self.args.scenario:
                     output=output_dict['y']
                 loss=self.criterion(t,output,targets)
+
+                _,pred=output.max(1)
+                hits=(pred==targets).float()
+
+                target_list.append(targets)
+                pred_list.append(pred)
+
+                # Log
+                total_loss+=loss.data.cpu().numpy().item()*real_b
+                total_acc+=hits.sum().data.cpu().numpy().item()
+                total_num+=real_b
+
+            f1=self.f1_compute_fn(y_pred=torch.cat(pred_list,0),y_true=torch.cat(target_list,0),average='macro')
+
+                # break
+
+        return total_loss/total_num,total_acc/total_num,f1
+    
+    def eval_validation(self,t,data,test=None,trained_task=None):
+        total_loss=0
+        total_acc=0
+        total_num=0
+        target_list = []
+        pred_list = []
+
+
+        with torch.no_grad():
+            self.model.eval()
+
+            for step, batch in enumerate(data):
+                batch = [
+                    bat.to(self.device) if bat is not None else None for bat in batch]
+                input_ids, segment_ids, input_mask, targets, _= batch
+                real_b=input_ids.size(0)
+
+                output_dict = self.model.forward(input_ids, segment_ids, input_mask)
+                # Forward
+                if 'dil' in self.args.scenario:
+                    output=output_dict['y']
+                elif 'til' in self.args.scenario:
+                    outputs=output_dict['y']
+                    output = outputs[t]
+                elif 'cil' in self.args.scenario:
+                    output=output_dict['y']
+                # loss=self.criterion(t,output,targets)
+                loss=self.ce(output,targets)
 
                 _,pred=output.max(1)
                 hits=(pred==targets).float()

@@ -25,9 +25,20 @@ from .buffer import Buffer as Buffer
 from .buffer import Attr_Buffer as Attr_Buffer
 from .buffer import RRR_Buffer as RRR_Buffer
 
+def log_softmax(t,x,class_counts=None):
+    # print('This is my custom function.')
+    # TODO: Replace 5,30 with arg in case number of classes per task is a variable
+    classes_seen = t*5
+    classes_cur = 5
+    classes_later = 30-(classes_seen+classes_cur)
+    my_lambda = torch.cat([torch.ones(classes_seen)*1,torch.ones(classes_cur)*torch.tensor(class_counts),torch.zeros(classes_later)], dim=0).cuda()
+    assert len(my_lambda)==x.shape[1]
+    return torch.log(my_lambda*torch.exp(x) / torch.sum(my_lambda*torch.exp(x), dim=1, keepdim=True))
 
 def MyBalancedCrossEntropyLoss():
-    return 
+    def my_bal_ce(t, outputs, targets, class_counts=None):
+        return torch.nn.functional.nll_loss(log_softmax(t,outputs,class_counts), targets)
+    return my_bal_ce
 
 class Appr(object):
 
@@ -60,7 +71,10 @@ class Appr(object):
             class_weights = [0.41, 0.89, 0.16] #'change': 0, 'sustain': 1, 'neutral': 2
             class_weights = torch.FloatTensor(class_weights).cuda()
             self.ce = torch.nn.CrossEntropyLoss(weight=class_weights)
-        elif args.scenario='cil':
+        elif args.scenario=='cil' and args.use_rbs==False:
+            self.ce=torch.nn.CrossEntropyLoss()
+            # self.ce2 = MyBalancedCrossEntropyLoss()
+        elif args.scenario=='cil' and args.use_rbs:
             self.ce = MyBalancedCrossEntropyLoss()
         else:
             self.ce=torch.nn.CrossEntropyLoss()
@@ -193,7 +207,7 @@ class Appr(object):
 
         y_true = y_true.cpu().numpy()
         y_pred = y_pred.cpu().numpy()
-        return f1_score(y_true, y_pred,average=average)
+        return f1_score(y_true, y_pred, average=average, labels=np.unique(y_true))
 
     def criterion(self,t,output,targets):
         # Regularization for all previous tasks
@@ -208,6 +222,8 @@ class Appr(object):
                 loss_reg+=torch.sum(
                                     (0.000001/(self.fisher[name]+0.00001)) * (param).pow(2)
                                     )/2
+
+        # assert self.ce(output,targets)==self.ce2(output,targets)
 
         if self.args.use_l1:
             loss_l1=0

@@ -79,7 +79,7 @@ def get(logger=None,args=None):
         num_train_steps = int(math.ceil(len(train_examples) / args.train_batch_size)) * args.num_train_epochs
 
         train_features = data_utils.convert_examples_to_features(
-            train_examples, label_list, args.max_seq_length, tokenizer, "asc", dataset='hwu64', idrandom=args.idrandom)
+            train_examples, label_list, args.max_seq_length, tokenizer, "asc", dataset='hwu64', idrandom=args.idrandom, scenario=args.scenario)
         logger.info("Loading Task"+str(t)+": "+str(random_sep[t]))
         # logger.info("***** Running training *****")
         # logger.info("  Num examples = %d", len(train_examples))
@@ -106,7 +106,7 @@ def get(logger=None,args=None):
 
         valid_examples = processor.get_dev_examples(dataset)
         valid_features=data_utils.convert_examples_to_features(
-            valid_examples, label_list, args.max_seq_length, tokenizer, "asc", dataset='hwu64', idrandom=args.idrandom)
+            valid_examples, label_list, args.max_seq_length, tokenizer, "asc", dataset='hwu64', idrandom=args.idrandom, scenario=args.scenario)
         valid_all_input_ids = torch.tensor([f.input_ids for f in valid_features], dtype=torch.long)
         valid_all_segment_ids = torch.tensor([f.segment_ids for f in valid_features], dtype=torch.long)
         valid_all_input_mask = torch.tensor([f.input_mask for f in valid_features], dtype=torch.long)
@@ -127,7 +127,8 @@ def get(logger=None,args=None):
         label_list = processor.get_labels()
         tokenizer = BertTokenizer.from_pretrained(args.bert_model)
         eval_examples = processor.get_test_examples(dataset)
-        eval_features = data_utils.convert_examples_to_features(eval_examples, label_list, args.max_seq_length, tokenizer, "asc", dataset='hwu64', idrandom=args.idrandom)
+        eval_features = data_utils.convert_examples_to_features(
+            eval_examples, label_list, args.max_seq_length, tokenizer, "asc", dataset='hwu64', idrandom=args.idrandom, scenario=args.scenario)
 
         # logger.info("***** Running evaluation *****")
         # logger.info("  Num examples = %d", len(eval_examples))

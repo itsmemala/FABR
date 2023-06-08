@@ -54,7 +54,9 @@ class Net(torch.nn.Module):
         self.dropout = nn.Dropout(args.hidden_dropout_prob)
         self.args = args
         if 'dil' in args.scenario:
-            self.last=torch.nn.Linear(args.bert_hidden_size,args.nclasses)
+            # self.last=torch.nn.Linear(args.bert_hidden_size,args.nclasses)
+            self.last=torch.nn.Linear(args.bert_hidden_size,self.taskcla[0][1]) # Infer from the first task
+            print('\nDIL with '+str(self.taskcla[0][1])+' classes\n')
         elif 'til' in args.scenario:
             self.last=torch.nn.ModuleList()
             for t,n in self.taskcla:

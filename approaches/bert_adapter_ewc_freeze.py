@@ -135,6 +135,12 @@ class Appr(ApprBase):
             # torch.save(self.model.state_dict(), save_path+str(args.note)+'_seed'+str(args.seed)+'_model'+str(t))
 
             if phase=='mcl':
+                if t>0:
+                    frozen_paramcount = 0
+                    for (name,param),(_,param_old) in zip(self.model.named_parameters(),self.model_old.named_parameters()):
+                        if torch.sum(param_old-param)==0:
+                            frozen_paramcount+=1
+                    print('Frozen paramcount:',frozen_paramcount)
                 # Update old
                 self.model_old=deepcopy(self.model)
                 self.model_old.eval()
@@ -162,7 +168,7 @@ class Appr(ApprBase):
                 else:
                     # Freeze non-overlapping params (vs layers?)
                     self.fisher=utils.modified_fisher(self.fisher,fisher_old
-                    # ,(train_loss_save[0]-train_loss_save[-1])/train_loss_save[0]
+                    ,train_f1_macro_save,self.args.lr_patience
                     ,self.model,self.model_old
                     ,self.args.elasticity_down,self.args.elasticity_up
                     ,self.args.freeze_cutoff
