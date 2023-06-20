@@ -27,13 +27,18 @@ from .buffer import RRR_Buffer as RRR_Buffer
 
 def log_softmax(t,x,class_counts=None):
     # print('This is my custom function.')
+    # print(x[0,:])
+    if class_counts is None:
+        class_counts=1
     # TODO: Replace 5,30 with arg in case number of classes per task is a variable
     classes_seen = t*5
     classes_cur = 5
     classes_later = 30-(classes_seen+classes_cur)
     my_lambda = torch.cat([torch.ones(classes_seen)*1,torch.ones(classes_cur)*torch.tensor(class_counts),torch.zeros(classes_later)], dim=0).cuda()
     assert len(my_lambda)==x.shape[1]
-    return torch.log(my_lambda*torch.exp(x) / torch.sum(my_lambda*torch.exp(x), dim=1, keepdim=True))
+    softmax = my_lambda*torch.exp(x) / torch.sum(my_lambda*torch.exp(x), dim=1, keepdim=True)
+    softmax_clamp = softmax.clamp(min=1e-16) # Clamp the zeros to avoid nan gradients
+    return torch.log(softmax_clamp)
 
 def MyBalancedCrossEntropyLoss():
     def my_bal_ce(t, outputs, targets, class_counts=None):
@@ -209,7 +214,7 @@ class Appr(object):
         y_pred = y_pred.cpu().numpy()
         return f1_score(y_true, y_pred, average=average, labels=np.unique(y_true))
 
-    def criterion(self,t,output,targets):
+    def criterion(self,t,output,targets,class_counts=None):
         # Regularization for all previous tasks
         loss_reg=0
         if t>0:
@@ -225,13 +230,18 @@ class Appr(object):
 
         # assert self.ce(output,targets)==self.ce2(output,targets)
 
+        if 'cil' in self.args.scenario and self.args.use_rbs:
+            loss_ce = self.ce(t,output,targets,class_counts)
+        else:
+            loss_ce = self.ce(output,targets)
+
         if self.args.use_l1:
             loss_l1=0
             for name,param in self.model.named_parameters():
                 loss_l1+=torch.sum(torch.abs(param))
-            return self.ce(output,targets)+self.lamb*loss_reg+self.args.l1_lamb*loss_l1
+            return loss_ce+self.lamb*loss_reg+self.args.l1_lamb*loss_l1
         else:
-            return self.ce(output,targets)+self.lamb*loss_reg
+            return loss_ce+self.lamb*loss_reg
     
     def criterion_fabr(self,t,output,targets,attributions,buffer_attributions):
         # Feature Attribution Based Regularization

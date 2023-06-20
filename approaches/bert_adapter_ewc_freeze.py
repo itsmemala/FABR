@@ -121,6 +121,7 @@ class Appr(ApprBase):
 
                 print()
 
+            best_index = valid_loss_save.index(best_loss)
             np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+phase+'_train_loss_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',train_loss_save,'%.4f',delimiter='\t')
             np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+phase+'_train_acc_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',train_acc_save,'%.4f',delimiter='\t')
             np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+phase+'_train_f1_macro_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',train_f1_macro_save,'%.4f',delimiter='\t')    
@@ -154,7 +155,7 @@ class Appr(ApprBase):
                     fisher_old[n]=self.fisher[n].clone()
 
             # if phase!='fo':
-            self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=args.scenario,imp=self.args.imp)
+            self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=args.scenario,imp=self.args.imp,imp_layer_norm=self.args.imp_layer_norm)
 
             if phase=='fo':
                 if t==0 and self.args.regularize_t0:
@@ -168,7 +169,7 @@ class Appr(ApprBase):
                 else:
                     # Freeze non-overlapping params (vs layers?)
                     self.fisher=utils.modified_fisher(self.fisher,fisher_old
-                    ,train_f1_macro_save,self.args.lr_patience
+                    ,train_f1_macro_save,best_index
                     ,self.model,self.model_old
                     ,self.args.elasticity_down,self.args.elasticity_up
                     ,self.args.freeze_cutoff

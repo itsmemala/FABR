@@ -76,3 +76,9 @@ Adapter SEQ (NLR)
 Adapter EWC (NLR)
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.02 --lr_patience 5 --learning_rate 0.003 --lamb 2500000 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuMH-EWC/
 -----------
+Adapter MAS (NLR)
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --imp function --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.02 --lr_patience 5 --learning_rate 0.003 --lamb 2500 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuMH-MAS/
+-----------
+CTR (NLR)
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach ctr --baseline None --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.02 --lr_patience 5 --learning_rate 0.003 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuMH-CTR/
+-----------

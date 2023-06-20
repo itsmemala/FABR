@@ -10,6 +10,7 @@ import argparse
 import random
 from tqdm import tqdm, trange
 import numpy as np
+from collections import Counter
 import torch
 from torch.utils.data import RandomSampler
 from torch.utils.data.distributed import DistributedSampler
@@ -53,6 +54,24 @@ class Appr(ApprBase):
                              t_total=t_total)
 
 
+        all_targets = []
+        for step, batch in enumerate(train):
+            batch = [
+                bat.to(self.device) if bat is not None else None for bat in batch]
+            input_ids, segment_ids, input_mask, targets, tasks= batch
+            all_targets += list(targets.cpu().numpy())
+        class_counts_dict = dict(Counter(all_targets))
+        class_counts = [class_counts_dict[k] for k in np.unique(all_targets)] # .unique() returns ordered list
+        
+        all_targets = []
+        for step, batch in enumerate(valid):
+            batch = [
+                bat.to(self.device) if bat is not None else None for bat in batch]
+            input_ids, segment_ids, input_mask, targets, tasks= batch
+            all_targets += list(targets.cpu().numpy())
+        class_counts_dict = dict(Counter(all_targets))
+        valid_class_counts = [class_counts_dict[k] for k in np.unique(all_targets)]
+        
         best_loss=np.inf
         best_model=utils.get_model(self.model)
         patience=self.args.lr_patience
@@ -62,7 +81,7 @@ class Appr(ApprBase):
             # Train
             clock0=time.time()
             iter_bar = tqdm(train, desc='Train Iter (loss=X.XXX)')
-            global_step=self.train_epoch(t,train,iter_bar, optimizer,t_total,global_step)
+            global_step=self.train_epoch(t,train,iter_bar, optimizer,t_total,global_step,class_counts)
             clock1=time.time()
 
             train_loss,train_acc,train_f1_macro=self.eval(t,train)
@@ -71,7 +90,7 @@ class Appr(ApprBase):
             print('| Epoch {:3d}, time={:5.1f}ms/{:5.1f}ms | Train: loss={:.3f}, f1_avg={:5.1f}% |'.format(e+1,
                 1000*self.train_batch_size*(clock1-clock0)/len(train),1000*self.train_batch_size*(clock2-clock1)/len(train),train_loss,100*train_acc),end='')
 
-            valid_loss,valid_acc,valid_f1_macro=self.eval_validation(t,valid)
+            valid_loss,valid_acc,valid_f1_macro=self.eval_validation(t,valid,class_counts=valid_class_counts)
             print(' Valid: loss={:.3f}, acc={:5.1f}% |'.format(valid_loss,100*valid_acc),end='')
             # Adapt lr
             if best_loss-valid_loss > args.valid_loss_es:
@@ -109,7 +128,7 @@ class Appr(ApprBase):
             # self.fisher=utils.fisher_matrix_diag_bert_dil(t,train_data,self.device,self.model,self.criterion)
         # elif 'til' in self.args.scenario or 'cil' in self.args.scenario:
             # self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=self.args.scenario,imp=self.args.imp)
-        self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=args.scenario,imp=self.args.imp)
+        self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=args.scenario,imp=self.args.imp,imp_layer_norm=self.args.imp_layer_norm)
 
         if t>0:
             # Watch out! We do not want to keep t models (or fisher diagonals) in memory, therefore we have to merge fisher diagonals
@@ -124,7 +143,7 @@ class Appr(ApprBase):
 
         return
 
-    def train_epoch(self,t,data,iter_bar,optimizer,t_total,global_step):
+    def train_epoch(self,t,data,iter_bar,optimizer,t_total,global_step,class_counts):
         self.num_labels = self.taskcla[t][1]
         self.model.train()
         for step, batch in enumerate(iter_bar):
@@ -142,7 +161,7 @@ class Appr(ApprBase):
                 output = outputs[t]
             elif 'cil' in self.args.scenario:
                 output=output_dict['y']
-            loss=self.criterion(t,output,targets)
+            loss=self.criterion(t,output,targets,class_counts)
 
             iter_bar.set_description('Train Iter (loss=%5.3f)' % loss.item())
             loss.backward()
@@ -183,7 +202,11 @@ class Appr(ApprBase):
                     output = outputs[t]
                 elif 'cil' in self.args.scenario:
                     output=output_dict['y']
-                loss=self.criterion(t,output,targets)
+                # loss=self.criterion(t,output,targets)
+                if 'cil' in self.args.scenario and self.args.use_rbs:
+                    loss=self.ce(t,output,targets)
+                else:
+                    loss=self.criterion(t,output,targets)
 
                 _,pred=output.max(1)
                 hits=(pred==targets).float()
@@ -202,7 +225,7 @@ class Appr(ApprBase):
 
         return total_loss/total_num,total_acc/total_num,f1
     
-    def eval_validation(self,t,data,test=None,trained_task=None):
+    def eval_validation(self,t,data,test=None,trained_task=None,class_counts=None):
         total_loss=0
         total_acc=0
         total_num=0
@@ -228,8 +251,12 @@ class Appr(ApprBase):
                     output = outputs[t]
                 elif 'cil' in self.args.scenario:
                     output=output_dict['y']
-                # loss=self.criterion(t,output,targets)
-                loss=self.ce(output,targets)
+                # # loss=self.criterion(t,output,targets)
+                # loss=self.ce(output,targets)
+                if 'cil' in self.args.scenario and self.args.use_rbs:
+                    loss=self.ce(t,output,targets,class_counts)
+                else:
+                    loss=self.ce(output,targets)
 
                 _,pred=output.max(1)
                 hits=(pred==targets).float()
