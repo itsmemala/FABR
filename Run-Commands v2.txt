@@ -34,6 +34,9 @@ Adapter MTL
 Adapter SEQ
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_seq --baseline seq --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --use_cls_wgts True --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/AnnoMIStrME4-AdapterSEQ/
 -----------
+Adapter SEQ Attributions
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_seq --baseline seq --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --use_cls_wgts True --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --save_metadata test_attributions --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/AnnoMIStrME4-AdapterSEQAttr/
+-----------
 EWC
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/AnnoMIStrME4-EWC/
 -----------

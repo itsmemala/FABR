@@ -34,7 +34,7 @@ def log_softmax(t,x,class_counts=None):
     classes_seen = t*5
     classes_cur = 5
     classes_later = 30-(classes_seen+classes_cur)
-    my_lambda = torch.cat([torch.ones(classes_seen)*1,torch.ones(classes_cur)*torch.tensor(class_counts),torch.zeros(classes_later)], dim=0).cuda()
+    my_lambda = torch.cat([torch.ones(classes_seen)*0,torch.ones(classes_cur)*torch.tensor(class_counts),torch.zeros(classes_later)], dim=0).cuda()
     assert len(my_lambda)==x.shape[1]
     softmax = my_lambda*torch.exp(x) / torch.sum(my_lambda*torch.exp(x), dim=1, keepdim=True)
     softmax_clamp = softmax.clamp(min=1e-16) # Clamp the zeros to avoid nan gradients

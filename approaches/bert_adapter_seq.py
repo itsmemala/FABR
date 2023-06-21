@@ -25,6 +25,7 @@ sys.path.append("./approaches/base/")
 from .bert_adapter_base import Appr as ApprBase
 from .my_optimization import BertAdam
 
+from captum.attr import LayerIntegratedGradients
 
 class Appr(ApprBase):
 
@@ -251,4 +252,63 @@ class Appr(ApprBase):
             # print(loss.item(),loss2.item()) #TODO: Check why there is variation after the 4th decimal
         
         return loss/targets.size(0)
+    
+    def get_attributions(self,t,data,input_tokens=None):
+        target_list = []
+        pred_list = []
 
+
+        # with torch.no_grad():
+            # self.model.eval()
+
+        for step, batch in enumerate(data):
+            batch = [
+                bat.to(self.device) if bat is not None else None for bat in batch]
+            input_ids, segment_ids, input_mask, targets, tasks= batch
+            real_b=input_ids.size(0)
+
+            output_dict = self.model.forward(input_ids, segment_ids, input_mask)
+            # Forward
+            if 'dil' in self.args.scenario:
+                output=output_dict['y']
+            elif 'til' in self.args.scenario:
+                outputs=output_dict['y']
+                output = outputs[t]
+            elif 'cil' in self.args.scenario:
+                output=output_dict['y']
+
+            _,pred=output.max(1)
+            hits=(pred==targets).float()
+
+            target_list.append(targets)
+            pred_list.append(pred)
+
+
+            # Calculate attributions
+            integrated_gradients = LayerIntegratedGradients(self.model, self.model.bert.embeddings)
+            # loop through inputs to avoid cuda memory err
+            loop_size=4
+            for i in range(math.ceil(input_ids.shape[0]/loop_size)):
+                # print(i)
+                attributions_ig_b = integrated_gradients.attribute(inputs=input_ids[i*loop_size:i*loop_size+loop_size,:]
+                                                                    # Note: Attributions are not computed with respect to these additional arguments
+                                                                    , additional_forward_args=(segment_ids[i*loop_size:i*loop_size+loop_size,:], input_mask[i*loop_size:i*loop_size+loop_size,:]
+                                                                                              ,self.args.fa_method, t)
+                                                                    , target=targets[i*loop_size:i*loop_size+loop_size], n_steps=10 # Attributions with respect to actual class
+                                                                    # ,baselines=(baseline_embedding)
+                                                                    )
+                attributions_ig_b = attributions_ig_b.detach().cpu()
+                # Get the max attribution across embeddings per token
+                attributions_ig_b = torch.sum(attributions_ig_b, dim=2)
+                if i==0 and step==0:
+                    attributions_ig = attributions_ig_b
+                else:
+                    attributions_ig = torch.cat((attributions_ig,attributions_ig_b),axis=0)
+            # print('Input shape:',input_ids.shape)
+            # print('IG attributions:',attributions_ig.shape)
+            # print('Attributions:',attributions_ig[0,:])
+            attributions = attributions_ig
+            # optimizer.zero_grad()
+
+
+        return torch.cat(target_list,0),torch.cat(pred_list,0),attributions

@@ -319,7 +319,7 @@ for t,ncla in taskcla:
         if args.save_metadata=='all' or args.save_metadata=='test_attributions':        
             # Test data attributions
             # Calculate attributions on current task after training
-            if args.approach=='bert_fine_tune' or args.approach=='bert_adapter_rrr' or args.approach=='ctr':
+            if args.approach=='bert_fine_tune' or args.approach=='bert_adapter_rrr' or args.approach=='ctr' or args.approach=='bert_adapter_seq':
                 targets, predictions, attributions = appr.get_attributions(eval_head,test_dataloader,input_tokens=data[u]['test_tokens'])
             elif 'kan' in args.approach:
                 targets, predictions, attributions = appr.eval(eval_head,test_dataloader,'mcl',my_debug=1,input_tokens=data[u]['test_tokens'])
