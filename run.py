@@ -306,7 +306,7 @@ for t,ncla in taskcla:
             train_dataloader = DataLoader(train, sampler=train_sampler, batch_size=args.train_batch_size)
             if args.approach=='bert_adapter_ewc_fabr':
                 targets, predictions, attributions = appr.get_attributions(eval_head,train_dataloader)
-            elif args.approach=='bert_fine_tune' or args.approach=='bert_adapter_rrr' or args.approach=='ctr':
+            elif args.approach=='bert_fine_tune' or args.approach=='bert_adapter_rrr' or args.approach=='ctr' or args.approach=='bert_adapter_seq':
                 targets, predictions, attributions = appr.get_attributions(eval_head,train_dataloader,input_tokens=data[u]['train_tokens'])
             elif 'kan' in args.approach:
                 targets, predictions, attributions = appr.eval(eval_head,train_dataloader,'mcl',my_debug=1,input_tokens=data[u]['train_tokens'])

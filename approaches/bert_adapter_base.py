@@ -25,24 +25,26 @@ from .buffer import Buffer as Buffer
 from .buffer import Attr_Buffer as Attr_Buffer
 from .buffer import RRR_Buffer as RRR_Buffer
 
-def log_softmax(t,x,class_counts=None):
+
+def log_softmax(idrandom,t,x,class_counts=None):
     # print('This is my custom function.')
     # print(x[0,:])
     if class_counts is None:
         class_counts=1
     # TODO: Replace 5,30 with arg in case number of classes per task is a variable
-    classes_seen = t*5
-    classes_cur = 5
-    classes_later = 30-(classes_seen+classes_cur)
-    my_lambda = torch.cat([torch.ones(classes_seen)*0,torch.ones(classes_cur)*torch.tensor(class_counts),torch.zeros(classes_later)], dim=0).cuda()
+    my_lambda = utils.get_my_lambda(idrandom,t,class_counts)
+    # classes_seen = t*5
+    # classes_cur = 5
+    # classes_later = 30-(classes_seen+classes_cur)
+    # my_lambda = torch.cat([torch.ones(classes_seen)*0,torch.ones(classes_cur)*torch.tensor(class_counts),torch.zeros(classes_later)], dim=0).cuda()
     assert len(my_lambda)==x.shape[1]
     softmax = my_lambda*torch.exp(x) / torch.sum(my_lambda*torch.exp(x), dim=1, keepdim=True)
     softmax_clamp = softmax.clamp(min=1e-16) # Clamp the zeros to avoid nan gradients
     return torch.log(softmax_clamp)
 
-def MyBalancedCrossEntropyLoss():
+def MyBalancedCrossEntropyLoss(idrandom):
     def my_bal_ce(t, outputs, targets, class_counts=None):
-        return torch.nn.functional.nll_loss(log_softmax(t,outputs,class_counts), targets)
+        return torch.nn.functional.nll_loss(log_softmax(idrandom,t,outputs,class_counts), targets)
     return my_bal_ce
 
 class Appr(object):
@@ -80,7 +82,7 @@ class Appr(object):
             self.ce=torch.nn.CrossEntropyLoss()
             # self.ce2 = MyBalancedCrossEntropyLoss()
         elif args.scenario=='cil' and args.use_rbs:
-            self.ce = MyBalancedCrossEntropyLoss()
+            self.ce = MyBalancedCrossEntropyLoss(self.args.idrandom)
         else:
             self.ce=torch.nn.CrossEntropyLoss()
         self.taskcla = taskcla

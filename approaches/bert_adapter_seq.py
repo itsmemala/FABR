@@ -294,7 +294,7 @@ class Appr(ApprBase):
                                                                     # Note: Attributions are not computed with respect to these additional arguments
                                                                     , additional_forward_args=(segment_ids[i*loop_size:i*loop_size+loop_size,:], input_mask[i*loop_size:i*loop_size+loop_size,:]
                                                                                               ,self.args.fa_method, t)
-                                                                    , target=targets[i*loop_size:i*loop_size+loop_size], n_steps=10 # Attributions with respect to actual class
+                                                                    , target=pred[i*loop_size:i*loop_size+loop_size], n_steps=10 # Attributions with respect to predicted class
                                                                     # ,baselines=(baseline_embedding)
                                                                     )
                 attributions_ig_b = attributions_ig_b.detach().cpu()
