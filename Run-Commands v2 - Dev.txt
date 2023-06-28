@@ -122,11 +122,20 @@ EWC-RBS2.1
 EWC-RBS2.2
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --backbone bert_adapter --baseline ewc --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 5000000 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuRBS2.2-EWC/
 -----------
+EWC-RBS2.2 Max+L1
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --backbone bert_adapter --baseline ewc --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 5000000 --fisher_combine max --use_l1 True --l1_lamb 0.0001 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuRBS2.2-EWCMaxL1/
+-----------
 EWC-RBS Max+L1
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --backbone bert_adapter --baseline ewc --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 500000 --fisher_combine max --use_l1 True --l1_lamb 0.0001 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuRBS2-EWCMaxL1/
 -----------
-MAS-RBS
-!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --imp function --backbone bert_adapter --baseline ewc --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 500 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuRBS-MAS/
+MAS-RBS2
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --imp function --backbone bert_adapter --baseline ewc --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 500 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuRBS2-MAS/
+-----------
+MAS-RBS2.1
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --imp function --backbone bert_adapter --baseline ewc --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 2500 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuRBS2.1-MAS/
+-----------
+MAS-RBS2.2
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --imp function --backbone bert_adapter --baseline ewc --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 5000 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuRBS2.2-MAS/
 -----------
 MAS-RBS Max+L1
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --imp function --backbone bert_adapter --baseline ewc --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 500 --fisher_combine max --use_l1 True --l1_lamb 0.0001 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuRBS2-MASMaxL1/
