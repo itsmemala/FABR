@@ -151,11 +151,19 @@ def is_number(s):
     return False
 ########################################################################################################################
 
-def fisher_matrix_diag_bert(t,train,device,model,criterion,sbatch=20,scenario='til',imp='loss',imp_layer_norm=False):
+def fisher_matrix_diag_bert(t,train,device,model,criterion,sbatch=20,scenario='til',imp='loss',adjust_final=False,imp_layer_norm=False):
     # Init
     fisher={}
+    fisher_true={}
+    train_true=0
+    train_false=0
+    fisher_fal={}
     for n,p in model.named_parameters():
+        # print(n)
         fisher[n]=0*p.data
+        fisher_true[n]=0*p.data
+        fisher_fal[n]=0*p.data
+        
     # Compute
     model.train()
 
@@ -176,30 +184,103 @@ def fisher_matrix_diag_bert(t,train,device,model,criterion,sbatch=20,scenario='t
             output=output_dict['y']
         elif 'dil' in scenario:
             output=output_dict['y']
+        
+        _,pred=output.max(1)
+        true_pred_idx=(pred==targets).nonzero().squeeze()
+        false_pred_idx=(pred!=targets).nonzero().squeeze()
+        train_true+=sum(pred==targets)
+        train_false+=sum(pred!=targets)
 
         if imp=='loss':
-            loss=criterion(t,output,targets)
-            loss.backward()
-            # Get gradients
-            for n,p in model.named_parameters():
-                if p.grad is not None:
-                    fisher[n]+=sbatch*p.grad.data.pow(2)
+            if adjust_final:
+                if sum(pred==targets)>0:
+                    loss=criterion(t,torch.index_select(output, dim=0, index=true_pred_idx),torch.index_select(targets, dim=0, index=true_pred_idx))
+                    loss.backward(retain_graph=True)
+                    # Get gradients
+                    for n,p in model.named_parameters():
+                        if p.grad is not None and 'last' in n: #Replaced 'layer.11' with 'last'
+                            fisher_true[n]+=sbatch*p.grad.data.pow(2)
+                    model.zero_grad()
+                if sum(pred!=targets)>0:
+                    loss=criterion(t,torch.index_select(output, dim=0, index=false_pred_idx),torch.index_select(targets, dim=0, index=false_pred_idx))
+                    loss.backward(retain_graph=True)
+                    # Get gradients
+                    for n,p in model.named_parameters():
+                        if p.grad is not None and 'last' in n:
+                            fisher_fal[n]+=sbatch*p.grad.data.pow(2)
+                    model.zero_grad()
+                loss=criterion(t,output,targets)
+                loss.backward # Think if this will be affected by the retain_graph=True
+                # Get gradients
+                for n,p in model.named_parameters():
+                    if p.grad is not None:
+                        if 'last' in n and sum(pred==targets)==0:
+                            fisher_true[n]+=0
+                        elif 'last' in n and sum(pred!=targets)==0:
+                            fisher_fal[n]+=0
+                        else:
+                            fisher[n]+=sbatch*p.grad.data.pow(2)
+            else:
+                loss=criterion(t,output,targets)
+                loss.backward()
+                # Get gradients
+                for n,p in model.named_parameters():
+                    if p.grad is not None:
+                        fisher[n]+=sbatch*p.grad.data.pow(2)
+            
         elif imp=='function':
-            # Square of the l2-norm: output.pow(2).sum(dim=1)
-            # Calculate square of the l2-norm and then sum for all samples in the batch
-            output = output.pow(2).sum(dim=1).sum()
-            output.backward()
-            # Get gradients
-            for n,p in model.named_parameters():
-                if p.grad is not None:
-                    fisher[n]+=sbatch*torch.abs(p.grad.data)
+            if adjust_final:
+                if sum(pred==targets)>0:
+                    output1 = torch.index_select(output, dim=0, index=true_pred_idx).pow(2).sum(dim=1).sum()
+                    output1.backward(retain_graph=True)
+                    # Get gradients
+                    for n,p in model.named_parameters():
+                        if p.grad is not None and 'last' in n:
+                            fisher_true[n]+=sbatch*torch.abs(p.grad.data)
+                    model.zero_grad()
+                if sum(pred!=targets)>0:
+                    output2 = torch.index_select(output, dim=0, index=false_pred_idx).pow(2).sum(dim=1).sum()
+                    output2.backward(retain_graph=True) # Think if this will be affected by the retain_graph=True
+                    # Get gradients
+                    for n,p in model.named_parameters():
+                        if p.grad is not None and 'last' in n:
+                            fisher_fal[n]+=sbatch*torch.abs(p.grad.data)
+                    model.zero_grad()
+                output = output.pow(2).sum(dim=1).sum()
+                output.backward() # Think if this will be affected by the retain_graph=True
+                # Get gradients
+                for n,p in model.named_parameters():
+                    if p.grad is not None:
+                        if 'last' in n and sum(pred==targets)==0:
+                            fisher_true[n]+=0
+                        elif 'last' in n and sum(pred!=targets)==0:
+                            fisher_fal[n]+=0
+                        else:
+                            fisher[n]+=sbatch*torch.abs(p.grad.data)
+            else:
+                # Square of the l2-norm: output.pow(2).sum(dim=1)
+                # Calculate square of the l2-norm and then sum for all samples in the batch
+                output = output.pow(2).sum(dim=1).sum()
+                output.backward()
+                # Get gradients
+                for n,p in model.named_parameters():
+                    if p.grad is not None:
+                        fisher[n]+=sbatch*torch.abs(p.grad.data)
         
     # Mean
     for n,_ in model.named_parameters():
-        fisher[n]=fisher[n]/len(train)
-        fisher[n]=torch.autograd.Variable(fisher[n],requires_grad=False)
-        # if 'output.adapter' in n or 'output.LayerNorm' in n:
-            # print(fisher[n])
+        if adjust_final and 'last' in n:
+            # fisher[n]=fisher_true[n]/train_true #v18
+            fisher_true[n] = fisher_true[n]/train_true
+            fisher_fal[n] = fisher_fal[n]/train_false
+            fisher_check = fisher_true[n]/(fisher_true[n]+fisher_fal[n])
+            fisher[n][fisher_check>0.5] = fisher_true[n][fisher_check>0.5]
+            fisher[n][fisher_check<=0.5] = 0.0000000000001 # Small value ~ 0
+        else:
+            fisher[n]=fisher[n]/len(train)
+            fisher[n]=torch.autograd.Variable(fisher[n],requires_grad=False)
+            # if 'output.adapter' in n or 'output.LayerNorm' in n:
+                # print(fisher[n])
     
     # Normalize by layer
     if imp_layer_norm:
@@ -271,7 +352,7 @@ def get_my_lambda(idrandom,t,class_counts):
     return my_lambda
 
 ########################################################################################################################
-#v17
+# v17,v18,v19
 def modified_fisher(fisher,fisher_old
                     ,train_f1,best_index
                     ,model,model_old
@@ -279,6 +360,7 @@ def modified_fisher(fisher,fisher_old
                     ,freeze_cutoff
                     ,lr,lamb
                     ,save_path):
+    frel_cut = 0.5
     modified_fisher = {}
     
     check_counter = {}
@@ -298,7 +380,9 @@ def modified_fisher(fisher,fisher_old
         # modified_fisher[n] = fisher_old[n] # This is for comparison without modifying fisher weights in the fo phase
         assert fisher_old[n].shape==fisher[n].shape
         
-        if 'output.adapter' in n or 'output.LayerNorm' in n:
+        if 'output.adapter' in n or 'output.LayerNorm' in n: #or 'last' in n:
+            # if 'last' in n:
+                # print('calculating for last layer...\n\n')
             fisher_rel = fisher_old[n]/(fisher_old[n]+fisher[n]) # Relative importance
             rel_fisher_counter[n] = fisher_rel
             
@@ -308,19 +392,19 @@ def modified_fisher(fisher,fisher_old
             instability_check = lr*lamb*elasticity_down*fisher_rel*fisher_old[n]
             instability_check = instability_check>1
             # Adjustment if out of stability region -> Reassign importance score; This essentially freezes the param
-            fisher_old[n][(fisher_rel>0.5) & (instability_check==True)] = 1/(lr*lamb*elasticity_down*fisher_rel[(fisher_rel>0.5) & (instability_check==True)])
-            modified_fisher[n][fisher_rel>0.5] = elasticity_down*fisher_rel[fisher_rel>0.5]*fisher_old[n][fisher_rel>0.5]
-            frozen_counter[n] = [torch.sum((fisher_rel>0.5) & (instability_check==True))]
+            # fisher_old[n][(fisher_rel>frel_cut) & (instability_check==True)] = 1/(lr*lamb*elasticity_down*fisher_rel[(fisher_rel>frel_cut) & (instability_check==True)])
+            modified_fisher[n][fisher_rel>frel_cut] = elasticity_down*fisher_rel[fisher_rel>frel_cut]*fisher_old[n][fisher_rel>frel_cut]
+            frozen_counter[n] = [torch.sum((fisher_rel>frel_cut) & (instability_check==True))]
             
             # [2] Other situations: Important for both or for only new task or neither -> make it more elastic (i.e. decrease fisher scaling)
             instability_check = lr*lamb*elasticity_up*fisher_rel*fisher_old[n]
             instability_check = instability_check>1
             # Adjustment if out of stability region -> Reassign importance score; This essentially freezes the param
-            fisher_old[n][(fisher_rel<=0.5) & (instability_check==True)] = 1/(lr*lamb*elasticity_up*fisher_rel[(fisher_rel<=0.5) & (instability_check==True)])
-            modified_fisher[n][fisher_rel<=0.5] = elasticity_up*fisher_rel[fisher_rel<=0.5]*fisher_old[n][fisher_rel<=0.5]
-            frozen_counter[n].append(torch.sum((fisher_rel<=0.5) & (instability_check==True)))
+            # fisher_old[n][(fisher_rel<=frel_cut) & (instability_check==True)] = 1/(lr*lamb*elasticity_up*fisher_rel[(fisher_rel<=frel_cut) & (instability_check==True)])
+            modified_fisher[n][fisher_rel<=frel_cut] = elasticity_up*fisher_rel[fisher_rel<=frel_cut]*fisher_old[n][fisher_rel<=frel_cut]
+            frozen_counter[n].append(torch.sum((fisher_rel<=frel_cut) & (instability_check==True)))
             
-            modified_paramcount = torch.sum((fisher_rel<=0.5) & (instability_check==False))
+            modified_paramcount = torch.sum((fisher_rel<=frel_cut) & (instability_check==False))
             check_counter[n]=modified_paramcount
         
         else:

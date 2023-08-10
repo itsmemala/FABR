@@ -927,3 +927,69 @@ def modified_fisher(fisher,fisher_old
         pickle.dump(rel_fisher_counter, fp)
     
     return modified_fisher
+########################################################################################################################
+# v17,v18,v19
+def modified_fisher(fisher,fisher_old
+                    ,train_f1,best_index
+                    ,model,model_old
+                    ,elasticity_down,elasticity_up
+                    ,freeze_cutoff
+                    ,lr,lamb
+                    ,save_path):
+    modified_fisher = {}
+    
+    check_counter = {}
+    frozen_counter = {}
+    rel_fisher_counter = {}
+    
+    # Adapt elasticity
+    train_f1_diff = (train_f1[best_index]-train_f1[0])*100
+    if train_f1_diff<2:
+        train_f1_diff=2
+    elasticity_down=train_f1_diff
+    elasticity_up=1/(train_f1_diff)
+    print('Elasticity adaptation:',train_f1_diff,elasticity_down,elasticity_up)
+    
+    for n in fisher.keys():
+        # print(n)
+        # modified_fisher[n] = fisher_old[n] # This is for comparison without modifying fisher weights in the fo phase
+        assert fisher_old[n].shape==fisher[n].shape
+        
+        if 'output.adapter' in n or 'output.LayerNorm' in n:
+            fisher_rel = fisher_old[n]/(fisher_old[n]+fisher[n]) # Relative importance
+            rel_fisher_counter[n] = fisher_rel
+            
+            modified_fisher[n] = fisher_old[n]
+            
+            # [1] Important for previous tasks only -> make it less elastic (i.e. increase fisher scaling)
+            instability_check = lr*lamb*elasticity_down*fisher_rel*fisher_old[n]
+            instability_check = instability_check>1
+            # Adjustment if out of stability region -> Reassign importance score; This essentially freezes the param
+            fisher_old[n][(fisher_rel>0.5) & (instability_check==True)] = 1/(lr*lamb*elasticity_down*fisher_rel[(fisher_rel>0.5) & (instability_check==True)])
+            modified_fisher[n][fisher_rel>0.5] = elasticity_down*fisher_rel[fisher_rel>0.5]*fisher_old[n][fisher_rel>0.5]
+            frozen_counter[n] = [torch.sum((fisher_rel>0.5) & (instability_check==True))]
+            
+            # [2] Other situations: Important for both or for only new task or neither -> make it more elastic (i.e. decrease fisher scaling)
+            instability_check = lr*lamb*elasticity_up*fisher_rel*fisher_old[n]
+            instability_check = instability_check>1
+            # Adjustment if out of stability region -> Reassign importance score; This essentially freezes the param
+            fisher_old[n][(fisher_rel<=0.5) & (instability_check==True)] = 1/(lr*lamb*elasticity_up*fisher_rel[(fisher_rel<=0.5) & (instability_check==True)])
+            modified_fisher[n][fisher_rel<=0.5] = elasticity_up*fisher_rel[fisher_rel<=0.5]*fisher_old[n][fisher_rel<=0.5]
+            frozen_counter[n].append(torch.sum((fisher_rel<=0.5) & (instability_check==True)))
+            
+            modified_paramcount = torch.sum((fisher_rel<=0.5) & (instability_check==False))
+            check_counter[n]=modified_paramcount
+        
+        else:
+            modified_fisher[n] = fisher_old[n]
+    
+    print('Modified paramcount:',np.sum([v.cpu().numpy() for k,v in check_counter.items()]))
+    with open(save_path+'_modified_paramcount.pkl', 'wb') as fp:
+        pickle.dump(check_counter, fp)
+    print('Frozen paramcount:',np.sum([v[0].cpu().numpy() for k,v in frozen_counter.items()]),np.sum([v[1].cpu().numpy() for k,v in frozen_counter.items()]))
+    with open(save_path+'_frozen_paramcount.pkl', 'wb') as fp:
+        pickle.dump(frozen_counter, fp)
+    with open(save_path+'_relative_fisher.pkl', 'wb') as fp:
+        pickle.dump(rel_fisher_counter, fp)
+    
+    return modified_fisher

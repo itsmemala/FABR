@@ -12,6 +12,9 @@ CTR
 EWC
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200rME4-EWC/
 -----------
+EWC.1
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 25000 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200rME4-EWC.1/
+-----------
 EWC Norm
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 0.0005 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200rME4-EWCNorm/
 -----------
@@ -25,6 +28,24 @@ Adapter SEQ
 -----------
 EWC
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario dil --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200rSH-EWC/
+-----------
+EWC.1
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario dil --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 25000 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200rSH-EWC.1/
+-----------
+EWC.2
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario dil --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 50000 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200rSH-EWC.2/
+-----------
+EWC.3
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario dil --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 100000 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200rSH-EWC.3/
+-----------
+MAS
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc --imp function --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario dil --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 0.1 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200rSH-MAS/
+-----------
+MAS.1
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc --imp function --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario dil --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 0.25 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200rSH-MAS.1/
+-----------
+MAS.2
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc --imp function --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario dil --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 0.5 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/s200rSH-MAS.2/
 -----------
 -------------------------------------------------AnnoMI Behaviour-------------------------------------------------------------
 -----------
@@ -57,8 +78,26 @@ Adapter SEQ
 EWC
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/AnnoMIStrSH-EWC/
 -----------
+EWC.1
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 25000 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/AnnoMIStrSH-EWC.1/
+-----------
+EWC.2
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 50000 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/AnnoMIStrSH-EWC.2/
+-----------
+EWC.3
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 100000 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/AnnoMIStrSH-EWC.3/
+-----------
+EWC.4
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 500 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/AnnoMIStrSH-EWC.4/
+-----------
 MAS
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc --imp function --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 0.5 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/AnnoMIStrSH-MAS/
+-----------
+MAS.1
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc --imp function --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 0.25 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/AnnoMIStrSH-MAS.1/
+-----------
+MAS.2
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc --imp function --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 0.1 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/AnnoMIStrSH-MAS.2/
 -----------
 -------------------------------------------------HWU64 Intent Cla-------------------------------------------------------------
 -----------
@@ -85,9 +124,26 @@ Adapter SEQ (NLR)
 Adapter EWC (NLR)
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.02 --lr_patience 5 --learning_rate 0.003 --lamb 2500000 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuMH-EWC/
 -----------
+Adapter EWC.1 (NLR)
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.02 --lr_patience 5 --learning_rate 0.003 --lamb 5000000 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuMH-EWC.1/
+-----------
 Adapter MAS (NLR)
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --imp function --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.02 --lr_patience 5 --learning_rate 0.003 --lamb 2500 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuMH-MAS/
+-----------
+MAS.1
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --imp function --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.02 --lr_patience 5 --learning_rate 0.003 --lamb 15000 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuMH-MAS.1/
+-----------
+MAS.2
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --imp function --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.02 --lr_patience 5 --learning_rate 0.003 --lamb 50000 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuMH-MAS.2/
+-----------
+MAS.3
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --imp function --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.02 --lr_patience 5 --learning_rate 0.003 --lamb 75000 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuMH-MAS.3/
 -----------
 CTR (NLR)
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach ctr --baseline None --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.02 --lr_patience 5 --learning_rate 0.003 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuMH-CTR/
 -----------
+KAN
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_gru_kan_ncl --baseline None --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 100 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuMH-KAN/
+-----------
+TASKDROP
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach taskdrop --baseline None --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 100 --my_save_path /content/gdrive/MyDrive/s200_kan_myocc_attributions_lfa/hwuMH-TASKDROP/

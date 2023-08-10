@@ -10,6 +10,7 @@ import argparse
 import random
 from tqdm import tqdm, trange
 import numpy as np
+from collections import Counter
 import torch
 from torch.utils.data import RandomSampler
 from torch.utils.data.distributed import DistributedSampler
@@ -92,8 +93,12 @@ class Appr(ApprBase):
         
             train_loss_save,train_acc_save,train_f1_macro_save = [],[],[]
             valid_loss_save,valid_acc_save,valid_f1_macro_save = [],[],[]
+            if phase == 'fo':
+                epochs = self.args.la_num_train_epochs
+            else:
+                epochs = self.args.num_train_epochs
             # Loop epochs
-            for e in range(int(self.args.num_train_epochs)):
+            for e in range(int(epochs)):
                 # Train
                 clock0=time.time()
                 iter_bar = tqdm(train, desc='Train Iter (loss=X.XXX)')
@@ -173,7 +178,7 @@ class Appr(ApprBase):
                     fisher_old[n]=self.fisher[n].clone()
 
             # if phase!='fo':
-            self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=args.scenario,imp=self.args.imp,imp_layer_norm=self.args.imp_layer_norm)
+            self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=args.scenario,imp=self.args.imp,adjust_final=self.args.adjust_final,imp_layer_norm=self.args.imp_layer_norm)
 
             if phase=='fo':
                 if t==0 and self.args.regularize_t0:

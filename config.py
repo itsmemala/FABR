@@ -51,6 +51,8 @@ def asc_config(parser):
                         help='temperature for loss function')
     parser.add_argument('--scenario',default='',type=str,required=True,help='(default=%(default)s)')
     # FABR dev args
+    parser.add_argument("--la_num_train_epochs",default=50,type=int,help="Total number of training epochs in the look-ahead phase.")
+    parser.add_argument('--adjust_final',default=False,type=bool,required=False,help='(default=%(default)s)')
     parser.add_argument('--imp_layer_norm',default=False,type=bool,required=False,help='(default=%(default)s)')
     parser.add_argument('--use_rbs',default=False,type=bool,required=False,help='(default=%(default)s)')
     parser.add_argument('--regularize_t0',default=False,type=bool,required=False,help='(default=%(default)s)')
