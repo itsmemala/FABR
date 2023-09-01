@@ -25,6 +25,8 @@ sys.path.append("./approaches/base/")
 from .bert_adapter_base import Appr as ApprBase
 from .my_optimization import BertAdam
 
+from captum.attr import LayerIntegratedGradients
+import pickle
 
 class Appr(ApprBase):
 
@@ -99,6 +101,24 @@ class Appr(ApprBase):
                 epochs = self.args.num_train_epochs
             # Loop epochs
             for e in range(int(epochs)):
+                if phase=='fo' and e==0 and t==3:
+                    # Fisher weights
+                    lastart_fisher,grad_dir_lastart=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=args.scenario,imp=self.args.imp,adjust_final=self.args.adjust_final,imp_layer_norm=self.args.imp_layer_norm,get_grad_dir=True)
+                    # Save
+                    if self.args.save_metadata=='all':
+                        # Attributions
+                        targets, predictions, attributions = self.get_attributions(t,train)
+                        np.savez_compressed(save_path+str(args.note)+'_seed'+str(args.seed)+'_attributions_model'+str(t)+'task'+str(t)+'_lastart'
+                                        ,targets=targets.cpu()
+                                        ,predictions=predictions.cpu()
+                                        ,attributions=attributions.cpu()
+                                        )
+                        # Fisher weights
+                        with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_lastart_fisher_task'+str(t)+'.pkl', 'wb') as fp:
+                            pickle.dump(lastart_fisher, fp)
+                        with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_lastart_graddir_task'+str(t)+'.pkl', 'wb') as fp:
+                            pickle.dump(grad_dir_lastart, fp)
+            
                 # Train
                 clock0=time.time()
                 iter_bar = tqdm(train, desc='Train Iter (loss=X.XXX)')
@@ -155,6 +175,15 @@ class Appr(ApprBase):
             # Restore best
             utils.set_model_(self.model,best_model)
             
+            if self.args.save_metadata=='all'and phase=='fo' and t==3:
+                # Attributions
+                targets, predictions, attributions = self.get_attributions(t,train)
+                np.savez_compressed(save_path+str(args.note)+'_seed'+str(args.seed)+'_attributions_model'+str(t)+'task'+str(t)+'_laend'
+                                ,targets=targets.cpu()
+                                ,predictions=predictions.cpu()
+                                ,attributions=attributions.cpu()
+                                )
+            
             # Save model
             # torch.save(self.model.state_dict(), save_path+str(args.note)+'_seed'+str(args.seed)+'_model'+str(t))
 
@@ -172,32 +201,36 @@ class Appr(ApprBase):
 
             # Fisher ops
             if t>0 and phase=='fo':
-            # if t>0:
                 fisher_old={}
                 for n,_ in self.model.named_parameters():
                     fisher_old[n]=self.fisher[n].clone()
 
-            # if phase!='fo':
-            self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=args.scenario,imp=self.args.imp,adjust_final=self.args.adjust_final,imp_layer_norm=self.args.imp_layer_norm)
+            self.fisher,grad_dir_laend=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=args.scenario,imp=self.args.imp,adjust_final=self.args.adjust_final,imp_layer_norm=self.args.imp_layer_norm,get_grad_dir=True)
+            if  self.args.save_metadata=='all'and phase=='fo' and t==3:
+                with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_laend_fisher_task'+str(t)+'.pkl', 'wb') as fp:
+                    pickle.dump(self.fisher, fp)
+                with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_laend_graddir_task'+str(t)+'.pkl', 'wb') as fp:
+                    pickle.dump(grad_dir_laend, fp)
 
             if phase=='fo':
-                if t==0 and self.args.regularize_t0:
-                    pass
-                    # self.fisher=utils.modified_fisher_t0(self.fisher,
-                    # ,self.model
-                    # ,self.args.elasticity_down,self.args.elasticity_up
-                    # ,self.args.freeze_cutoff
-                    # ,self.args.learning_rate,self.args.lamb
-                    # ,save_path+str(args.note)+'_seed'+str(args.seed)+'model_'+str(t))
-                else:
-                    # Freeze non-overlapping params (vs layers?)
+                # Freeze non-overlapping params
+                if t==3:
                     self.fisher=utils.modified_fisher(self.fisher,fisher_old
                     ,train_f1_macro_save,best_index
                     ,self.model,self.model_old
                     ,self.args.elasticity_down,self.args.elasticity_up
                     ,self.args.freeze_cutoff
                     ,self.args.learning_rate,self.args.lamb
+                    ,grad_dir_lastart,grad_dir_laend,lastart_fisher
                     ,save_path+str(args.note)+'_seed'+str(args.seed)+'model_'+str(t))
+                else:
+                    self.fisher=utils.modified_fisher(self.fisher,fisher_old
+                    ,train_f1_macro_save,best_index
+                    ,self.model,self.model_old
+                    ,self.args.elasticity_down,self.args.elasticity_up
+                    ,self.args.freeze_cutoff
+                    ,self.args.learning_rate,self.args.lamb
+                    ,save_path=save_path+str(args.note)+'_seed'+str(args.seed)+'model_'+str(t))
 
             if t>0 and phase=='mcl':
                 # Watch out! We do not want to keep t models (or fisher diagonals) in memory, therefore we have to merge fisher diagonals
@@ -207,8 +240,8 @@ class Appr(ApprBase):
                         #self.fisher[n]=0.5*(self.fisher[n]+fisher_old[n])
                     elif self.args.fisher_combine=='max':
                         self.fisher[n]=torch.maximum(self.fisher[n],fisher_old[n])
-                    elif self.args.fisher_combine=='sum':
-                        self.fisher[n]=torch.add(self.fisher[n],fisher_old[n])
+                with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_fisher_task'+str(t)+'.pkl', 'wb') as fp:
+                    pickle.dump(self.fisher, fp)
 
             if phase=='fo':
                 utils.set_model_(self.model,mcl_model) # Reset to main model after fisher overlap check
@@ -343,3 +376,66 @@ class Appr(ApprBase):
 
         return total_loss/total_num,total_acc/total_num,f1
 
+    def get_attributions(self,t,data,input_tokens=None):
+        target_list = []
+        pred_list = []
+
+
+        # with torch.no_grad():
+            # self.model.eval()
+
+        for step, batch in enumerate(data):
+            batch = [
+                bat.to(self.device) if bat is not None else None for bat in batch]
+            input_ids, segment_ids, input_mask, targets, tasks= batch
+            real_b=input_ids.size(0)
+
+            output_dict = self.model.forward(input_ids, segment_ids, input_mask)
+            # Forward
+            if 'dil' in self.args.scenario:
+                output=output_dict['y']
+            elif 'til' in self.args.scenario:
+                outputs=output_dict['y']
+                output = outputs[t]
+            elif 'cil' in self.args.scenario:
+                output=output_dict['y']
+            loss=self.criterion(t,output,targets)
+
+            _,pred=output.max(1)
+            hits=(pred==targets).float()
+
+            target_list.append(targets)
+            pred_list.append(pred)
+
+
+            # Calculate attributions
+            integrated_gradients = LayerIntegratedGradients(self.model, self.model.bert.embeddings)
+            # loop through inputs to avoid cuda memory err
+            if t==2:
+                loop_size=6
+            else:
+                loop_size=3
+            for i in range(math.ceil(input_ids.shape[0]/loop_size)):
+                # print(i)
+                attributions_ig_b = integrated_gradients.attribute(inputs=input_ids[i*loop_size:i*loop_size+loop_size,:]
+                                                                    # Note: Attributions are not computed with respect to these additional arguments
+                                                                    , additional_forward_args=(segment_ids[i*loop_size:i*loop_size+loop_size,:], input_mask[i*loop_size:i*loop_size+loop_size,:]
+                                                                                              ,self.args.fa_method, t)
+                                                                    , target=targets[i*loop_size:i*loop_size+loop_size], n_steps=10 # Attributions with respect to actual class
+                                                                    # ,baselines=(baseline_embedding)
+                                                                    )
+                attributions_ig_b = attributions_ig_b.detach().cpu()
+                # Get the max attribution across embeddings per token
+                # attributions_ig_b = torch.sum(attributions_ig_b, dim=2)
+                if i==0 and step==0:
+                    attributions_ig = attributions_ig_b
+                else:
+                    attributions_ig = torch.cat((attributions_ig,attributions_ig_b),axis=0)
+            # print('Input shape:',input_ids.shape)
+            # print('IG attributions:',attributions_ig.shape)
+            # print('Attributions:',attributions_ig[0,:])
+            attributions = attributions_ig
+            # optimizer.zero_grad()
+
+
+        return torch.cat(target_list,0),torch.cat(pred_list,0),attributions

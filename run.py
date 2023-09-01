@@ -298,7 +298,7 @@ for t,ncla in taskcla:
                 # #TODO: Check why check_loss==test_loss fails for ctr
                 # assert check_loss==test_loss and check_acc==test_acc and check_f1==test_f1
                    
-        if args.save_metadata=='all' or args.save_metadata=='train_attributions':
+        if (args.save_metadata=='all' or args.save_metadata=='train_attributions') and u in [2,3]:
             # Train data attributions
             # Calculate attributions on all previous tasks and current task after training
             train = data[u]['train']
@@ -306,7 +306,7 @@ for t,ncla in taskcla:
             train_dataloader = DataLoader(train, sampler=train_sampler, batch_size=args.train_batch_size)
             if args.approach=='bert_adapter_ewc_fabr':
                 targets, predictions, attributions = appr.get_attributions(eval_head,train_dataloader)
-            elif args.approach=='bert_fine_tune' or args.approach=='bert_adapter_rrr' or args.approach=='ctr' or args.approach=='bert_adapter_seq':
+            elif args.approach=='bert_fine_tune' or args.approach=='bert_adapter_rrr' or args.approach=='ctr' or args.approach=='bert_adapter_seq' or args.approach=='bert_adapter_ewc_freeze':
                 targets, predictions, attributions = appr.get_attributions(eval_head,train_dataloader,input_tokens=data[u]['train_tokens'])
             elif 'kan' in args.approach:
                 targets, predictions, attributions = appr.eval(eval_head,train_dataloader,'mcl',my_debug=1,input_tokens=data[u]['train_tokens'])
@@ -316,10 +316,10 @@ for t,ncla in taskcla:
                                 ,attributions=attributions.cpu()
                                 )
         
-        if args.save_metadata=='all' or args.save_metadata=='test_attributions':        
+        if (args.save_metadata=='all' or args.save_metadata=='test_attributions') and u in [2,3]:        
             # Test data attributions
             # Calculate attributions on current task after training
-            if args.approach=='bert_fine_tune' or args.approach=='bert_adapter_rrr' or args.approach=='ctr' or args.approach=='bert_adapter_seq':
+            if args.approach=='bert_fine_tune' or args.approach=='bert_adapter_rrr' or args.approach=='ctr' or args.approach=='bert_adapter_seq' or args.approach=='bert_adapter_ewc_freeze':
                 targets, predictions, attributions = appr.get_attributions(eval_head,test_dataloader,input_tokens=data[u]['test_tokens'])
             elif 'kan' in args.approach:
                 targets, predictions, attributions = appr.eval(eval_head,test_dataloader,'mcl',my_debug=1,input_tokens=data[u]['test_tokens'])

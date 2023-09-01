@@ -223,12 +223,12 @@ class Appr(object):
             # print(self.model.named_parameters(),self.model_old.named_parameters())
             for (name,param),(_,param_old) in zip(self.model.named_parameters(),self.model_old.named_parameters()):
                 loss_reg+=torch.sum(self.fisher[name]*(param_old-param).pow(2))/2
-        # Regularization for task0
-        if t==0 and (self.args.regularize_t0) and (self.fisher is not None):
-            for (name,param) in self.model.named_parameters():
-                loss_reg+=torch.sum(
-                                    (0.000001/(self.fisher[name]+0.00001)) * (param).pow(2)
-                                    )/2
+        # # Regularization for task0
+        # if t==0 and (self.args.regularize_t0) and (self.fisher is not None):
+            # for (name,param) in self.model.named_parameters():
+                # loss_reg+=torch.sum(
+                                    # (0.000001/(self.fisher[name]+0.00001)) * (param).pow(2)
+                                    # )/2
 
         # assert self.ce(output,targets)==self.ce2(output,targets)
 
