@@ -283,7 +283,7 @@ def fisher_matrix_diag_bert(t,train,device,model,criterion,sbatch=20,scenario='t
             fisher[n]=fisher[n]/len(train)
             fisher[n]=torch.autograd.Variable(fisher[n],requires_grad=False)
             grad_dir[n]=grad_dir[n]/len(train)
-            grad_dir[n]=torch.autograd.Variable(grad_dir[n],requires_grad=False)
+            # grad_dir[n]=torch.autograd.Variable(grad_dir[n],requires_grad=False)
             # if 'output.adapter' in n or 'output.LayerNorm' in n:
                 # print(fisher[n])
     
@@ -399,7 +399,9 @@ def modified_fisher(fisher,fisher_old
             if grad_dir_lastart is not None:
                 alpha_delta = (fisher[n] - lastart_fisher[n])
                 graddir = torch.abs(grad_dir_laend[n] - grad_dir_lastart[n])
-                check_graddir = ((graddir-alpha_delta)/graddir)>1
+                check_graddir = torch.nan_to_num((graddir-alpha_delta)/graddir,nan=0,posinf=0,neginf=0)
+                check_graddir = check_graddir>1
+                # print(torch.sum(check_graddir))
                 # print(check_graddir.shape,graddir.shape,fisher_rel.shape)
             
             modified_fisher[n] = fisher_old[n]
@@ -411,7 +413,7 @@ def modified_fisher(fisher,fisher_old
             # fisher_old[n][(fisher_rel>frel_cut) & (instability_check==True)] = 1/(lr*lamb*elasticity_down*fisher_rel[(fisher_rel>frel_cut) & (instability_check==True)])
             # frozen_counter[n] = [torch.sum((fisher_rel>frel_cut) & (instability_check==True))]
             if grad_dir_lastart is not None:
-                modified_fisher[n][(fisher_rel>frel_cut) | (check_graddir==True)] = elasticity_down*fisher_rel[(fisher_rel>frel_cut) | (check_graddir==True)]*fisher_old[n][(fisher_rel>frel_cut) | (check_graddir==True)]
+                modified_fisher[n][fisher_rel>frel_cut] = elasticity_down*fisher_rel[fisher_rel>frel_cut]*fisher_old[n][fisher_rel>frel_cut]
             else:
                 modified_fisher[n][fisher_rel>frel_cut] = elasticity_down*fisher_rel[fisher_rel>frel_cut]*fisher_old[n][fisher_rel>frel_cut]
             
