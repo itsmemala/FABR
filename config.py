@@ -59,6 +59,8 @@ def asc_config(parser):
     parser.add_argument('--imp',default='loss',type=str,required=False,help='(default=%(default)s)')
     parser.add_argument('--l1_lamb',default=0.000001,type=float,required=False,help='(default=%(default)s)')
     parser.add_argument('--use_l1',default=False,type=bool,required=False,help='(default=%(default)s)')
+    parser.add_argument('--l2_lamb',default=0.000001,type=float,required=False,help='(default=%(default)s)')
+    parser.add_argument('--use_l2',default=False,type=bool,required=False,help='(default=%(default)s)')
     parser.add_argument('--freeze_cutoff',default=0.99,type=float,required=False,help='(default=%(default)s)')
     parser.add_argument('--mask_scaling',default=0.1,type=float,required=False,help='(default=%(default)s)')
     parser.add_argument('--elasticity_down',default=10,type=float,required=False,help='(default=%(default)s)')

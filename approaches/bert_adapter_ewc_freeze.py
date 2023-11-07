@@ -99,6 +99,7 @@ class Appr(ApprBase):
                 epochs = self.args.la_num_train_epochs
             else:
                 epochs = self.args.num_train_epochs
+            
             # Loop epochs
             for e in range(int(epochs)):
                 if phase=='fo' and e==0 and t==3:
@@ -164,7 +165,10 @@ class Appr(ApprBase):
 
                 print()
 
-            best_index = valid_loss_save.index(best_loss)
+            try:
+                best_index = valid_loss_save.index(best_loss)
+            except ValueError:
+                best_index = -1
             np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+phase+'_train_loss_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',train_loss_save,'%.4f',delimiter='\t')
             np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+phase+'_train_acc_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',train_acc_save,'%.4f',delimiter='\t')
             np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+phase+'_train_f1_macro_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',train_f1_macro_save,'%.4f',delimiter='\t')    
@@ -214,23 +218,23 @@ class Appr(ApprBase):
 
             if phase=='fo':
                 # Freeze non-overlapping params
-                if t==3:
-                    self.fisher=utils.modified_fisher(self.fisher,fisher_old
-                    ,train_f1_macro_save,best_index
-                    ,self.model,self.model_old
-                    ,self.args.elasticity_down,self.args.elasticity_up
-                    ,self.args.freeze_cutoff
-                    ,self.args.learning_rate,self.args.lamb
-                    ,grad_dir_lastart,grad_dir_laend,lastart_fisher
-                    ,save_path+str(args.note)+'_seed'+str(args.seed)+'model_'+str(t))
-                else:
-                    self.fisher=utils.modified_fisher(self.fisher,fisher_old
-                    ,train_f1_macro_save,best_index
-                    ,self.model,self.model_old
-                    ,self.args.elasticity_down,self.args.elasticity_up
-                    ,self.args.freeze_cutoff
-                    ,self.args.learning_rate,self.args.lamb
-                    ,save_path=save_path+str(args.note)+'_seed'+str(args.seed)+'model_'+str(t))
+                # if t==3:
+                    # self.fisher=utils.modified_fisher(self.fisher,fisher_old
+                    # ,train_f1_macro_save,best_index
+                    # ,self.model,self.model_old
+                    # ,self.args.elasticity_down,self.args.elasticity_up
+                    # ,self.args.freeze_cutoff
+                    # ,self.args.learning_rate,self.args.lamb
+                    # ,grad_dir_lastart,grad_dir_laend,lastart_fisher
+                    # ,save_path+str(args.note)+'_seed'+str(args.seed)+'model_'+str(t))
+                # else:
+                self.fisher=utils.modified_fisher(self.fisher,fisher_old
+                ,train_f1_macro_save,best_index
+                ,self.model,self.model_old
+                ,self.args.elasticity_down,self.args.elasticity_up
+                ,self.args.freeze_cutoff
+                ,self.args.learning_rate,self.args.lamb
+                ,save_path=save_path+str(args.note)+'_seed'+str(args.seed)+'model_'+str(t))
 
             if t>0 and phase=='mcl':
                 # Watch out! We do not want to keep t models (or fisher diagonals) in memory, therefore we have to merge fisher diagonals

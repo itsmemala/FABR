@@ -242,6 +242,11 @@ class Appr(object):
             for name,param in self.model.named_parameters():
                 loss_l1+=torch.sum(torch.abs(param))
             return loss_ce+self.lamb*loss_reg+self.args.l1_lamb*loss_l1
+        elif self.args.use_l2:
+            loss_l2=0
+            for name,param in self.model.named_parameters():
+                loss_l2+=torch.sum(torch.square(param))
+            return loss_ce+self.lamb*loss_reg+self.args.l2_lamb*loss_l2
         else:
             return loss_ce+self.lamb*loss_reg
     
