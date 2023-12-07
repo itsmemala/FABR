@@ -359,8 +359,8 @@ for t,ncla in taskcla:
     # appr.decode(train_dataloader)
     # break
     
-    # if t==1: # Only first 2 tasks
-        # break
+    if t==args.break_after_task: # 1 implies only first 2 tasks
+        break
 
 # Done
 print('*'*100)

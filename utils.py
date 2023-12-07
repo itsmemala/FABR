@@ -360,7 +360,7 @@ def get_my_lambda(idrandom,t,class_counts):
     return my_lambda
 
 ########################################################################################################################
-# v20
+# vLA.1
 def modified_fisher(fisher,fisher_old
                     ,train_f1,best_index
                     ,model,model_old
@@ -368,6 +368,8 @@ def modified_fisher(fisher,fisher_old
                     ,freeze_cutoff
                     ,lr,lamb
                     ,grad_dir_lastart=None,grad_dir_laend=None,lastart_fisher=None
+                    ,adapt_type='orig'
+                    ,modify_fisher_last=False
                     ,save_path=''):
     frel_cut = 0.5
     modified_fisher = {}
@@ -378,77 +380,85 @@ def modified_fisher(fisher,fisher_old
     check_graddir_counter = {}
     
     # Adapt elasticity
-    if best_index>=0:
-        train_f1_diff = (train_f1[best_index]-train_f1[0])*100
-        if train_f1_diff<2:
-            train_f1_diff=2
-    else:
-        train_f1_diff=1
-    elasticity_down=train_f1_diff
-    elasticity_up=1/(train_f1_diff)
-    print('Elasticity adaptation:',train_f1_diff,elasticity_down,elasticity_up)
+    if adapt_type=='orig':
+        if best_index>=0:
+            train_f1_diff = (train_f1[best_index]-train_f1[0])*100
+            if train_f1_diff<2:
+                train_f1_diff=2
+        else:
+            train_f1_diff=1
+        elasticity_down=train_f1_diff
+        elasticity_up=1/(train_f1_diff)
+        print('Elasticity adaptation:',train_f1_diff,elasticity_down,elasticity_up)
+    elif adapt_type=='kt' or adapt_type=='kt_strict':
+        elasticity_up = 1
+    elif adapt_type=='ktcf':
+        elasticity_down = elasticity_down
+        elasticity_up = 1
     
     for n in fisher.keys():
         # print(n)
         # modified_fisher[n] = fisher_old[n] # This is for comparison without modifying fisher weights in the fo phase
         assert fisher_old[n].shape==fisher[n].shape
+        # print(n,fisher[n].shape)
         
-        if 'output.adapter' in n or 'output.LayerNorm' in n: #or 'last' in n:
+        if 'output.adapter' in n or 'output.LayerNorm' in n or (modify_fisher_last==True and 'last' in n):
             # if 'last' in n:
                 # print('calculating for last layer...\n\n')
             fisher_rel = fisher_old[n]/(fisher_old[n]+fisher[n]) # Relative importance
             rel_fisher_counter[n] = fisher_rel
             
-            if grad_dir_lastart is not None:
-                alpha_delta = (fisher[n] - lastart_fisher[n])
-                graddir = torch.abs(grad_dir_laend[n] - grad_dir_lastart[n])
-                check_graddir = torch.nan_to_num((graddir-alpha_delta)/graddir,nan=0,posinf=0,neginf=0)
-                check_graddir = check_graddir>1
-                # print(torch.sum(check_graddir))
-                # print(check_graddir.shape,graddir.shape,fisher_rel.shape)
-            
             modified_fisher[n] = fisher_old[n]
             
-            # [1] Important for previous tasks only (or) potential negative transfer -> make it less elastic (i.e. increase fisher scaling)
-            instability_check = lr*lamb*elasticity_down*fisher_rel*fisher_old[n]
-            instability_check = instability_check>1
-            # Adjustment if out of stability region -> Reassign importance score; This essentially freezes the param
-            # fisher_old[n][(fisher_rel>frel_cut) & (instability_check==True)] = 1/(lr*lamb*elasticity_down*fisher_rel[(fisher_rel>frel_cut) & (instability_check==True)])
-            # frozen_counter[n] = [torch.sum((fisher_rel>frel_cut) & (instability_check==True))]
-            if grad_dir_lastart is not None:
+            if adapt_type=='orig':
+                # [1] Important for previous tasks only (or) potential negative transfer -> make it less elastic (i.e. increase fisher scaling)
                 modified_fisher[n][fisher_rel>frel_cut] = elasticity_down*fisher_rel[fisher_rel>frel_cut]*fisher_old[n][fisher_rel>frel_cut]
-            else:
-                modified_fisher[n][fisher_rel>frel_cut] = elasticity_down*fisher_rel[fisher_rel>frel_cut]*fisher_old[n][fisher_rel>frel_cut]
-            
-            # [2] Other situations: Important for both or for only new task or neither -> make it more elastic (i.e. decrease fisher scaling)
-            instability_check = lr*lamb*elasticity_up*fisher_rel*fisher_old[n]
-            instability_check = instability_check>1
-            # Adjustment if out of stability region -> Reassign importance score; This essentially freezes the param
-            # fisher_old[n][(fisher_rel<=frel_cut) & (instability_check==True)] = 1/(lr*lamb*elasticity_up*fisher_rel[(fisher_rel<=frel_cut) & (instability_check==True)])
-            # frozen_counter[n].append(torch.sum((fisher_rel<=frel_cut) & (instability_check==True)))
-            if grad_dir_lastart is not None:
-                modified_fisher[n][(fisher_rel<=frel_cut) & (check_graddir==False)] = elasticity_up*fisher_rel[(fisher_rel<=frel_cut) & (check_graddir==False)]*fisher_old[n][(fisher_rel<=frel_cut) & (check_graddir==False)]
-            else:
+                # [2] Other situations: Important for both or for only new task or neither -> make it more elastic (i.e. decrease fisher scaling)
                 modified_fisher[n][fisher_rel<=frel_cut] = elasticity_up*fisher_rel[fisher_rel<=frel_cut]*fisher_old[n][fisher_rel<=frel_cut]
             
-            # modified_paramcount = torch.sum((fisher_rel<=frel_cut) & (instability_check==False))
+            elif adapt_type=='kt_easy':
+                # [2] Other situations: Important for both or for only new task or neither -> make it fully elastic
+                modified_fisher[n][fisher_rel<=frel_cut] = 0
+            
+            elif adapt_type=='kt':
+                # [2] Other situations: Important for both or for only new task or neither -> make it more elastic (i.e. decrease fisher scaling)
+                modified_fisher[n][fisher_rel<=frel_cut] = elasticity_up*fisher_rel[fisher_rel<=frel_cut]*fisher_old[n][fisher_rel<=frel_cut]
+            
+            elif adapt_type=='ktcf':
+                # [1] Important for previous tasks only (or) potential negative transfer -> make it less elastic (i.e. increase fisher scaling)
+                modified_fisher[n][fisher_rel>frel_cut] = elasticity_down*fisher_old[n][fisher_rel>frel_cut]
+                # [2] Other situations: Important for both or for only new task or neither -> make it more elastic (i.e. decrease fisher scaling)
+                modified_fisher[n][fisher_rel<=frel_cut] = elasticity_up*fisher_rel[fisher_rel<=frel_cut]*fisher_old[n][fisher_rel<=frel_cut]
+            
+            elif adapt_type=='kt_strictv2':
+                # [1] Important for previous tasks only (or) potential negative transfer -> make it frozen
+                modified_fisher[n][fisher_rel>frel_cut] = 1/(lr*lamb)
+                # [2] Other situations: Important for both or for only new task or neither -> make it fully elastic
+                modified_fisher[n][fisher_rel<=frel_cut] = 0
+            
+            elif adapt_type=='kt_strict':
+                # [1] Important for previous tasks only (or) potential negative transfer -> make it frozen
+                modified_fisher[n][fisher_rel>frel_cut] = 1/(lr*lamb)
+                # [2] Other situations: Important for both or for only new task or neither -> make it more elastic
+                modified_fisher[n][fisher_rel<=frel_cut] = elasticity_up*fisher_rel[fisher_rel<=frel_cut]*fisher_old[n][fisher_rel<=frel_cut]
+            
+            elif adapt_type=='zero':
+                modified_fisher[n] = 0 # fully elastic
+            
+            elif adapt_type=='one':
+                modified_fisher[n] = 1/(lr*lamb) # frozen
+            
             modified_paramcount = torch.sum((fisher_rel<=frel_cut))
             check_counter[n]=modified_paramcount
-            if grad_dir_lastart is not None:
-                check_graddir_counter[n]=torch.sum((fisher_rel<=frel_cut) & (check_graddir==False))
         
         else:
             modified_fisher[n] = fisher_old[n]
     
-    print('All KT paramcount:',np.sum([v.cpu().numpy() for k,v in check_counter.items()]))
-    print('Positive KT paramcount:',np.sum([v.cpu().numpy() for k,v in check_graddir_counter.items()]))
-    with open(save_path+'_modified_paramcount.pkl', 'wb') as fp:
-        pickle.dump(check_counter, fp)
-    # print('Frozen paramcount:',np.sum([v[0].cpu().numpy() for k,v in frozen_counter.items()]),np.sum([v[1].cpu().numpy() for k,v in frozen_counter.items()]))
-    # with open(save_path+'_frozen_paramcount.pkl', 'wb') as fp:
-        # pickle.dump(frozen_counter, fp)
-    with open(save_path+'_relative_fisher.pkl', 'wb') as fp:
-        pickle.dump(rel_fisher_counter, fp)
+    # print('All KT paramcount:',np.sum([v.cpu().numpy() for k,v in check_counter.items()]))
+    # with open(save_path+'_modified_paramcount.pkl', 'wb') as fp:
+        # pickle.dump(check_counter, fp)
+    # with open(save_path+'_relative_fisher.pkl', 'wb') as fp:
+        # pickle.dump(rel_fisher_counter, fp)
     
     return modified_fisher
 

@@ -216,13 +216,16 @@ class Appr(object):
         y_pred = y_pred.cpu().numpy()
         return f1_score(y_true, y_pred, average=average, labels=np.unique(y_true))
 
-    def criterion(self,t,output,targets,class_counts=None):
+    def criterion(self,t,output,targets,class_counts=None,phase=None):
         # Regularization for all previous tasks
         loss_reg=0
         if t>0:
-            # print(self.model.named_parameters(),self.model_old.named_parameters())
-            for (name,param),(_,param_old) in zip(self.model.named_parameters(),self.model_old.named_parameters()):
-                loss_reg+=torch.sum(self.fisher[name]*(param_old-param).pow(2))/2
+            if phase=='fo' and self.args.use_reg_in_LA==False:
+                pass
+            else:
+                # print(self.model.named_parameters(),self.model_old.named_parameters())
+                for (name,param),(_,param_old) in zip(self.model.named_parameters(),self.model_old.named_parameters()):
+                    loss_reg+=torch.sum(self.fisher[name]*(param_old-param).pow(2))/2
         # # Regularization for task0
         # if t==0 and (self.args.regularize_t0) and (self.fisher is not None):
             # for (name,param) in self.model.named_parameters():

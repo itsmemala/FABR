@@ -102,31 +102,31 @@ class Appr(ApprBase):
             
             # Loop epochs
             for e in range(int(epochs)):
-                if phase=='fo' and e==0 and t==3:
-                    # Fisher weights
-                    lastart_fisher,grad_dir_lastart=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=args.scenario,imp=self.args.imp,adjust_final=self.args.adjust_final,imp_layer_norm=self.args.imp_layer_norm,get_grad_dir=True)
-                    # Save
-                    if self.args.save_metadata=='all':
-                        # Attributions
-                        targets, predictions, attributions = self.get_attributions(t,train)
-                        np.savez_compressed(save_path+str(args.note)+'_seed'+str(args.seed)+'_attributions_model'+str(t)+'task'+str(t)+'_lastart'
-                                        ,targets=targets.cpu()
-                                        ,predictions=predictions.cpu()
-                                        ,attributions=attributions.cpu()
-                                        )
-                        # Fisher weights
-                        with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_lastart_fisher_task'+str(t)+'.pkl', 'wb') as fp:
-                            pickle.dump(lastart_fisher, fp)
-                        with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_lastart_graddir_task'+str(t)+'.pkl', 'wb') as fp:
-                            pickle.dump(grad_dir_lastart, fp)
+                # if phase=='fo' and e==0 and t==3:
+                    # # Fisher weights
+                    # lastart_fisher,grad_dir_lastart=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=args.scenario,imp=self.args.imp,adjust_final=self.args.adjust_final,imp_layer_norm=self.args.imp_layer_norm,get_grad_dir=True)
+                    # # Save
+                    # if self.args.save_metadata=='all':
+                        # # Attributions
+                        # targets, predictions, attributions = self.get_attributions(t,train)
+                        # np.savez_compressed(save_path+str(args.note)+'_seed'+str(args.seed)+'_attributions_model'+str(t)+'task'+str(t)+'_lastart'
+                                        # ,targets=targets.cpu()
+                                        # ,predictions=predictions.cpu()
+                                        # ,attributions=attributions.cpu()
+                                        # )
+                        # # Fisher weights
+                        # with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_lastart_fisher_task'+str(t)+'.pkl', 'wb') as fp:
+                            # pickle.dump(lastart_fisher, fp)
+                        # with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_lastart_graddir_task'+str(t)+'.pkl', 'wb') as fp:
+                            # pickle.dump(grad_dir_lastart, fp)
             
                 # Train
                 clock0=time.time()
                 iter_bar = tqdm(train, desc='Train Iter (loss=X.XXX)')
-                global_step=self.train_epoch(t,train,iter_bar, optimizer,t_total,global_step,class_counts)
+                global_step=self.train_epoch(t,train,iter_bar, optimizer,t_total,global_step,class_counts=class_counts,phase=phase)
                 clock1=time.time()
 
-                train_loss,train_acc,train_f1_macro=self.eval(t,train)
+                train_loss,train_acc,train_f1_macro=self.eval(t,train,phase=phase)
                 clock2=time.time()
                 print('time: ',float((clock1-clock0)*10*25))
                 print('| Epoch {:3d}, time={:5.1f}ms/{:5.1f}ms | Train: loss={:.3f}, f1_avg={:5.1f}% |'.format(e+1,
@@ -179,14 +179,14 @@ class Appr(ApprBase):
             # Restore best
             utils.set_model_(self.model,best_model)
             
-            if self.args.save_metadata=='all'and phase=='fo' and t==3:
-                # Attributions
-                targets, predictions, attributions = self.get_attributions(t,train)
-                np.savez_compressed(save_path+str(args.note)+'_seed'+str(args.seed)+'_attributions_model'+str(t)+'task'+str(t)+'_laend'
-                                ,targets=targets.cpu()
-                                ,predictions=predictions.cpu()
-                                ,attributions=attributions.cpu()
-                                )
+            # if self.args.save_metadata=='all'and phase=='fo' and t==3:
+                # # Attributions
+                # targets, predictions, attributions = self.get_attributions(t,train)
+                # np.savez_compressed(save_path+str(args.note)+'_seed'+str(args.seed)+'_attributions_model'+str(t)+'task'+str(t)+'_laend'
+                                # ,targets=targets.cpu()
+                                # ,predictions=predictions.cpu()
+                                # ,attributions=attributions.cpu()
+                                # )
             
             # Save model
             # torch.save(self.model.state_dict(), save_path+str(args.note)+'_seed'+str(args.seed)+'_model'+str(t))
@@ -210,11 +210,11 @@ class Appr(ApprBase):
                     fisher_old[n]=self.fisher[n].clone()
 
             self.fisher,grad_dir_laend=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=args.scenario,imp=self.args.imp,adjust_final=self.args.adjust_final,imp_layer_norm=self.args.imp_layer_norm,get_grad_dir=True)
-            if  self.args.save_metadata=='all'and phase=='fo' and t==3:
-                with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_laend_fisher_task'+str(t)+'.pkl', 'wb') as fp:
-                    pickle.dump(self.fisher, fp)
-                with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_laend_graddir_task'+str(t)+'.pkl', 'wb') as fp:
-                    pickle.dump(grad_dir_laend, fp)
+            # if  self.args.save_metadata=='all'and phase=='fo' and t==3:
+                # with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_laend_fisher_task'+str(t)+'.pkl', 'wb') as fp:
+                    # pickle.dump(self.fisher, fp)
+                # with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_laend_graddir_task'+str(t)+'.pkl', 'wb') as fp:
+                    # pickle.dump(grad_dir_laend, fp)
 
             if phase=='fo':
                 # Freeze non-overlapping params
@@ -234,6 +234,8 @@ class Appr(ApprBase):
                 ,self.args.elasticity_down,self.args.elasticity_up
                 ,self.args.freeze_cutoff
                 ,self.args.learning_rate,self.args.lamb
+                ,adapt_type=self.args.adapt_type
+                ,modify_fisher_last=self.args.modify_fisher_last
                 ,save_path=save_path+str(args.note)+'_seed'+str(args.seed)+'model_'+str(t))
 
             if t>0 and phase=='mcl':
@@ -244,15 +246,28 @@ class Appr(ApprBase):
                         #self.fisher[n]=0.5*(self.fisher[n]+fisher_old[n])
                     elif self.args.fisher_combine=='max':
                         self.fisher[n]=torch.maximum(self.fisher[n],fisher_old[n])
-                with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_fisher_task'+str(t)+'.pkl', 'wb') as fp:
-                    pickle.dump(self.fisher, fp)
+                # with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_fisher_task'+str(t)+'.pkl', 'wb') as fp:
+                    # pickle.dump(self.fisher, fp)
 
             if phase=='fo':
+                fo_model=utils.get_model(self.model)
                 utils.set_model_(self.model,mcl_model) # Reset to main model after fisher overlap check
-
+            
+            if phase=='mcl' and t>0:
+                wd_aux = 0
+                wd_old = 0
+                for n,param in self.model.named_parameters():
+                    if 'output.adapter' in n or 'output.LayerNorm' in n or (self.args.modify_fisher_last==True and 'last' in n):
+                        wd_aux += torch.sum((param.detach() - fo_model[n].detach())**2).item()
+                        wd_old += torch.sum((param.detach() - mcl_model[n].detach())**2).item()
+                wd_aux = math.sqrt(wd_aux).detach().cpu().numpy()
+                wd_old = math.sqrt(wd_old).detach().cpu().numpy()
+                np.savetxt(save_path+str(args.note)+'_seed'+str(args.seed)+'_task'+str(t)+'wd_aux.txt',wd_aux,'%.4f',delimiter='\t')
+                np.savetxt(save_path+str(args.note)+'_seed'+str(args.seed)+'_task'+str(t)+'wd_old.txt',wd_old,'%.4f',delimiter='\t')
+                
         return
 
-    def train_epoch(self,t,data,iter_bar,optimizer,t_total,global_step,class_counts):
+    def train_epoch(self,t,data,iter_bar,optimizer,t_total,global_step,class_counts,phase=None):
         self.num_labels = self.taskcla[t][1]
         self.model.train()
         for step, batch in enumerate(iter_bar):
@@ -270,7 +285,7 @@ class Appr(ApprBase):
                 output = outputs[t]
             elif 'cil' in self.args.scenario:
                 output=output_dict['y']
-            loss=self.criterion(t,output,targets,class_counts)
+            loss=self.criterion(t,output,targets,class_counts=class_counts,phase=phase)
 
             iter_bar.set_description('Train Iter (loss=%5.3f)' % loss.item())
             loss.backward()
@@ -285,7 +300,7 @@ class Appr(ApprBase):
 
         return global_step
 
-    def eval(self,t,data,test=None,trained_task=None):
+    def eval(self,t,data,test=None,trained_task=None,phase=None):
         total_loss=0
         total_acc=0
         total_num=0
@@ -311,7 +326,7 @@ class Appr(ApprBase):
                     output = outputs[t]
                 elif 'cil' in self.args.scenario:
                     output=output_dict['y']
-                loss=self.criterion(t,output,targets)
+                loss=self.criterion(t,output,targets,phase=phase)
 
                 _,pred=output.max(1)
                 hits=(pred==targets).float()
