@@ -51,7 +51,12 @@ def asc_config(parser):
                         help='temperature for loss function')
     parser.add_argument('--scenario',default='',type=str,required=True,help='(default=%(default)s)')
     # FABR dev args
-    parser.add_argument('--use_reg_in_LA',default=True,type=bool,required=False,help='(default=%(default)s)')
+    parser.add_argument('--ktcf_wgt',default=0.0,type=float,required=False,help='(default=%(default)s)')
+    parser.add_argument('--alpha_lamb',default=0.0,type=float,required=False,help='(default=%(default)s)')
+    parser.add_argument('--ancl',default=False,type=bool,required=False,help='(default=%(default)s)')
+    parser.add_argument('--save_wd_old_magn',default=False,type=bool,required=False,help='(default=%(default)s)')
+    parser.add_argument('--save_alpharel',default=False,type=bool,required=False,help='(default=%(default)s)')
+    parser.add_argument('--no_reg_in_LA',default=False,type=bool,required=False,help='(default=%(default)s)')
     parser.add_argument('--modify_fisher_last',default=False,type=bool,required=False,help='(default=%(default)s)')
     parser.add_argument("--break_after_task",default=6,type=int,help="Train only up to specific number of tasks.")
     parser.add_argument('--adapt_type',default='orig',type=str,required=False,help='(default=%(default)s)')

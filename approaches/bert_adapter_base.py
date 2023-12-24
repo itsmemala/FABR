@@ -70,6 +70,7 @@ class Appr(object):
         # shared ==============
         self.model=model
         self.model_old=None
+        self.model_aux=None
         self.train_batch_size=args.train_batch_size
         self.eval_batch_size=args.eval_batch_size
         self.args=args
@@ -88,9 +89,11 @@ class Appr(object):
         self.taskcla = taskcla
         self.logger = logger
 
-        if args.baseline=='ewc' or args.baseline=='ewc_freeze':
+        if args.baseline=='ewc' or args.baseline=='ewc_freeze' or args.baseline=='ewc_ancl':
             self.lamb=args.lamb                      # Grid search = [500,1000,2000,5000,10000,20000,50000]; best was 5000
             self.fisher=None
+            self.fisher_old=None
+            self.alpha_lamb=args.alpha_lamb
         
         if args.baseline=='ewc_fabr':
             self.lamb=args.lamb # Remove if not using ewc loss
@@ -219,13 +222,23 @@ class Appr(object):
     def criterion(self,t,output,targets,class_counts=None,phase=None):
         # Regularization for all previous tasks
         loss_reg=0
+        loss_ancl_reg=0
         if t>0:
-            if phase=='fo' and self.args.use_reg_in_LA==False:
-                pass
-            else:
-                # print(self.model.named_parameters(),self.model_old.named_parameters())
-                for (name,param),(_,param_old) in zip(self.model.named_parameters(),self.model_old.named_parameters()):
-                    loss_reg+=torch.sum(self.fisher[name]*(param_old-param).pow(2))/2
+            if self.args.ancl==False:
+                if (phase=='fo' and self.args.no_reg_in_LA==True) or phase is None:
+                    pass
+                else:
+                    # print(self.model.named_parameters(),self.model_old.named_parameters())
+                    for (name,param),(_,param_old) in zip(self.model.named_parameters(),self.model_old.named_parameters()):
+                        loss_reg+=torch.sum(self.fisher[name]*(param_old-param).pow(2))/2
+            elif self.args.ancl==True:
+                if phase=='fo' or phase is None:
+                    pass
+                else:
+                    for (name,param),(_,param_old), (_,param_aux) in zip(self.model.named_parameters(),self.model_old.named_parameters(),self.model_aux.named_parameters()):
+                        loss_reg+=torch.sum(self.fisher_old[name]*(param_old-param).pow(2))/2
+                        loss_ancl_reg+=torch.sum(self.fisher[name]*(param_aux-param).pow(2))/2
+                    # print('loss_reg:',loss_reg,' loss_ancl_reg:',loss_ancl_reg)
         # # Regularization for task0
         # if t==0 and (self.args.regularize_t0) and (self.fisher is not None):
             # for (name,param) in self.model.named_parameters():
@@ -250,6 +263,8 @@ class Appr(object):
             for name,param in self.model.named_parameters():
                 loss_l2+=torch.sum(torch.square(param))
             return loss_ce+self.lamb*loss_reg+self.args.l2_lamb*loss_l2
+        elif self.args.ancl==True:
+            return loss_ce+self.lamb*loss_reg+self.alpha_lamb*loss_ancl_reg
         else:
             return loss_ce+self.lamb*loss_reg
     

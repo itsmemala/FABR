@@ -1,0 +1,56 @@
+-----------------------------------NoL1NoRegInLA-----------------------------------------
+-------------------------------SentMH-MAS, lambda=1-------------------------------------------
+## Adapt-Zero ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 1 --fisher_combine max --use_l1 False --l1_lamb 0.0000001 --adapt_type zero --break_after_task 1 --no_reg_in_LA True --my_save_path /content/gdrive/MyDrive/Collas24/SentMH_NoL1NoRegLAMAS_AdaptZero_2tasks/
+
+## Adapt-KTEasy ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 1 --fisher_combine max --use_l1 False --l1_lamb 0.0000001 --adapt_type kt_easy --break_after_task 1 --no_reg_in_LA True --my_save_path /content/gdrive/MyDrive/Collas24/SentMH_NoL1NoRegLAMAS_AdaptKTEasy_2tasks/
+
+## Adapt-One ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment bert_dis --subset_data 200 --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario til --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --lamb 1 --fisher_combine max --use_l1 False --l1_lamb 0.0000001 --adapt_type one --break_after_task 1 --no_reg_in_LA True --my_save_path /content/gdrive/MyDrive/Collas24/SentMH_NoL1NoRegLAMAS_AdaptOne_2tasks/
+
+
+
+-------------------------------IntentSH-EWC, lambda=1------------------------------------------
+## Adapt-KTEasy ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 1 --fisher_combine max --use_l1 False --l1_lamb 0.000075 --modify_fisher_last True --adapt_type kt_easy --break_after_task 1 --no_reg_in_LA True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_NoL1NoRegLAEWC_wlast_AdaptKTEasy_2tasks/
+
+-------------------------------IntentSH-EWC, lambda=100000------------------------------------------
+## Adapt-KTEasy ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 100000 --fisher_combine max --use_l1 False --l1_lamb 0.000075 --modify_fisher_last True --adapt_type kt_easy --break_after_task 1 --no_reg_in_LA True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_NoL1NoRegLAEWC_wlast_AdaptKTEasy_2tasks.3/
+
+-------------------------------------------NoL1InLA-----------------------------------------
+-------------------------------IntentSH-EWC, lambda=50 x 100000------------------------------------------
+## Adapt-Zero ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 5000000 --fisher_combine max --use_l1 False --l1_lamb 0.000075 --modify_fisher_last True --adapt_type zero --break_after_task 1 --save_wd_old_magn True --save_alpharel True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_NoL1LAEWC_wlast_AdaptZero_2tasks.4/
+
+
+## Adapt-KTEasy ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 5000000 --fisher_combine max --use_l1 False --l1_lamb 0.000075 --modify_fisher_last True --adapt_type kt_easy --break_after_task 1 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_NoL1LAEWC_wlast_AdaptKTEasy_2tasks.4/
+
+## Adapt-KT ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 5000000 --fisher_combine max --use_l1 False --l1_lamb 0.000075 --modify_fisher_last True --adapt_type kt --break_after_task 1 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_NoL1LAEWC_wlast_AdaptKT_2tasks.4/
+
+## Adapt-KTCFscaledv1
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 5000000 --fisher_combine max --use_l1 False --l1_lamb 0.000075 --modify_fisher_last True --adapt_type ktcf_scaledv1 --ktcf_wgt 0.25 --break_after_task 1 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_NoL1LAEWC_wlast_AdaptKTCFsv1_2tasks.4.1/
+
+## Adapt-KTCFscaledv2
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 5000000 --fisher_combine max --use_l1 False --l1_lamb 0.000075 --modify_fisher_last True --adapt_type ktcf_scaledv2 --ktcf_wgt 0.25 --break_after_task 1 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_NoL1LAEWC_wlast_AdaptKTCFsv2_2tasks.4.1/
+
+## Adapt-KTCFscaledv3
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 5000000 --fisher_combine max --use_l1 False --l1_lamb 0.000075 --modify_fisher_last True --adapt_type ktcf_scaledv3 --ktcf_wgt 0.25 --break_after_task 1 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_NoL1LAEWC_wlast_AdaptKTCFsv3_2tasks.4.1/
+
+## Adapt-KTStrictv2 ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 5000000 --fisher_combine max --use_l1 False --l1_lamb 0.000075 --modify_fisher_last True --adapt_type kt_strictv2 --break_after_task 1 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_NoL1LAEWC_wlast_AdaptKTStrictv2_2tasks.4/
+
+## Adapt-KTStrict ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 5000000 --fisher_combine max --use_l1 False --l1_lamb 0.000075 --modify_fisher_last True --adapt_type kt_strict --break_after_task 1 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_NoL1LAEWC_wlast_AdaptKTStrict_2tasks.4/
+
+## Adapt-KTStrictv3 ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 5000000 --fisher_combine max --use_l1 False --l1_lamb 0.000075 --modify_fisher_last True --adapt_type kt_strictv3 --break_after_task 1 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_NoL1LAEWC_wlast_AdaptKTStrictv3_2tasks.4/
+
+## Adapt-One ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 5000000 --fisher_combine max --use_l1 False --l1_lamb 0.000075 --modify_fisher_last True --adapt_type one --break_after_task 1 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_NoL1LAEWC_wlast_AdaptOne_2tasks.4/
+
+## ANCL ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_ancl --backbone bert_adapter --baseline ewc_ancl --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 5000000 --fisher_combine max --alpha_lamb 5000000 --ancl True --break_after_task 1 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_ANCLEWC_wlast_2tasks.4.1/

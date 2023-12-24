@@ -134,6 +134,9 @@ if args.backbone == 'bert_adapter':
     elif args.baseline == 'ewc_freeze':
         from approaches import bert_adapter_ewc_freeze as approach
         from networks import bert_adapter as network
+    elif args.baseline == 'ewc_ancl':
+        from approaches import bert_adapter_ewc_ancl as approach
+        from networks import bert_adapter as network
     elif args.baseline == 'seq' or args.baseline == 'mtl':
         from approaches import bert_adapter_seq as approach
         from networks import bert_adapter as network

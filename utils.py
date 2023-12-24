@@ -369,7 +369,9 @@ def modified_fisher(fisher,fisher_old
                     ,lr,lamb
                     ,grad_dir_lastart=None,grad_dir_laend=None,lastart_fisher=None
                     ,adapt_type='orig'
+                    ,ktcf_wgt=0.0
                     ,modify_fisher_last=False
+                    ,save_alpharel=False
                     ,save_path=''):
     frel_cut = 0.5
     modified_fisher = {}
@@ -430,6 +432,24 @@ def modified_fisher(fisher,fisher_old
                 # [2] Other situations: Important for both or for only new task or neither -> make it more elastic (i.e. decrease fisher scaling)
                 modified_fisher[n][fisher_rel<=frel_cut] = elasticity_up*fisher_rel[fisher_rel<=frel_cut]*fisher_old[n][fisher_rel<=frel_cut]
             
+            elif adapt_type=='ktcf_scaledv1':
+                # [1] Important for previous tasks only (or) potential negative transfer -> make it less elastic (i.e. increase fisher scaling)
+                modified_fisher[n][fisher_rel>frel_cut] = fisher_old[n][fisher_rel>frel_cut] + ktcf_wgt*( (1/(lr*lamb)) - (fisher_old[n][fisher_rel>frel_cut]) )
+                # [2] Other situations: Important for both or for only new task or neither -> make it more elastic (i.e. decrease fisher scaling)
+                modified_fisher[n][fisher_rel<=frel_cut] = 0
+            
+            elif adapt_type=='ktcf_scaledv2':
+                # [1] Important for previous tasks only (or) potential negative transfer -> make it less elastic (i.e. increase fisher scaling)
+                modified_fisher[n][fisher_rel>frel_cut] = fisher_old[n][fisher_rel>frel_cut] + ktcf_wgt*( (1/(lr*lamb)) - (fisher_old[n][fisher_rel>frel_cut]) )
+                # [2] Other situations: Important for both or for only new task or neither -> make it more elastic (i.e. decrease fisher scaling)
+                modified_fisher[n][fisher_rel<=frel_cut] = fisher_rel[fisher_rel<=frel_cut]*fisher_old[n][fisher_rel<=frel_cut]
+            
+            elif adapt_type=='ktcf_scaledv3':
+                # [1] Important for previous tasks only (or) potential negative transfer -> make it less elastic (i.e. increase fisher scaling)
+                modified_fisher[n][fisher_rel>frel_cut] = fisher_old[n][fisher_rel>frel_cut] + ktcf_wgt*( (1/(lr*lamb)) - (fisher_old[n][fisher_rel>frel_cut]) )
+                # [2] Other situations: Important for both or for only new task or neither -> make it more elastic (i.e. decrease fisher scaling)
+                modified_fisher[n][fisher_rel<=frel_cut] = fisher_old[n][fisher_rel<=frel_cut]
+            
             elif adapt_type=='kt_strictv2':
                 # [1] Important for previous tasks only (or) potential negative transfer -> make it frozen
                 modified_fisher[n][fisher_rel>frel_cut] = 1/(lr*lamb)
@@ -441,6 +461,12 @@ def modified_fisher(fisher,fisher_old
                 modified_fisher[n][fisher_rel>frel_cut] = 1/(lr*lamb)
                 # [2] Other situations: Important for both or for only new task or neither -> make it more elastic
                 modified_fisher[n][fisher_rel<=frel_cut] = elasticity_up*fisher_rel[fisher_rel<=frel_cut]*fisher_old[n][fisher_rel<=frel_cut]
+            
+            elif adapt_type=='kt_strictv3':
+                # [1] Important for previous tasks only (or) potential negative transfer -> make it frozen
+                modified_fisher[n][fisher_rel>frel_cut] = 1/(lr*lamb)
+                # [2] Other situations: Important for both or for only new task or neither -> make it more elastic
+                modified_fisher[n][fisher_rel<=frel_cut] = elasticity_up*fisher_old[n][fisher_rel<=frel_cut]
             
             elif adapt_type=='zero':
                 modified_fisher[n] = 0 # fully elastic
@@ -457,8 +483,9 @@ def modified_fisher(fisher,fisher_old
     # print('All KT paramcount:',np.sum([v.cpu().numpy() for k,v in check_counter.items()]))
     # with open(save_path+'_modified_paramcount.pkl', 'wb') as fp:
         # pickle.dump(check_counter, fp)
-    # with open(save_path+'_relative_fisher.pkl', 'wb') as fp:
-        # pickle.dump(rel_fisher_counter, fp)
+    if save_alpharel:
+        with open(save_path+'_relative_fisher.pkl', 'wb') as fp:
+            pickle.dump(rel_fisher_counter, fp)
     
     return modified_fisher
 
