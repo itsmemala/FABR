@@ -33,7 +33,7 @@ class Appr(ApprBase):
 
     def __init__(self,model,logger,taskcla, args=None):
         super().__init__(model=model,logger=logger,taskcla=taskcla,args=args)
-        print('BERT ADAPTER LA-EWC')
+        print('BERT ADAPTER EWC NCL')
 
         return
 
@@ -102,24 +102,7 @@ class Appr(ApprBase):
             
             # Loop epochs
             for e in range(int(epochs)):
-                # if phase=='fo' and e==0 and t==3:
-                    # # Fisher weights
-                    # lastart_fisher,grad_dir_lastart=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=args.scenario,imp=self.args.imp,adjust_final=self.args.adjust_final,imp_layer_norm=self.args.imp_layer_norm,get_grad_dir=True)
-                    # # Save
-                    # if self.args.save_metadata=='all':
-                        # # Attributions
-                        # targets, predictions, attributions = self.get_attributions(t,train)
-                        # np.savez_compressed(save_path+str(args.note)+'_seed'+str(args.seed)+'_attributions_model'+str(t)+'task'+str(t)+'_lastart'
-                                        # ,targets=targets.cpu()
-                                        # ,predictions=predictions.cpu()
-                                        # ,attributions=attributions.cpu()
-                                        # )
-                        # # Fisher weights
-                        # with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_lastart_fisher_task'+str(t)+'.pkl', 'wb') as fp:
-                            # pickle.dump(lastart_fisher, fp)
-                        # with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_lastart_graddir_task'+str(t)+'.pkl', 'wb') as fp:
-                            # pickle.dump(grad_dir_lastart, fp)
-            
+           
                 # Train
                 clock0=time.time()
                 iter_bar = tqdm(train, desc='Train Iter (loss=X.XXX)')
@@ -147,15 +130,6 @@ class Appr(ApprBase):
                     # print(' *',end='')
                 else:
                     patience-=1
-                    # if patience<=0:
-                        # break
-                        # lr/=self.lr_factor
-                        # print(' lr={:.1e}'.format(lr),end='')
-                        # if lr<self.lr_min:
-                            # print()
-                            # break
-                        # patience=self.args.lr_patience
-                        # self.optimizer=self._get_optimizer(lr,which_type)
                 if valid_loss<best_loss:
                     best_loss=valid_loss
                     best_model=utils.get_model(self.model)
@@ -178,26 +152,8 @@ class Appr(ApprBase):
 
             # Restore best
             utils.set_model_(self.model,best_model)
-            
-            # if self.args.save_metadata=='all'and phase=='fo' and t==3:
-                # # Attributions
-                # targets, predictions, attributions = self.get_attributions(t,train)
-                # np.savez_compressed(save_path+str(args.note)+'_seed'+str(args.seed)+'_attributions_model'+str(t)+'task'+str(t)+'_laend'
-                                # ,targets=targets.cpu()
-                                # ,predictions=predictions.cpu()
-                                # ,attributions=attributions.cpu()
-                                # )
-            
-            # Save model
-            # torch.save(self.model.state_dict(), save_path+str(args.note)+'_seed'+str(args.seed)+'_model'+str(t))
 
             if phase=='mcl':
-                if t>0:
-                    frozen_paramcount = 0
-                    for (name,param),(_,param_old) in zip(self.model.named_parameters(),self.model_old.named_parameters()):
-                        if torch.sum(param_old-param)==0:
-                            frozen_paramcount+=1
-                    print('Frozen paramcount:',frozen_paramcount)
                 # Update old
                 self.model_old=deepcopy(self.model)
                 self.model_old.eval()
@@ -205,41 +161,18 @@ class Appr(ApprBase):
 
             # Fisher ops
             if t>0 and phase=='fo':
+                # Update auxilliary model
+                self.model_aux=deepcopy(self.model)
+                self.model_aux.eval()
+                utils.freeze_model(self.model_aux) # Freeze the weights
+                # Save mcl fisher first
                 fisher_old={}
+                self.fisher_old={}
                 for n,_ in self.model.named_parameters():
                     fisher_old[n]=self.fisher[n].clone()
+                    self.fisher_old[n]=self.fisher[n].detach()
 
             self.fisher,grad_dir_laend=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=args.scenario,imp=self.args.imp,adjust_final=self.args.adjust_final,imp_layer_norm=self.args.imp_layer_norm,get_grad_dir=True)
-            # if  self.args.save_metadata=='all'and phase=='fo' and t==3:
-                # with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_laend_fisher_task'+str(t)+'.pkl', 'wb') as fp:
-                    # pickle.dump(self.fisher, fp)
-                # with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_laend_graddir_task'+str(t)+'.pkl', 'wb') as fp:
-                    # pickle.dump(grad_dir_laend, fp)
-
-            if phase=='fo':
-                # Freeze non-overlapping params
-                # if t==3:
-                    # self.fisher=utils.modified_fisher(self.fisher,fisher_old
-                    # ,train_f1_macro_save,best_index
-                    # ,self.model,self.model_old
-                    # ,self.args.elasticity_down,self.args.elasticity_up
-                    # ,self.args.freeze_cutoff
-                    # ,self.args.learning_rate,self.args.lamb
-                    # ,grad_dir_lastart,grad_dir_laend,lastart_fisher
-                    # ,save_path+str(args.note)+'_seed'+str(args.seed)+'model_'+str(t))
-                # else:
-                self.fisher=utils.modified_fisher(self.fisher,fisher_old
-                ,train_f1_macro_save,best_index
-                ,self.model,self.model_old
-                ,self.args.elasticity_down,self.args.elasticity_up
-                ,self.args.freeze_cutoff
-                ,self.args.learning_rate,self.args.lamb
-                ,adapt_type=self.args.adapt_type
-                ,ktcf_wgt=self.args.ktcf_wgt
-                ,ktcf_wgt_use_arel=self.args.ktcf_wgt_use_arel
-                ,modify_fisher_last=self.args.modify_fisher_last
-                ,save_alpharel=self.args.save_alpharel
-                ,save_path=save_path+str(args.note)+'_seed'+str(args.seed)+'model_'+str(t))
 
             if t>0 and phase=='mcl':
                 # Watch out! We do not want to keep t models (or fisher diagonals) in memory, therefore we have to merge fisher diagonals

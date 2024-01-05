@@ -370,6 +370,7 @@ def modified_fisher(fisher,fisher_old
                     ,grad_dir_lastart=None,grad_dir_laend=None,lastart_fisher=None
                     ,adapt_type='orig'
                     ,ktcf_wgt=0.0
+                    ,ktcf_wgt_use_arel=False
                     ,modify_fisher_last=False
                     ,save_alpharel=False
                     ,save_path=''):
@@ -397,7 +398,7 @@ def modified_fisher(fisher,fisher_old
     elif adapt_type=='ktcf':
         elasticity_down = elasticity_down
         elasticity_up = 1
-    
+          
     for n in fisher.keys():
         # print(n)
         # modified_fisher[n] = fisher_old[n] # This is for comparison without modifying fisher weights in the fo phase
@@ -411,6 +412,9 @@ def modified_fisher(fisher,fisher_old
             rel_fisher_counter[n] = fisher_rel
             
             modified_fisher[n] = fisher_old[n]
+            
+            if ktcf_wgt_use_arel:
+                ktcf_wgt = fisher_rel
             
             if adapt_type=='orig':
                 # [1] Important for previous tasks only (or) potential negative transfer -> make it less elastic (i.e. increase fisher scaling)
@@ -486,6 +490,8 @@ def modified_fisher(fisher,fisher_old
     if save_alpharel:
         with open(save_path+'_relative_fisher.pkl', 'wb') as fp:
             pickle.dump(rel_fisher_counter, fp)
+        with open(save_path+'_fisher_old.pkl', 'wb') as fp:
+            pickle.dump(fisher_old, fp)
     
     return modified_fisher
 

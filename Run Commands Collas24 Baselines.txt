@@ -1,0 +1,48 @@
+-------------------------------------------NoL1InLA-----------------------------------------
+-------------------------------IntentSH-EWC, lambda=100 x 100000------------------------------------------
+## EWC (Fisher Max) ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --backbone bert_adapter --baseline ewc --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 10000000 --fisher_combine max --modify_fisher_last True --break_after_task 1 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_EWCMax_wlast_2tasks.5/
+
+-------------------------------IntentSH-EWC, lambda=500 x 100000------------------------------------------
+## EWC (Fisher Max) ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --backbone bert_adapter --baseline ewc --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 50000000 --fisher_combine max --modify_fisher_last True --break_after_task 1 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_EWCMax_wlast_2tasks.6/
+
+-------------------------------IntentSH-EWC, lambda=1------------------------------------------
+## EWC (Fisher Max) ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --backbone bert_adapter --baseline ewc --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 1 --fisher_combine max --modify_fisher_last True --break_after_task 1 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_EWCMax_wlast_2tasks/
+
+-------------------------------IntentSH-EWC, lambda=100------------------------------------------
+## EWC (Fisher Max) ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --backbone bert_adapter --baseline ewc --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 100 --fisher_combine max --modify_fisher_last True --break_after_task 1 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_EWCMax_wlast_2tasks.2/
+
+-------------------------------IntentSH-EWC, lambda=1000 (rand 0)------------------------------------------
+## EWC (Fisher Max) ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --backbone bert_adapter --baseline ewc --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 1000 --fisher_combine max --modify_fisher_last True --break_after_task 1 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_EWCMax_wlast_2tasks.7/
+
+-------------------------------IntentSH-EWC, lambda=2000 (rand 0)------------------------------------------
+## EWC (Fisher Max) ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --backbone bert_adapter --baseline ewc --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 2000 --fisher_combine max --modify_fisher_last True --break_after_task 1 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_EWCMax_wlast_2tasks.8/
+
+-------------------------------IntentSH-EWC, lambda=0.22 x 100000 (rand 0)------------------------------------------
+## EWC (Fisher Max) ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --backbone bert_adapter --baseline ewc --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 22000 --fisher_combine max --modify_fisher_last True --break_after_task 1 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_EWCMax_wlast_2tasks.12/
+
+-------------------------------IntentSH-EWC, lambda=44.44 x 100000 (rand 3)------------------------------------------
+## EWC (Fisher Max) ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --backbone bert_adapter --baseline ewc --note random3 --idrandom 3 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 4444000 --fisher_combine max --modify_fisher_last True --break_after_task 1 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_EWCMax_wlast_2tasks.13/
+
+-------------------------------IntentSH-EWC, lambda=5 x 100000 (rand 3)------------------------------------------
+## EWC (Fisher Max) ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --backbone bert_adapter --baseline ewc --note random3 --idrandom 3 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 500000 --fisher_combine max --modify_fisher_last True --break_after_task 1 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_EWCMax_wlast_2tasks.3/
+
+-------------------------------IntentSH-EWC, lambda=5 x 10000 (rand 3, 6)------------------------------------------
+## EWC (Fisher Max) ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --backbone bert_adapter --baseline ewc --note random3 --idrandom 3 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 50000 --fisher_combine max --modify_fisher_last True --break_after_task 1 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_EWCMax_wlast_2tasks.9/
+
+-------------------------------IntentSH-EWC, lambda=5 x 1000 (rand 6)------------------------------------------
+## EWC (Fisher Max) ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --backbone bert_adapter --baseline ewc --note random6 --idrandom 6 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 5000 --fisher_combine max --modify_fisher_last True --break_after_task 1 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_EWCMax_wlast_2tasks.11/
+
+-------------------------------IntentSH-EWC, lambda=4.44 x 100000 (rand 6)------------------------------------------
+## EWC (Fisher Max) ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --backbone bert_adapter --baseline ewc --note random6 --idrandom 6 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 444000 --fisher_combine max --modify_fisher_last True --break_after_task 1 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_EWCMax_wlast_2tasks.14/

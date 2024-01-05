@@ -95,6 +95,11 @@ class Appr(object):
             self.fisher_old=None
             self.alpha_lamb=args.alpha_lamb
         
+        if args.baseline=='lwf' args.baseline=='lwf_ancl':
+            self.lamb=args.lamb                      # Grid search = [500,1000,2000,5000,10000,20000,50000]; best was 5000
+            self.soft_targets=None
+            self.alpha_lamb=args.alpha_lamb
+        
         if args.baseline=='ewc_fabr':
             self.lamb=args.lamb # Remove if not using ewc loss
             self.buffer = Attr_Buffer(self.args.buffer_size, 'cpu') # using cpu to avoid cuda memory err
@@ -255,13 +260,19 @@ class Appr(object):
 
         if self.args.use_l1:
             loss_l1=0
-            for name,param in self.model.named_parameters():
-                loss_l1+=torch.sum(torch.abs(param))
+            if phase is None:
+                pass
+            else:
+                for name,param in self.model.named_parameters():
+                    loss_l1+=torch.sum(torch.abs(param))
             return loss_ce+self.lamb*loss_reg+self.args.l1_lamb*loss_l1
         elif self.args.use_l2:
             loss_l2=0
-            for name,param in self.model.named_parameters():
-                loss_l2+=torch.sum(torch.square(param))
+            if phase is None:
+                pass
+            else:
+                for name,param in self.model.named_parameters():
+                    loss_l2+=torch.sum(torch.square(param))
             return loss_ce+self.lamb*loss_reg+self.args.l2_lamb*loss_l2
         elif self.args.ancl==True:
             return loss_ce+self.lamb*loss_reg+self.alpha_lamb*loss_ancl_reg
