@@ -7,6 +7,10 @@
 (2 tasks)
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc_freeze --imp function --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --use_ind_lamb_max True --lamb_div 100 --adapt_type zero --save_wd_old_magn True --save_alpharel True --break_after_task 1 --my_save_path /content/gdrive/MyDrive/Collas24/BehavSH/BehavSH_NoL1LAMAS_AdaptZero_2tasks.ind_max.1/
 
+## Adapt-KTCFscaledv2
+(Fisher Avg)
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc_freeze --imp function --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --use_ind_lamb_max True --lamb_div 100 --adapt_type ktcf_scaledv2 --ktcf_wgt_use_arel True --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/BehavSH/BehavSH_NoL1LAMAS_AdaptKTCFsv2.ind_max.1/
+
 ## ANCL LWF ##
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_lwf --backbone bert_adapter --baseline lwf --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 0.1 --lwf True --lwf_T 2 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/BehavSH/BehavSH_LWF.1/
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_lwf_ancl --backbone bert_adapter --baseline lwf_ancl --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 100 --alpha_lamb 25 --lwf_ancl True --lwf_T 2 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/BehavSH/BehavSH_ANCLLWF.1/
