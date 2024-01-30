@@ -90,15 +90,18 @@ class Appr(object):
         self.logger = logger
 
         if args.baseline=='ewc' or args.baseline=='ewc_freeze' or args.baseline=='ewc_ancl':
-            self.lamb=args.lamb                      # Grid search = [500,1000,2000,5000,10000,20000,50000]; best was 5000
+            if self.args.use_ind_lamb_max==True:
+                self.lamb={}
+            else:
+                self.lamb=args.lamb                  # Grid search = [500,1000,2000,5000,10000,20000,50000]; best was 5000
             self.fisher=None
             self.fisher_old=None
             self.alpha_lamb=args.alpha_lamb
         
-        if args.baseline=='lwf' args.baseline=='lwf_ancl':
+        if args.baseline=='lwf' or args.baseline=='lwf_ancl':
             self.lamb=args.lamb                      # Grid search = [500,1000,2000,5000,10000,20000,50000]; best was 5000
-            self.soft_targets=None
             self.alpha_lamb=args.alpha_lamb
+            self.lwf_T=args.lwf_T
         
         if args.baseline=='ewc_fabr':
             self.lamb=args.lamb # Remove if not using ewc loss
@@ -224,18 +227,22 @@ class Appr(object):
         y_pred = y_pred.cpu().numpy()
         return f1_score(y_true, y_pred, average=average, labels=np.unique(y_true))
 
-    def criterion(self,t,output,targets,class_counts=None,phase=None):
+    def criterion(self,t,output,targets,class_counts=None,phase=None, outputs_cur1=None, targets_old=None, outputs_cur2=None, targets_aux=None):
         # Regularization for all previous tasks
         loss_reg=0
         loss_ancl_reg=0
         if t>0:
-            if self.args.ancl==False:
+            if self.args.ancl==False and self.args.lwf_ancl==False and self.args.lwf==False:
                 if (phase=='fo' and self.args.no_reg_in_LA==True) or phase is None:
                     pass
                 else:
-                    # print(self.model.named_parameters(),self.model_old.named_parameters())
-                    for (name,param),(_,param_old) in zip(self.model.named_parameters(),self.model_old.named_parameters()):
-                        loss_reg+=torch.sum(self.fisher[name]*(param_old-param).pow(2))/2
+                    if self.args.use_ind_lamb_max==True:
+                        for (name,param),(_,param_old) in zip(self.model.named_parameters(),self.model_old.named_parameters()):
+                            loss_reg+=torch.sum(self.lamb[name]*self.fisher[name]*(param_old-param).pow(2))/2
+                    else:
+                        for (name,param),(_,param_old) in zip(self.model.named_parameters(),self.model_old.named_parameters()):
+                            loss_reg+=torch.sum(self.fisher[name]*(param_old-param).pow(2))/2
+                        loss_reg = self.lamb*loss_reg
             elif self.args.ancl==True:
                 if phase=='fo' or phase is None:
                     pass
@@ -244,12 +251,27 @@ class Appr(object):
                         loss_reg+=torch.sum(self.fisher_old[name]*(param_old-param).pow(2))/2
                         loss_ancl_reg+=torch.sum(self.fisher[name]*(param_aux-param).pow(2))/2
                     # print('loss_reg:',loss_reg,' loss_ancl_reg:',loss_ancl_reg)
-        # # Regularization for task0
-        # if t==0 and (self.args.regularize_t0) and (self.fisher is not None):
-            # for (name,param) in self.model.named_parameters():
-                # loss_reg+=torch.sum(
-                                    # (0.000001/(self.fisher[name]+0.00001)) * (param).pow(2)
-                                    # )/2
+                    loss_reg = self.lamb*loss_reg
+                    loss_ancl_reg = self.alpha_lamb*loss_ancl_reg
+            elif self.args.lwf_ancl==True:
+                if phase=='fo' or phase is None:
+                    pass
+                else:
+                    if 'til' in self.args.scenario:
+                        loss_reg = self.lamb*self.lwf_cross_entropy(torch.cat(outputs_cur1, dim=1),
+                                                            torch.cat(targets_old, dim=1), exp=1.0 / self.lwf_T)
+                    else:
+                        loss_reg = self.lamb*self.lwf_cross_entropy(outputs_cur1,
+                                                        targets_old, exp=1.0 / self.lwf_T)
+                    loss_ancl_reg = self.alpha_lamb*self.lwf_cross_entropy(outputs_cur2,
+                                                   targets_aux, exp=1.0 / self.lwf_T)
+            elif self.args.lwf==True:
+                if 'til' in self.args.scenario:
+                    loss_reg = self.lamb*self.lwf_cross_entropy(torch.cat(outputs_cur1, dim=1),
+                                                        torch.cat(targets_old, dim=1), exp=1.0 / self.lwf_T)
+                else:
+                    loss_reg = self.lamb*self.lwf_cross_entropy(outputs_cur1,
+                                                    targets_old, exp=1.0 / self.lwf_T)
 
         # assert self.ce(output,targets)==self.ce2(output,targets)
 
@@ -258,26 +280,51 @@ class Appr(object):
         else:
             loss_ce = self.ce(output,targets)
 
-        if self.args.use_l1:
+        if self.args.use_l1==True:
+            # print('using L1')
             loss_l1=0
             if phase is None:
                 pass
             else:
                 for name,param in self.model.named_parameters():
                     loss_l1+=torch.sum(torch.abs(param))
-            return loss_ce+self.lamb*loss_reg+self.args.l1_lamb*loss_l1
-        elif self.args.use_l2:
+            return loss_ce+loss_reg+self.args.l1_lamb*loss_l1
+        
+        elif self.args.use_l2==True:
             loss_l2=0
             if phase is None:
                 pass
             else:
                 for name,param in self.model.named_parameters():
                     loss_l2+=torch.sum(torch.square(param))
-            return loss_ce+self.lamb*loss_reg+self.args.l2_lamb*loss_l2
+            return loss_ce+loss_reg+self.args.l2_lamb*loss_l2
+        
         elif self.args.ancl==True:
-            return loss_ce+self.lamb*loss_reg+self.alpha_lamb*loss_ancl_reg
+            return loss_ce+loss_reg+loss_ancl_reg  
+        
+        elif self.args.lwf_ancl==True:
+            return loss_ce+loss_reg+loss_ancl_reg
+        elif self.args.lwf==True:
+            return loss_ce+loss_reg  
+        
         else:
-            return loss_ce+self.lamb*loss_reg
+            return loss_ce+loss_reg
+    
+    def lwf_cross_entropy(self, outputs, targets, exp=1.0, size_average=True, eps=1e-5):
+        """Calculates cross-entropy with temperature scaling"""
+        out = torch.nn.functional.softmax(outputs, dim=1)
+        tar = torch.nn.functional.softmax(targets, dim=1)
+        if exp != 1:
+            out = out.pow(exp)
+            out = out / out.sum(1).view(-1, 1).expand_as(out)
+            tar = tar.pow(exp)
+            tar = tar / tar.sum(1).view(-1, 1).expand_as(tar)
+        out = out + eps / out.size(1)
+        out = out / out.sum(1).view(-1, 1).expand_as(out)
+        ce = -(tar * out.log()).sum(1)
+        if size_average:
+            ce = ce.mean()
+        return ce
     
     def criterion_fabr(self,t,output,targets,attributions,buffer_attributions):
         # Feature Attribution Based Regularization

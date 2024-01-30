@@ -89,6 +89,7 @@ class Appr(ApprBase):
             valid_class_counts = [class_counts_dict[k] for k in np.unique(all_targets)]
             
             best_loss=np.inf
+            # best_f1=0
             best_model=utils.get_model(self.model)
             patience=self.args.lr_patience
         
@@ -113,25 +114,28 @@ class Appr(ApprBase):
                 clock2=time.time()
                 print('time: ',float((clock1-clock0)*10*25))
                 print('| Epoch {:3d}, time={:5.1f}ms/{:5.1f}ms | Train: loss={:.3f}, f1_avg={:5.1f}% |'.format(e+1,
-                    1000*self.train_batch_size*(clock1-clock0)/len(train),1000*self.train_batch_size*(clock2-clock1)/len(train),train_loss,100*train_acc),end='')
+                    1000*self.train_batch_size*(clock1-clock0)/len(train),1000*self.train_batch_size*(clock2-clock1)/len(train),train_loss,100*train_f1_macro),end='')
                 train_loss_save.append(train_loss)
                 train_acc_save.append(train_acc)
                 train_f1_macro_save.append(train_f1_macro)
 
-                valid_loss,valid_acc,valid_f1_macro=self.eval_validation(t,valid,class_counts=valid_class_counts)
-                print(' Valid: loss={:.3f}, acc={:5.1f}% |'.format(valid_loss,100*valid_acc),end='')
+                valid_loss,valid_acc,valid_f1_macro=self.eval_validation(t,valid,class_counts=valid_class_counts,phase=phase)
+                print(' Valid: loss={:.3f}, acc={:5.1f}% |'.format(valid_loss,100*valid_f1_macro),end='')
                 valid_loss_save.append(valid_loss)
                 valid_acc_save.append(valid_acc)
                 valid_f1_macro_save.append(valid_f1_macro)
                 
                 # Adapt lr
                 if best_loss-valid_loss > args.valid_loss_es:
+                # if valid_f1_macro-best_f1 > self.args.valid_f1_es:
                     patience=self.args.lr_patience
                     # print(' *',end='')
                 else:
                     patience-=1
                 if valid_loss<best_loss:
+                # if valid_f1_macro>best_f1:
                     best_loss=valid_loss
+                    # best_f1=valid_f1_macro
                     best_model=utils.get_model(self.model)
                     print(' *',end='')
                 if patience<=0:
@@ -141,6 +145,7 @@ class Appr(ApprBase):
 
             try:
                 best_index = valid_loss_save.index(best_loss)
+                # best_index = valid_f1_macro_save.index(best_f1)
             except ValueError:
                 best_index = -1
             np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+phase+'_train_loss_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',train_loss_save,'%.4f',delimiter='\t')
@@ -185,6 +190,18 @@ class Appr(ApprBase):
                 # with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_fisher_task'+str(t)+'.pkl', 'wb') as fp:
                     # pickle.dump(self.fisher, fp)
 
+            if phase=='mcl' and self.args.use_lamb_max==True:
+                # Set EWC lambda for subsequent task
+                vals = np.array([])
+                for n in self.fisher.keys():
+                    vals = np.append(vals,self.fisher[n].detach().cpu().flatten().numpy())
+                self.lamb = 1/(self.args.learning_rate*np.max(vals))
+            elif phase=='mcl' and self.args.use_ind_lamb_max==True:
+                # Set EWC lambda for subsequent task
+                for n in self.fisher.keys():
+                    self.lamb[n] = (1/(self.args.learning_rate*self.fisher[n]))/self.args.lamb_div
+                    self.lamb[n] = torch.clip(self.lamb[n],min=torch.finfo(self.lamb[n].dtype).min,max=torch.finfo(self.lamb[n].dtype).max)
+            
             if phase=='fo':
                 fo_model=utils.get_model(self.model)
                 utils.set_model_(self.model,mcl_model) # Reset to main model after fisher overlap check
@@ -285,7 +302,7 @@ class Appr(ApprBase):
 
         return total_loss/total_num,total_acc/total_num,f1
     
-    def eval_validation(self,t,data,test=None,trained_task=None,class_counts=None):
+    def eval_validation(self,t,data,test=None,trained_task=None,class_counts=None,phase=None):
         total_loss=0
         total_acc=0
         total_num=0
@@ -311,12 +328,15 @@ class Appr(ApprBase):
                     output = outputs[t]
                 elif 'cil' in self.args.scenario:
                     output=output_dict['y']
+                
                 # # loss=self.criterion(t,output,targets)
                 # loss=self.ce(output,targets)
-                if 'cil' in self.args.scenario and self.args.use_rbs:
-                    loss=self.ce(t,output,targets,class_counts)
-                else:
-                    loss=self.ce(output,targets)
+                
+                # if 'cil' in self.args.scenario and self.args.use_rbs:
+                    # loss=self.ce(t,output,targets,class_counts)
+                # else:
+                    # loss=self.ce(output,targets)
+                loss=self.criterion(t,output,targets,class_counts=class_counts,phase=phase)
 
                 _,pred=output.max(1)
                 hits=(pred==targets).float()

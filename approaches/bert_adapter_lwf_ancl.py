@@ -89,6 +89,7 @@ class Appr(ApprBase):
             valid_class_counts = [class_counts_dict[k] for k in np.unique(all_targets)]
             
             best_loss=np.inf
+            # best_f1=0
             best_model=utils.get_model(self.model)
             patience=self.args.lr_patience
         
@@ -113,25 +114,28 @@ class Appr(ApprBase):
                 clock2=time.time()
                 print('time: ',float((clock1-clock0)*10*25))
                 print('| Epoch {:3d}, time={:5.1f}ms/{:5.1f}ms | Train: loss={:.3f}, f1_avg={:5.1f}% |'.format(e+1,
-                    1000*self.train_batch_size*(clock1-clock0)/len(train),1000*self.train_batch_size*(clock2-clock1)/len(train),train_loss,100*train_acc),end='')
+                    1000*self.train_batch_size*(clock1-clock0)/len(train),1000*self.train_batch_size*(clock2-clock1)/len(train),train_loss,100*train_f1_macro),end='')
                 train_loss_save.append(train_loss)
                 train_acc_save.append(train_acc)
                 train_f1_macro_save.append(train_f1_macro)
 
-                valid_loss,valid_acc,valid_f1_macro=self.eval_validation(t,valid,class_counts=valid_class_counts)
-                print(' Valid: loss={:.3f}, acc={:5.1f}% |'.format(valid_loss,100*valid_acc),end='')
+                valid_loss,valid_acc,valid_f1_macro=self.eval_validation(t,valid,class_counts=valid_class_counts,phase=phase)
+                print(' Valid: loss={:.3f}, acc={:5.1f}% |'.format(valid_loss,100*valid_f1_macro),end='')
                 valid_loss_save.append(valid_loss)
                 valid_acc_save.append(valid_acc)
                 valid_f1_macro_save.append(valid_f1_macro)
                 
                 # Adapt lr
                 if best_loss-valid_loss > args.valid_loss_es:
+                # if valid_f1_macro-best_f1 > self.args.valid_f1_es:
                     patience=self.args.lr_patience
                     # print(' *',end='')
                 else:
                     patience-=1
                 if valid_loss<best_loss:
+                # if valid_f1_macro>best_f1:
                     best_loss=valid_loss
+                    # best_f1=valid_f1_macro
                     best_model=utils.get_model(self.model)
                     print(' *',end='')
                 if patience<=0:
@@ -141,6 +145,7 @@ class Appr(ApprBase):
 
             try:
                 best_index = valid_loss_save.index(best_loss)
+                # best_index = valid_f1_macro_save.index(best_f1)
             except ValueError:
                 best_index = -1
             np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+phase+'_train_loss_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',train_loss_save,'%.4f',delimiter='\t')
@@ -165,25 +170,6 @@ class Appr(ApprBase):
                 self.model_aux=deepcopy(self.model)
                 self.model_aux.eval()
                 utils.freeze_model(self.model_aux) # Freeze the weights
-                # Save mcl fisher first
-                fisher_old={}
-                self.fisher_old={}
-                for n,_ in self.model.named_parameters():
-                    fisher_old[n]=self.fisher[n].clone()
-                    self.fisher_old[n]=self.fisher[n].detach()
-
-            self.fisher,grad_dir_laend=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=args.scenario,imp=self.args.imp,adjust_final=self.args.adjust_final,imp_layer_norm=self.args.imp_layer_norm,get_grad_dir=True)
-
-            if t>0 and phase=='mcl':
-                # Watch out! We do not want to keep t models (or fisher diagonals) in memory, therefore we have to merge fisher diagonals
-                for n,_ in self.model.named_parameters():
-                    if self.args.fisher_combine=='avg': #default
-                        self.fisher[n]=(self.fisher[n]+fisher_old[n]*t)/(t+1)       # Checked: it is better than the other option
-                        #self.fisher[n]=0.5*(self.fisher[n]+fisher_old[n])
-                    elif self.args.fisher_combine=='max':
-                        self.fisher[n]=torch.maximum(self.fisher[n],fisher_old[n])
-                # with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_fisher_task'+str(t)+'.pkl', 'wb') as fp:
-                    # pickle.dump(self.fisher, fp)
 
             if phase=='fo':
                 fo_model=utils.get_model(self.model)
@@ -217,15 +203,30 @@ class Appr(ApprBase):
             input_ids, segment_ids, input_mask, targets, _= batch
 
             output_dict = self.model.forward(input_ids, segment_ids, input_mask)
+            if t>0 and phase=='mcl':
+                output_dict_old = self.model_old.forward(input_ids, segment_ids, input_mask)
+                output_dict_aux = self.model_aux.forward(input_ids, segment_ids, input_mask)
+            else:
+                outputs_cur1=outputs_cur2=output_old=output_aux=None
             # Forward
             if 'dil' in self.args.scenario:
-                output=output_dict['y']
+                output=outputs_cur1=outputs_cur2=output_dict['y']
+                if t>0 and phase=='mcl':
+                    output_old=output_dict_old['y']
+                    output_aux=output_dict_aux['y']
             elif 'til' in self.args.scenario:
-                outputs=output_dict['y']
-                output = outputs[t]
+                output=output_dict['y'][t]
+                if t>0 and phase=='mcl':
+                    outputs_cur1=output_dict['y'][:t]
+                    outputs_cur2=output_dict['y'][t]
+                    output_old=output_dict_old['y'][:t]
+                    output_aux=output_dict_aux['y'][t]
             elif 'cil' in self.args.scenario:
-                output=output_dict['y']
-            loss=self.criterion(t,output,targets,class_counts=class_counts,phase=phase)
+                output=outputs_cur1=outputs_cur2=output_dict['y']
+                if t>0 and phase=='mcl':
+                    output_old=output_dict_old['y']
+                    output_aux=output_dict_aux['y']
+            loss=self.criterion(t,output,targets,class_counts=class_counts,phase=phase, outputs_cur1=outputs_cur1,targets_old=output_old, outputs_cur2=outputs_cur2,targets_aux=output_aux)
 
             iter_bar.set_description('Train Iter (loss=%5.3f)' % loss.item())
             loss.backward()
@@ -258,15 +259,30 @@ class Appr(ApprBase):
                 real_b=input_ids.size(0)
 
                 output_dict = self.model.forward(input_ids, segment_ids, input_mask)
+                if t>0 and phase=='mcl':
+                    output_dict_old = self.model_old.forward(input_ids, segment_ids, input_mask)
+                    output_dict_aux = self.model_aux.forward(input_ids, segment_ids, input_mask)
+                else:
+                    outputs_cur1=outputs_cur2=output_old=output_aux=None
                 # Forward
                 if 'dil' in self.args.scenario:
-                    output=output_dict['y']
+                    output=outputs_cur1=outputs_cur2=output_dict['y']
+                    if t>0 and phase=='mcl':
+                        output_old=output_dict_old['y']
+                        output_aux=output_dict_aux['y']
                 elif 'til' in self.args.scenario:
-                    outputs=output_dict['y']
-                    output = outputs[t]
+                    output=output_dict['y'][t]
+                    if t>0 and phase=='mcl':
+                        outputs_cur1=output_dict['y'][:t]
+                        outputs_cur2=output_dict['y'][t]
+                        output_old=output_dict_old['y'][:t]
+                        output_aux=output_dict_aux['y'][t]
                 elif 'cil' in self.args.scenario:
-                    output=output_dict['y']
-                loss=self.criterion(t,output,targets,phase=phase)
+                    output=outputs_cur1=outputs_cur2=output_dict['y']
+                    if t>0 and phase=='mcl':
+                        output_old=output_dict_old['y']
+                        output_aux=output_dict_aux['y']
+                loss=self.criterion(t,output,targets,phase=phase, outputs_cur1=outputs_cur1,targets_old=output_old, outputs_cur2=outputs_cur2,targets_aux=output_aux)
 
                 _,pred=output.max(1)
                 hits=(pred==targets).float()
@@ -285,7 +301,7 @@ class Appr(ApprBase):
 
         return total_loss/total_num,total_acc/total_num,f1
     
-    def eval_validation(self,t,data,test=None,trained_task=None,class_counts=None):
+    def eval_validation(self,t,data,test=None,trained_task=None,class_counts=None,phase=None):
         total_loss=0
         total_acc=0
         total_num=0
@@ -303,20 +319,38 @@ class Appr(ApprBase):
                 real_b=input_ids.size(0)
 
                 output_dict = self.model.forward(input_ids, segment_ids, input_mask)
+                if t>0 and phase=='mcl':
+                    output_dict_old = self.model_old.forward(input_ids, segment_ids, input_mask)
+                    output_dict_aux = self.model_aux.forward(input_ids, segment_ids, input_mask)
+                else:
+                    outputs_cur1=outputs_cur2=output_old=output_aux=None
                 # Forward
                 if 'dil' in self.args.scenario:
-                    output=output_dict['y']
+                    output=outputs_cur1=outputs_cur2=output_dict['y']
+                    if t>0 and phase=='mcl':
+                        output_old=output_dict_old['y']
+                        output_aux=output_dict_aux['y']
                 elif 'til' in self.args.scenario:
-                    outputs=output_dict['y']
-                    output = outputs[t]
+                    output=output_dict['y'][t]
+                    if t>0 and phase=='mcl':
+                        outputs_cur1=output_dict['y'][:t]
+                        outputs_cur2=output_dict['y'][t]
+                        output_old=output_dict_old['y'][:t]
+                        output_aux=output_dict_aux['y'][t]
                 elif 'cil' in self.args.scenario:
-                    output=output_dict['y']
+                    output=outputs_cur1=outputs_cur2=output_dict['y']
+                    if t>0 and phase=='mcl':
+                        output_old=output_dict_old['y']
+                        output_aux=output_dict_aux['y']
+                
                 # # loss=self.criterion(t,output,targets)
                 # loss=self.ce(output,targets)
-                if 'cil' in self.args.scenario and self.args.use_rbs:
-                    loss=self.ce(t,output,targets,class_counts)
-                else:
-                    loss=self.ce(output,targets)
+                
+                # if 'cil' in self.args.scenario and self.args.use_rbs:
+                    # loss=self.ce(t,output,targets,class_counts)
+                # else:
+                    # loss=self.ce(output,targets)
+                loss=self.criterion(t,output,targets,class_counts=class_counts,phase=phase, outputs_cur1=outputs_cur1,targets_old=output_old, outputs_cur2=outputs_cur2,targets_aux=output_aux)
 
                 _,pred=output.max(1)
                 hits=(pred==targets).float()

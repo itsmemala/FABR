@@ -366,7 +366,7 @@ def modified_fisher(fisher,fisher_old
                     ,model,model_old
                     ,elasticity_down,elasticity_up
                     ,freeze_cutoff
-                    ,lr,lamb
+                    ,lr,lamb,use_ind_lamb_max
                     ,grad_dir_lastart=None,grad_dir_laend=None,lastart_fisher=None
                     ,adapt_type='orig'
                     ,ktcf_wgt=0.0
@@ -381,6 +381,8 @@ def modified_fisher(fisher,fisher_old
     frozen_counter = {}
     rel_fisher_counter = {}
     check_graddir_counter = {}
+    
+    instability_counter = {}
     
     # Adapt elasticity
     if adapt_type=='orig':
@@ -413,8 +415,15 @@ def modified_fisher(fisher,fisher_old
             
             modified_fisher[n] = fisher_old[n]
             
+            if use_ind_lamb_max==True:
+                lamb_cur = lamb[n][fisher_rel>frel_cut]
+                lamb_cur_fr = lamb[n]
+            else:
+                lamb_cur = lamb
+                lamb_cur_fr = lamb
+            
             if ktcf_wgt_use_arel:
-                ktcf_wgt = fisher_rel
+                ktcf_wgt = fisher_rel[fisher_rel>frel_cut]
             
             if adapt_type=='orig':
                 # [1] Important for previous tasks only (or) potential negative transfer -> make it less elastic (i.e. increase fisher scaling)
@@ -438,48 +447,54 @@ def modified_fisher(fisher,fisher_old
             
             elif adapt_type=='ktcf_scaledv1':
                 # [1] Important for previous tasks only (or) potential negative transfer -> make it less elastic (i.e. increase fisher scaling)
-                modified_fisher[n][fisher_rel>frel_cut] = fisher_old[n][fisher_rel>frel_cut] + ktcf_wgt*( (1/(lr*lamb)) - (fisher_old[n][fisher_rel>frel_cut]) )
+                modified_fisher[n][fisher_rel>frel_cut] = fisher_old[n][fisher_rel>frel_cut] + ktcf_wgt*( (1/(lr*lamb_cur)) - (fisher_old[n][fisher_rel>frel_cut]) )
                 # [2] Other situations: Important for both or for only new task or neither -> make it more elastic (i.e. decrease fisher scaling)
                 modified_fisher[n][fisher_rel<=frel_cut] = 0
             
             elif adapt_type=='ktcf_scaledv2':
                 # [1] Important for previous tasks only (or) potential negative transfer -> make it less elastic (i.e. increase fisher scaling)
-                modified_fisher[n][fisher_rel>frel_cut] = fisher_old[n][fisher_rel>frel_cut] + ktcf_wgt*( (1/(lr*lamb)) - (fisher_old[n][fisher_rel>frel_cut]) )
+                modified_fisher[n][fisher_rel>frel_cut] = fisher_old[n][fisher_rel>frel_cut] + ktcf_wgt*( (1/(lr*lamb_cur)) - (fisher_old[n][fisher_rel>frel_cut]) )
                 # [2] Other situations: Important for both or for only new task or neither -> make it more elastic (i.e. decrease fisher scaling)
                 modified_fisher[n][fisher_rel<=frel_cut] = fisher_rel[fisher_rel<=frel_cut]*fisher_old[n][fisher_rel<=frel_cut]
             
             elif adapt_type=='ktcf_scaledv3':
                 # [1] Important for previous tasks only (or) potential negative transfer -> make it less elastic (i.e. increase fisher scaling)
-                modified_fisher[n][fisher_rel>frel_cut] = fisher_old[n][fisher_rel>frel_cut] + ktcf_wgt*( (1/(lr*lamb)) - (fisher_old[n][fisher_rel>frel_cut]) )
+                modified_fisher[n][fisher_rel>frel_cut] = fisher_old[n][fisher_rel>frel_cut] + ktcf_wgt*( (1/(lr*lamb_cur)) - (fisher_old[n][fisher_rel>frel_cut]) )
                 # [2] Other situations: Important for both or for only new task or neither -> make it more elastic (i.e. decrease fisher scaling)
                 modified_fisher[n][fisher_rel<=frel_cut] = fisher_old[n][fisher_rel<=frel_cut]
             
             elif adapt_type=='kt_strictv2':
                 # [1] Important for previous tasks only (or) potential negative transfer -> make it frozen
-                modified_fisher[n][fisher_rel>frel_cut] = 1/(lr*lamb)
+                modified_fisher[n][fisher_rel>frel_cut] = 1/(lr*lamb_cur)
                 # [2] Other situations: Important for both or for only new task or neither -> make it fully elastic
                 modified_fisher[n][fisher_rel<=frel_cut] = 0
             
             elif adapt_type=='kt_strict':
                 # [1] Important for previous tasks only (or) potential negative transfer -> make it frozen
-                modified_fisher[n][fisher_rel>frel_cut] = 1/(lr*lamb)
+                modified_fisher[n][fisher_rel>frel_cut] = 1/(lr*lamb_cur)
                 # [2] Other situations: Important for both or for only new task or neither -> make it more elastic
                 modified_fisher[n][fisher_rel<=frel_cut] = elasticity_up*fisher_rel[fisher_rel<=frel_cut]*fisher_old[n][fisher_rel<=frel_cut]
             
             elif adapt_type=='kt_strictv3':
                 # [1] Important for previous tasks only (or) potential negative transfer -> make it frozen
-                modified_fisher[n][fisher_rel>frel_cut] = 1/(lr*lamb)
+                modified_fisher[n][fisher_rel>frel_cut] = 1/(lr*lamb_cur)
                 # [2] Other situations: Important for both or for only new task or neither -> make it more elastic
-                modified_fisher[n][fisher_rel<=frel_cut] = elasticity_up*fisher_old[n][fisher_rel<=frel_cut]
+                modified_fisher[n][fisher_rel<=frel_cut] = fisher_old[n][fisher_rel<=frel_cut]
             
             elif adapt_type=='zero':
                 modified_fisher[n] = 0 # fully elastic
             
             elif adapt_type=='one':
-                modified_fisher[n] = 1/(lr*lamb) # frozen
+                modified_fisher[n] = 1/(lr*lamb_cur_fr) # frozen
             
-            modified_paramcount = torch.sum((fisher_rel<=frel_cut))
-            check_counter[n]=modified_paramcount
+            # modified_paramcount = torch.sum((fisher_rel<=frel_cut))
+            # check_counter[n]=modified_paramcount
+            
+            # Instability adjustment
+            # instability_check = lr*lamb*modified_fisher[n]
+            # instability_check = instability_check>1
+            # modified_fisher[n][instability_check==True] = 1/(lr*lamb)
+            # instability_counter[n] = torch.sum(instability_check==True)
         
         else:
             modified_fisher[n] = fisher_old[n]

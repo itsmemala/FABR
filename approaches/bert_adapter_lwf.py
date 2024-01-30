@@ -8,7 +8,6 @@ import math
 import json
 import argparse
 import random
-import pickle
 from tqdm import tqdm, trange
 import numpy as np
 from collections import Counter
@@ -26,6 +25,8 @@ sys.path.append("./approaches/base/")
 from .bert_adapter_base import Appr as ApprBase
 from .my_optimization import BertAdam
 
+from captum.attr import LayerIntegratedGradients
+import pickle
 
 class Appr(ApprBase):
 
@@ -79,23 +80,37 @@ class Appr(ApprBase):
         # best_f1=0
         best_model=utils.get_model(self.model)
         patience=self.args.lr_patience
-
+    
+    
+        train_loss_save,train_acc_save,train_f1_macro_save = [],[],[]
+        valid_loss_save,valid_acc_save,valid_f1_macro_save = [],[],[]
+        
+        epochs = self.args.num_train_epochs
+        
         # Loop epochs
-        for e in range(int(self.args.num_train_epochs)):
+        for e in range(int(epochs)):
+       
             # Train
             clock0=time.time()
             iter_bar = tqdm(train, desc='Train Iter (loss=X.XXX)')
-            global_step=self.train_epoch(t,train,iter_bar, optimizer,t_total,global_step,class_counts)
+            global_step=self.train_epoch(t,train,iter_bar, optimizer,t_total,global_step,class_counts=class_counts,phase=None)
             clock1=time.time()
 
-            train_loss,train_acc,train_f1_macro=self.eval(t,train)
+            train_loss,train_acc,train_f1_macro=self.eval(t,train,phase=None)
             clock2=time.time()
             print('time: ',float((clock1-clock0)*10*25))
             print('| Epoch {:3d}, time={:5.1f}ms/{:5.1f}ms | Train: loss={:.3f}, f1_avg={:5.1f}% |'.format(e+1,
                 1000*self.train_batch_size*(clock1-clock0)/len(train),1000*self.train_batch_size*(clock2-clock1)/len(train),train_loss,100*train_f1_macro),end='')
+            train_loss_save.append(train_loss)
+            train_acc_save.append(train_acc)
+            train_f1_macro_save.append(train_f1_macro)
 
-            valid_loss,valid_acc,valid_f1_macro=self.eval_validation(t,valid,class_counts=valid_class_counts)
+            valid_loss,valid_acc,valid_f1_macro=self.eval_validation(t,valid,class_counts=valid_class_counts,phase=None)
             print(' Valid: loss={:.3f}, acc={:5.1f}% |'.format(valid_loss,100*valid_f1_macro),end='')
+            valid_loss_save.append(valid_loss)
+            valid_acc_save.append(valid_acc)
+            valid_f1_macro_save.append(valid_f1_macro)
+            
             # Adapt lr
             if best_loss-valid_loss > args.valid_loss_es:
             # if valid_f1_macro-best_f1 > self.args.valid_f1_es:
@@ -113,52 +128,26 @@ class Appr(ApprBase):
                 break
 
             print()
-            # break
+
+        try:
+            best_index = valid_loss_save.index(best_loss)
+            # best_index = valid_f1_macro_save.index(best_f1)
+        except ValueError:
+            best_index = -1
+        np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+'mcl'+'_train_loss_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',train_loss_save,'%.4f',delimiter='\t')
+        np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+'mcl'+'_train_acc_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',train_acc_save,'%.4f',delimiter='\t')
+        np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+'mcl'+'_train_f1_macro_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',train_f1_macro_save,'%.4f',delimiter='\t')    
+        np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+'mcl'+'_valid_loss_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',valid_loss_save,'%.4f',delimiter='\t')
+        np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+'mcl'+'_valid_acc_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',valid_acc_save,'%.4f',delimiter='\t')
+        np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+'mcl'+'_valid_f1_macro_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',valid_f1_macro_save,'%.4f',delimiter='\t')
+
         # Restore best
         utils.set_model_(self.model,best_model)
-        
-        # Save model
-        # torch.save(self.model.state_dict(), save_path+str(args.note)+'_seed'+str(args.seed)+'_model'+str(t))
 
         # Update old
         self.model_old=deepcopy(self.model)
         self.model_old.eval()
         utils.freeze_model(self.model_old) # Freeze the weights
-
-        # Fisher ops
-        if t>0:
-            fisher_old={}
-            for n,_ in self.model.named_parameters():
-                fisher_old[n]=self.fisher[n].clone()
-
-        # if 'dil' in self.args.scenario:
-            # self.fisher=utils.fisher_matrix_diag_bert_dil(t,train_data,self.device,self.model,self.criterion)
-        # elif 'til' in self.args.scenario or 'cil' in self.args.scenario:
-            # self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=self.args.scenario,imp=self.args.imp)
-        self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=args.scenario,imp=self.args.imp,adjust_final=self.args.adjust_final,imp_layer_norm=self.args.imp_layer_norm)
-
-        if t>0:
-            # Watch out! We do not want to keep t models (or fisher diagonals) in memory, therefore we have to merge fisher diagonals
-            for n,_ in self.model.named_parameters():
-                if self.args.fisher_combine=='avg': #default
-                    self.fisher[n]=(self.fisher[n]+fisher_old[n]*t)/(t+1)       # Checked: it is better than the other option
-                    #self.fisher[n]=0.5*(self.fisher[n]+fisher_old[n])
-                elif self.args.fisher_combine=='max':
-                    self.fisher[n]=torch.maximum(self.fisher[n],fisher_old[n])
-                elif self.args.fisher_combine=='sum':
-                    self.fisher[n]=torch.add(self.fisher[n],fisher_old[n])
-                    
-        if self.args.use_lamb_max==True:
-            # Set EWC lambda for subsequent task
-            vals = np.array([])
-            for n in self.fisher.keys():
-                vals = np.append(vals,self.fisher[n].detach().cpu().flatten().numpy())
-            self.lamb = 1/(self.args.learning_rate*np.max(vals))
-        elif self.args.use_ind_lamb_max==True:
-            # Set EWC lambda for subsequent task
-            for n in self.fisher.keys():
-                self.lamb[n] = (1/(self.args.learning_rate*self.fisher[n]))/self.args.lamb_div
-                self.lamb[n] = torch.clip(self.lamb[n],min=torch.finfo(self.lamb[n].dtype).min,max=torch.finfo(self.lamb[n].dtype).max)
         
         if t>0:
             wd_old = 0
@@ -166,17 +155,16 @@ class Appr(ApprBase):
             for n,param in self.model.named_parameters():
                 if 'output.adapter' in n or 'output.LayerNorm' in n or (self.args.modify_fisher_last==True and 'last' in n):
                     wd_old += torch.sum((param.detach() - mcl_model[n].detach())**2).item()
-                    # wd_old_magn[n] = math.sqrt(torch.sum((param.detach() - mcl_model[n].detach())**2).item())
-                    wd_old_magn[n] = (param.detach() - mcl_model[n].detach())**2
+                    wd_old_magn[n] = math.sqrt(torch.sum((param.detach() - mcl_model[n].detach())**2).item())
             wd_old = math.sqrt(wd_old)
             np.savetxt(save_path+str(args.note)+'_seed'+str(args.seed)+'_task'+str(t)+'wd.txt',np.array([0,wd_old]),'%.4f',delimiter='\t')
             if self.args.save_wd_old_magn:
                 with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_task'+str(t)+'_wd_old_magn.pkl', 'wb') as fp:
                     pickle.dump(wd_old_magn, fp)
-
+            
         return
 
-    def train_epoch(self,t,data,iter_bar,optimizer,t_total,global_step,class_counts):
+    def train_epoch(self,t,data,iter_bar,optimizer,t_total,global_step,class_counts,phase=None):
         self.num_labels = self.taskcla[t][1]
         self.model.train()
         for step, batch in enumerate(iter_bar):
@@ -186,15 +174,25 @@ class Appr(ApprBase):
             input_ids, segment_ids, input_mask, targets, _= batch
 
             output_dict = self.model.forward(input_ids, segment_ids, input_mask)
+            if t>0:
+                output_dict_old = self.model_old.forward(input_ids, segment_ids, input_mask)
+            else:
+                outputs_cur1=output_old=None
             # Forward
             if 'dil' in self.args.scenario:
-                output=output_dict['y']
+                output=outputs_cur1=output_dict['y']
+                if t>0:
+                    output_old=output_dict_old['y']
             elif 'til' in self.args.scenario:
-                outputs=output_dict['y']
-                output = outputs[t]
+                output=output_dict['y'][t]
+                if t>0:
+                    outputs_cur1=output_dict['y'][:t]
+                    output_old=output_dict_old['y'][:t]
             elif 'cil' in self.args.scenario:
-                output=output_dict['y']
-            loss=self.criterion(t,output,targets,class_counts=class_counts,phase='mcl')
+                output=outputs_cur1=output_dict['y']
+                if t>0:
+                    output_old=output_dict_old['y']
+            loss=self.criterion(t,output,targets,class_counts=class_counts,phase=phase, outputs_cur1=outputs_cur1,targets_old=output_old)
 
             iter_bar.set_description('Train Iter (loss=%5.3f)' % loss.item())
             loss.backward()
@@ -209,7 +207,7 @@ class Appr(ApprBase):
 
         return global_step
 
-    def eval(self,t,data,test=None,trained_task=None):
+    def eval(self,t,data,test=None,trained_task=None,phase=None):
         total_loss=0
         total_acc=0
         total_num=0
@@ -227,19 +225,25 @@ class Appr(ApprBase):
                 real_b=input_ids.size(0)
 
                 output_dict = self.model.forward(input_ids, segment_ids, input_mask)
+                if t>0:
+                    output_dict_old = self.model_old.forward(input_ids, segment_ids, input_mask)
+                else:
+                    outputs_cur1=output_old=None
                 # Forward
                 if 'dil' in self.args.scenario:
-                    output=output_dict['y']
+                    output=outputs_cur1=output_dict['y']
+                    if t>0:
+                        output_old=output_dict_old['y']
                 elif 'til' in self.args.scenario:
-                    outputs=output_dict['y']
-                    output = outputs[t]
+                    output=output_dict['y'][t]
+                    if t>0:
+                        outputs_cur1=output_dict['y'][:t]
+                        output_old=output_dict_old['y'][:t]
                 elif 'cil' in self.args.scenario:
-                    output=output_dict['y']
-                # loss=self.criterion(t,output,targets)
-                if 'cil' in self.args.scenario and self.args.use_rbs:
-                    loss=self.ce(t,output,targets)
-                else:
-                    loss=self.criterion(t,output,targets,phase='mcl')
+                    output=outputs_cur1=output_dict['y']
+                    if t>0:
+                        output_old=output_dict_old['y']
+                loss=self.criterion(t,output,targets,phase=phase, outputs_cur1=outputs_cur1,targets_old=output_old)
 
                 _,pred=output.max(1)
                 hits=(pred==targets).float()
@@ -258,7 +262,7 @@ class Appr(ApprBase):
 
         return total_loss/total_num,total_acc/total_num,f1
     
-    def eval_validation(self,t,data,test=None,trained_task=None,class_counts=None):
+    def eval_validation(self,t,data,test=None,trained_task=None,class_counts=None,phase=None):
         total_loss=0
         total_acc=0
         total_num=0
@@ -276,23 +280,25 @@ class Appr(ApprBase):
                 real_b=input_ids.size(0)
 
                 output_dict = self.model.forward(input_ids, segment_ids, input_mask)
+                if t>0:
+                    output_dict_old = self.model_old.forward(input_ids, segment_ids, input_mask)
+                else:
+                    outputs_cur1=output_old=None
                 # Forward
                 if 'dil' in self.args.scenario:
-                    output=output_dict['y']
+                    output=outputs_cur1=output_dict['y']
+                    if t>0:
+                        output_old=output_dict_old['y']
                 elif 'til' in self.args.scenario:
-                    outputs=output_dict['y']
-                    output = outputs[t]
+                    output=output_dict['y'][t]
+                    if t>0:
+                        outputs_cur1=output_dict['y'][:t]
+                        output_old=output_dict_old['y'][:t]
                 elif 'cil' in self.args.scenario:
-                    output=output_dict['y']
-                
-                # # loss=self.criterion(t,output,targets)
-                # loss=self.ce(output,targets)
-                
-                # if 'cil' in self.args.scenario and self.args.use_rbs:
-                    # loss=self.ce(t,output,targets,class_counts)
-                # else:
-                    # loss=self.ce(output,targets)
-                loss=self.criterion(t,output,targets,class_counts=class_counts,phase='mcl')
+                    output=outputs_cur1=output_dict['y']
+                    if t>0:
+                        output_old=output_dict_old['y']
+                loss=self.criterion(t,output,targets,class_counts=class_counts,phase=phase, outputs_cur1=outputs_cur1,targets_old=output_old)
 
                 _,pred=output.max(1)
                 hits=(pred==targets).float()
@@ -311,3 +317,66 @@ class Appr(ApprBase):
 
         return total_loss/total_num,total_acc/total_num,f1
 
+    def get_attributions(self,t,data,input_tokens=None):
+        target_list = []
+        pred_list = []
+
+
+        # with torch.no_grad():
+            # self.model.eval()
+
+        for step, batch in enumerate(data):
+            batch = [
+                bat.to(self.device) if bat is not None else None for bat in batch]
+            input_ids, segment_ids, input_mask, targets, tasks= batch
+            real_b=input_ids.size(0)
+
+            output_dict = self.model.forward(input_ids, segment_ids, input_mask)
+            # Forward
+            if 'dil' in self.args.scenario:
+                output=output_dict['y']
+            elif 'til' in self.args.scenario:
+                outputs=output_dict['y']
+                output = outputs[t]
+            elif 'cil' in self.args.scenario:
+                output=output_dict['y']
+            loss=self.criterion(t,output,targets)
+
+            _,pred=output.max(1)
+            hits=(pred==targets).float()
+
+            target_list.append(targets)
+            pred_list.append(pred)
+
+
+            # Calculate attributions
+            integrated_gradients = LayerIntegratedGradients(self.model, self.model.bert.embeddings)
+            # loop through inputs to avoid cuda memory err
+            if t==2:
+                loop_size=6
+            else:
+                loop_size=3
+            for i in range(math.ceil(input_ids.shape[0]/loop_size)):
+                # print(i)
+                attributions_ig_b = integrated_gradients.attribute(inputs=input_ids[i*loop_size:i*loop_size+loop_size,:]
+                                                                    # Note: Attributions are not computed with respect to these additional arguments
+                                                                    , additional_forward_args=(segment_ids[i*loop_size:i*loop_size+loop_size,:], input_mask[i*loop_size:i*loop_size+loop_size,:]
+                                                                                              ,self.args.fa_method, t)
+                                                                    , target=targets[i*loop_size:i*loop_size+loop_size], n_steps=10 # Attributions with respect to actual class
+                                                                    # ,baselines=(baseline_embedding)
+                                                                    )
+                attributions_ig_b = attributions_ig_b.detach().cpu()
+                # Get the max attribution across embeddings per token
+                # attributions_ig_b = torch.sum(attributions_ig_b, dim=2)
+                if i==0 and step==0:
+                    attributions_ig = attributions_ig_b
+                else:
+                    attributions_ig = torch.cat((attributions_ig,attributions_ig_b),axis=0)
+            # print('Input shape:',input_ids.shape)
+            # print('IG attributions:',attributions_ig.shape)
+            # print('Attributions:',attributions_ig[0,:])
+            attributions = attributions_ig
+            # optimizer.zero_grad()
+
+
+        return torch.cat(target_list,0),torch.cat(pred_list,0),attributions

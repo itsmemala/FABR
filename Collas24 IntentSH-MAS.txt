@@ -1,0 +1,29 @@
+-------------------------------lambda=ind_max (rand 0,3,6)------------------------------------------
+## MAS (Fisher Max) ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --imp function --backbone bert_adapter --baseline ewc --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --use_ind_lamb_max True --lamb_div 600 --fisher_combine max --modify_fisher_last True --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_MASMax_wlast.ind_max.6/
+(Fisher Avg)
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --imp function --backbone bert_adapter --baseline ewc --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --use_ind_lamb_max True --lamb_div 600 --modify_fisher_last True --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_MAS_wlast.ind_max.6/
+(2 tasks Fisher Max)
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --imp function --backbone bert_adapter --baseline ewc --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --use_ind_lamb_max True --lamb_div 10 --fisher_combine max --modify_fisher_last True --save_wd_old_magn True --break_after_task 1 --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_MASMax_wlast_2tasks.ind_max.1/
+
+## Adapt-Zero ##
+(2 tasks)
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --imp function --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --use_ind_lamb_max True --lamb_div 10 --fisher_combine max --modify_fisher_last True --adapt_type zero --save_wd_old_magn True --save_alpharel True --break_after_task 1 --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_NoL1LAMAS_wlast_AdaptZero_2tasks.ind_max.1/
+-------------------------------lambda=2500 (rand 0)------------------------------------------
+## MAS (Fisher Avg) ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --imp function --backbone bert_adapter --baseline ewc --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 2500 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_MAS_wlast.1/
+
+## ANCL MAS (Fisher Avg) ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_ancl --imp function --backbone bert_adapter --baseline ewc_ancl --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 2500 --alpha_lamb 1250 --ancl True --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_ANCLMAS_wlast.1.1/
+-------------------------------lambda=1000 (rand 0)------------------------------------------
+## MAS (Fisher Avg) ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --imp function --backbone bert_adapter --baseline ewc --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 1000 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_MAS_wlast.2/
+
+## ANCL MAS (Fisher Avg) ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_ancl --imp function --backbone bert_adapter --baseline ewc_ancl --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 1000 --alpha_lamb 500 --ancl True --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_ANCLMAS_wlast.2.1/
+-------------------------------lambda=100 (rand 0)------------------------------------------
+## MAS (Fisher Avg) ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --imp function --backbone bert_adapter --baseline ewc --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 100 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_MAS_wlast.3/
+
+## ANCL MAS (Fisher Avg) ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_ancl --imp function --backbone bert_adapter --baseline ewc_ancl --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 100 --alpha_lamb 50 --ancl True --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_ANCLMAS_wlast.3.1/
