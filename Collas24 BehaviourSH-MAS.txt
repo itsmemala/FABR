@@ -1,5 +1,6 @@
 -------------------------------lambda=ind_max (rand 0,3,6)------------------------------------------
 ## MAS (Avg) ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc --imp function --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --use_ind_lamb_max True --lamb_div 100 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/BehavSH/BehavSH_MAS.ind_max.1/
 ( 2 tasks)
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc --imp function --baseline ewc --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --use_ind_lamb_max True --lamb_div 100 --save_wd_old_magn True --break_after_task 1 --my_save_path /content/gdrive/MyDrive/Collas24/BehavSH/BehavSH_MAS_2tasks.ind_max.1/
 

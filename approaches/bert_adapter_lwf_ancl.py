@@ -58,15 +58,25 @@ class Appr(ApprBase):
 
             param_optimizer = [(k, v) for k, v in self.model.named_parameters() if v.requires_grad==True]
             param_optimizer = [n for n in param_optimizer if 'pooler' not in n[0]]
-            no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
-            optimizer_grouped_parameters = [
-                {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
-                {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-                ]
-            t_total = num_train_steps
+            if self.args.remove_wd:
+                optimizer_grouped_parameters = [
+                    {'params': [p for n, p in param_optimizer], 'weight_decay': 0.0}
+                    ]
+            else:
+                no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+                optimizer_grouped_parameters = [
+                    {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
+                    {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+                    ]
+            if self.args.remove_lr_schedule:
+                t_total = -1
+                warmup = -1
+            else:
+                t_total = num_train_steps
+                warmup = self.args.warmup_proportion
             optimizer = BertAdam(optimizer_grouped_parameters,
                                  lr=self.args.learning_rate,
-                                 warmup=self.args.warmup_proportion,
+                                 warmup=warmup,
                                  t_total=t_total)
 
 
@@ -231,7 +241,10 @@ class Appr(ApprBase):
             iter_bar.set_description('Train Iter (loss=%5.3f)' % loss.item())
             loss.backward()
 
-            lr_this_step = self.args.learning_rate * \
+            if self.args.remove_lr_schedule:
+                lr_this_step = self.args.learning_rate
+            else:  
+                lr_this_step = self.args.learning_rate * \
                            self.warmup_linear(global_step/t_total, self.args.warmup_proportion)
             for param_group in optimizer.param_groups:
                 param_group['lr'] = lr_this_step

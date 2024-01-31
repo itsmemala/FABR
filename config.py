@@ -51,6 +51,8 @@ def asc_config(parser):
                         help='temperature for loss function')
     parser.add_argument('--scenario',default='',type=str,required=True,help='(default=%(default)s)')
     # FABR dev args
+    parser.add_argument('--remove_wd',default=False,type=bool,required=False,help='(default=%(default)s)')
+    parser.add_argument('--remove_lr_schedule',default=False,type=bool,required=False,help='(default=%(default)s)')
     parser.add_argument('--lwf_T',default=2.0,type=float,required=False,help='(default=%(default)s)')
     parser.add_argument('--lamb_div',default=3.0,type=float,required=False,help='(default=%(default)s)')
     parser.add_argument('--use_ind_lamb_max',default=False,type=bool,required=False,help='(default=%(default)s)')
