@@ -243,10 +243,10 @@ for t,ncla in taskcla:
     valid_sampler = SequentialSampler(valid)
     valid_dataloader = DataLoader(valid, sampler=valid_sampler, batch_size=args.eval_batch_size)
 
-    with open(my_save_path+str(args.note)+'_seed'+str(args.seed)+"_inputtokens_task"+str(t)+".txt", "wb") as internal_filename:
-        pickle.dump(data[t]['train_tokens'], internal_filename)
-    with open(my_save_path+str(args.note)+'_seed'+str(args.seed)+"_inputtokens_task"+str(t)+"_test.txt", "wb") as internal_filename:
-        pickle.dump(data[t]['test_tokens'], internal_filename)
+    # with open(my_save_path+str(args.note)+'_seed'+str(args.seed)+"_inputtokens_task"+str(t)+".txt", "wb") as internal_filename:
+        # pickle.dump(data[t]['train_tokens'], internal_filename)
+    # with open(my_save_path+str(args.note)+'_seed'+str(args.seed)+"_inputtokens_task"+str(t)+"_test.txt", "wb") as internal_filename:
+        # pickle.dump(data[t]['test_tokens'], internal_filename)
 
     # Train
     if args.lfa is None: # No attribution calculation at train time
