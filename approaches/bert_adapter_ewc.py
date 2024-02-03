@@ -49,12 +49,15 @@ class Appr(ApprBase):
             optimizer_grouped_parameters = [
                 {'params': [p for n, p in param_optimizer], 'weight_decay': 0.0}
                 ]
+            optimizer_param_keys = [n for n, p in param_optimizer]
         else:
             no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
             optimizer_grouped_parameters = [
                 {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
                 {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
                 ]
+            optimizer_param_keys = [n for n, p in param_optimizer if not any(nd in n for nd in no_decay)] +\
+                                    [n for n, p in param_optimizer if any(nd in n for nd in no_decay)]
         if self.args.remove_lr_schedule:
             t_total = -1
             warmup = -1
@@ -91,11 +94,13 @@ class Appr(ApprBase):
         patience=self.args.lr_patience
 
         # Loop epochs
+        epoch_wise_updates = np.array([])
         for e in range(int(self.args.num_train_epochs)):
             # Train
             clock0=time.time()
             iter_bar = tqdm(train, desc='Train Iter (loss=X.XXX)')
-            global_step=self.train_epoch(t,train,iter_bar, optimizer,t_total,global_step,class_counts)
+            global_step,step_wise_updates=self.train_epoch(t,train,iter_bar, optimizer,t_total,global_step,class_counts,optimizer_param_keys)
+            epoch_wise_updates = np.concatenate((epoch_wise_updates,step_wise_updates), axis=0)
             clock1=time.time()
 
             train_loss,train_acc,train_f1_macro=self.eval(t,train)
@@ -106,6 +111,7 @@ class Appr(ApprBase):
 
             valid_loss,valid_acc,valid_f1_macro=self.eval_validation(t,valid,class_counts=valid_class_counts)
             print(' Valid: loss={:.3f}, acc={:5.1f}% |'.format(valid_loss,100*valid_f1_macro),end='')
+            
             # Adapt lr
             if best_loss-valid_loss > args.valid_loss_es:
             # if valid_f1_macro-best_f1 > self.args.valid_f1_es:
@@ -124,6 +130,8 @@ class Appr(ApprBase):
 
             print()
             # break
+        np.savetxt(save_path+str(args.note)+'_seed'+str(args.seed)+'_task'+str(t)+'_step_wise_updates.txt',epoch_wise_updates,'%.2f',delimiter='\t')
+        
         # Restore best
         utils.set_model_(self.model,best_model)
         
@@ -186,9 +194,10 @@ class Appr(ApprBase):
 
         return
 
-    def train_epoch(self,t,data,iter_bar,optimizer,t_total,global_step,class_counts):
+    def train_epoch(self,t,data,iter_bar,optimizer,t_total,global_step,class_counts,optimizer_param_keys):
         self.num_labels = self.taskcla[t][1]
         self.model.train()
+        step_wise_updates = []
         for step, batch in enumerate(iter_bar):
             # print('step: ',step)
             batch = [
@@ -216,11 +225,34 @@ class Appr(ApprBase):
                            self.warmup_linear(global_step/t_total, self.args.warmup_proportion)
             for param_group in optimizer.param_groups:
                 param_group['lr'] = lr_this_step
-            optimizer.step()
+            _,updates = optimizer.step()
             optimizer.zero_grad()
             global_step += 1
+            
+            if t>0:
+                orthogonal_upds = 0
+                num_params = 0 
+                for k,param_old in self.model_old.named_parameters():
+                    try:
+                        param_upd = updates[optimizer_param_keys.index(k)]
+                        param_old = param_old.detach().cpu().numpy()
+                        assert param_old.shape == param_upd.shape
+                        # print(k, param_upd.shape)
+                        unit_x = param_upd / np.linalg.norm(param_upd)
+                        unit_y = param_old / np.linalg.norm(param_old)
+                        angle_rad = np.arccos(np.dot(unit_x, unit_y))
+                        angle_deg = np.degrees(angle_rad)
+                        # print(k, angle_deg, np.linalg.norm(param_upd), np.linalg.norm(param_old))
+                        num_params += 1
+                        if angle_deg > 89 and angle_deg < 91:
+                            orthogonal_upds += 1
+                    except ValueError:
+                        continue # Skip parameters that are not being optimized
+                step_wise_updates.append(orthogonal_upds*100/num_params)
+            # break
+                    
 
-        return global_step
+        return global_step,np.array(step_wise_updates)
 
     def eval(self,t,data,test=None,trained_task=None):
         total_loss=0

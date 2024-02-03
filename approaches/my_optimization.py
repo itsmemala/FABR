@@ -118,6 +118,8 @@ class BertAdam(Optimizer):
         if closure is not None:
             loss = closure()
 
+        param_wise_updates = []
+
         for group in self.param_groups:
             for p_id,p in enumerate(group['params']):
                 if p.grad is None:
@@ -182,6 +184,8 @@ class BertAdam(Optimizer):
                 update_with_lr = lr_scheduled * update
                 p.data.add_(-update_with_lr)
 
+                param_wise_updates.append(-update_with_lr.detach().cpu().numpy())
+
                 state['step'] += 1
 
                 # step_size = lr_scheduled * math.sqrt(bias_correction2) / bias_correction1
@@ -192,5 +196,5 @@ class BertAdam(Optimizer):
 
 
 
-        return loss
+        return loss, param_wise_updates
 

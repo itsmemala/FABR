@@ -62,12 +62,15 @@ class Appr(ApprBase):
                 optimizer_grouped_parameters = [
                     {'params': [p for n, p in param_optimizer], 'weight_decay': 0.0}
                     ]
+                optimizer_param_keys = [n for n, p in param_optimizer]
             else:
                 no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
                 optimizer_grouped_parameters = [
                     {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
                     {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
                     ]
+                optimizer_param_keys = [n for n, p in param_optimizer if not any(nd in n for nd in no_decay)] +\
+                                    [n for n, p in param_optimizer if any(nd in n for nd in no_decay)]
             if self.args.remove_lr_schedule:
                 t_total = -1
                 warmup = -1
@@ -134,7 +137,7 @@ class Appr(ApprBase):
                 # Train
                 clock0=time.time()
                 iter_bar = tqdm(train, desc='Train Iter (loss=X.XXX)')
-                global_step=self.train_epoch(t,train,iter_bar, optimizer,t_total,global_step,class_counts=class_counts,phase=phase)
+                global_step,step_wise_updates=self.train_epoch(t,train,iter_bar, optimizer,t_total,global_step,class_counts=class_counts,phase=phase,optimizer_param_keys=optimizer_param_keys)
                 clock1=time.time()
 
                 train_loss,train_acc,train_f1_macro=self.eval(t,train,phase=phase)
@@ -303,9 +306,10 @@ class Appr(ApprBase):
                 
         return
 
-    def train_epoch(self,t,data,iter_bar,optimizer,t_total,global_step,class_counts,phase=None):
+    def train_epoch(self,t,data,iter_bar,optimizer,t_total,global_step,class_counts,phase=None,optimizer_param_keys=None):
         self.num_labels = self.taskcla[t][1]
         self.model.train()
+        step_wise_updates = []
         for step, batch in enumerate(iter_bar):
             # print('step: ',step)
             batch = [
@@ -333,11 +337,13 @@ class Appr(ApprBase):
                            self.warmup_linear(global_step/t_total, self.args.warmup_proportion)
             for param_group in optimizer.param_groups:
                 param_group['lr'] = lr_this_step
-            optimizer.step()
+            _,updates = optimizer.step()
             optimizer.zero_grad()
             global_step += 1
+            
+            
 
-        return global_step
+        return global_step,np.array(step_wise_updates)
 
     def eval(self,t,data,test=None,trained_task=None,phase=None):
         total_loss=0
