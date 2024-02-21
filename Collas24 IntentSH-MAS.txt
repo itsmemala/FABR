@@ -28,6 +28,10 @@
 ## Adapt-KT
 (Fisher Avg)
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --imp function --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 2 --modify_fisher_last True --adapt_type kt --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_NoL1LAMAS_wlast_AdaptKT.7/
+
+## Adapt-KTCFscaledv2
+(Fisher Avg)
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --imp function --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 2 --modify_fisher_last True --adapt_type ktcf_scaledv2 --ktcf_wgt_use_arel True --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_NoL1LAMAS_wlast_AdaptKTCFsv2.7/
 -------------------------------lambda=1000 (rand 0)------------------------------------------
 ## MAS (Fisher Avg) ##
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --imp function --backbone bert_adapter --baseline ewc --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 1000 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_MAS_wlast.2/
