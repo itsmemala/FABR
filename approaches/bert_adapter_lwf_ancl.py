@@ -185,6 +185,11 @@ class Appr(ApprBase):
                 fo_model=utils.get_model(self.model)
                 utils.set_model_(self.model,mcl_model) # Reset to main model after fisher overlap check
             
+            if phase=='mcl' and self.args.custom_lamb is not None:
+                # Set lambda for subsequent task
+                self.lamb = self.args.custom_lamb[t+1]
+                self.alpha_lamb = self.args.custom_alpha_lamb[t+1]
+            
             if phase=='mcl' and t>0:
                 wd_aux = 0
                 wd_old = 0

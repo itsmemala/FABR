@@ -177,6 +177,9 @@ class Appr(ApprBase):
             for n in self.fisher.keys():
                 self.lamb[n] = (1/(self.args.learning_rate*self.fisher[n]))/self.args.lamb_div
                 self.lamb[n] = torch.clip(self.lamb[n],min=torch.finfo(self.lamb[n].dtype).min,max=torch.finfo(self.lamb[n].dtype).max)
+        elif self.args.custom_lamb is not None:
+            # Set EWC lambda for subsequent task
+            self.lamb = self.args.custom_lamb[t+1]
         
         if t>0:
             wd_old = 0

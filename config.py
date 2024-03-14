@@ -4,6 +4,10 @@ import torch
 import multiprocessing
 import utils
 
+# Define a custom argument type for a list of integers
+def list_of_ints(arg):
+    return list(map(int, arg.split(',')))
+
 def asc_config(parser):
     # EWC args
     # Source: https://github.com/ZixuanKe/PyContinual/blob/54dd15de566b110c9bc8d8316205de63a4805190/src/config.py
@@ -51,6 +55,10 @@ def asc_config(parser):
                         help='temperature for loss function')
     parser.add_argument('--scenario',default='',type=str,required=True,help='(default=%(default)s)')
     # FABR dev args
+    parser.add_argument('--custom_alpha_lamb',default=None,type=list_of_ints,required=False,help='(default=%(default)s)')
+    parser.add_argument('--custom_lamb',default=None,type=list_of_ints,required=False,help='(default=%(default)s)')
+    parser.add_argument('--frel_cut_type',default='',type=str,required=False,help='(default=%(default)s)')
+    parser.add_argument('--frel_cut',default=0.5,type=float,required=False,help='(default=%(default)s)')
     parser.add_argument('--remove_wd',default=False,type=bool,required=False,help='(default=%(default)s)')
     parser.add_argument('--remove_lr_schedule',default=False,type=bool,required=False,help='(default=%(default)s)')
     parser.add_argument('--lwf_T',default=2.0,type=float,required=False,help='(default=%(default)s)')

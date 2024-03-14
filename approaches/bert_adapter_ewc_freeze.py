@@ -228,6 +228,8 @@ class Appr(ApprBase):
                     fisher_old[n]=self.fisher[n].clone()
 
             self.fisher,grad_dir_laend=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=args.scenario,imp=self.args.imp,adjust_final=self.args.adjust_final,imp_layer_norm=self.args.imp_layer_norm,get_grad_dir=True)
+            if t==0:
+                self.fisher_for_loss = self.fisher
             # if  self.args.save_metadata=='all'and phase=='fo' and t==3:
                 # with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_laend_fisher_task'+str(t)+'.pkl', 'wb') as fp:
                     # pickle.dump(self.fisher, fp)
@@ -247,7 +249,7 @@ class Appr(ApprBase):
                     # ,grad_dir_lastart,grad_dir_laend,lastart_fisher
                     # ,save_path+str(args.note)+'_seed'+str(args.seed)+'model_'+str(t))
                 # else:
-                self.fisher=utils.modified_fisher(self.fisher,fisher_old
+                self.fisher_for_loss=utils.modified_fisher(self.fisher,fisher_old
                 ,train_f1_macro_save,best_index
                 ,self.model,self.model_old
                 ,self.args.elasticity_down,self.args.elasticity_up
@@ -256,6 +258,7 @@ class Appr(ApprBase):
                 ,adapt_type=self.args.adapt_type
                 ,ktcf_wgt=self.args.ktcf_wgt
                 ,ktcf_wgt_use_arel=self.args.ktcf_wgt_use_arel
+                ,frel_cut=self.args.frel_cut, frel_cut_type=self.args.frel_cut_type
                 ,modify_fisher_last=self.args.modify_fisher_last
                 ,save_alpharel=self.args.save_alpharel
                 ,save_path=save_path+str(args.note)+'_seed'+str(args.seed)+'model_'+str(t))
@@ -282,6 +285,10 @@ class Appr(ApprBase):
                 for n in self.fisher.keys():
                     self.lamb[n] = (1/(self.args.learning_rate*self.fisher[n]))/self.args.lamb_div
                     self.lamb[n] = torch.clip(self.lamb[n],min=torch.finfo(self.lamb[n].dtype).min,max=torch.finfo(self.lamb[n].dtype).max)
+            elif phase=='mcl' and self.args.custom_lamb is not None:
+                # Set EWC lambda for subsequent task
+                self.lamb = self.args.custom_lamb[t+1]
+                self.alpha_lamb = self.args.custom_alpha_lamb[t+1]
 
             if phase=='fo':
                 fo_model=utils.get_model(self.model)

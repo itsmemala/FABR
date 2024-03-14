@@ -371,10 +371,11 @@ def modified_fisher(fisher,fisher_old
                     ,adapt_type='orig'
                     ,ktcf_wgt=0.0
                     ,ktcf_wgt_use_arel=False
+                    ,frel_cut=0.5, frel_cut_type=''
                     ,modify_fisher_last=False
                     ,save_alpharel=False
                     ,save_path=''):
-    frel_cut = 0.5
+    frel_cut = frel_cut
     modified_fisher = {}
     
     check_counter = {}
@@ -412,6 +413,13 @@ def modified_fisher(fisher,fisher_old
                 # print('calculating for last layer...\n\n')
             fisher_rel = fisher_old[n]/(fisher_old[n]+fisher[n]) # Relative importance
             rel_fisher_counter[n] = fisher_rel
+            
+            if frel_cut_type=='pdm':
+                # Get distribution to set threshold
+                frel_cut = torch.mean(fisher_rel.flatten()).item()
+            elif frel_cut_type=='pdmsd':
+                # Get distribution to set threshold
+                frel_cut = torch.mean(fisher_rel.flatten()).item() + torch.std(fisher_rel.flatten()).item()
             
             modified_fisher[n] = fisher_old[n]
             

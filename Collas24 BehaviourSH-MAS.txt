@@ -25,6 +25,8 @@
 ## ANCL LWF ##
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_lwf --backbone bert_adapter --baseline lwf --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.00003 --lamb 0.1 --lwf True --lwf_T 2 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/BehavSH/BehavSH_LWF.1/
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_lwf_ancl --backbone bert_adapter --baseline lwf_ancl --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.00003 --lamb 100 --alpha_lamb 25 --lwf_ancl True --lwf_T 2 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/BehavSH/BehavSH_ANCLLWF.1/
+## CHSF ANCL LWF ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_lwf --backbone bert_adapter --baseline lwf --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.00003 --custom_lamb 0,0 --lwf True --lwf_T 2 --break_after_task 1 --my_save_path /content/gdrive/MyDrive/Collas24/BehavSH/BehavSH_LWF_t1gold/
 
 -------------------------------lambda=0.1 (rand 0,3,6)------------------------------------------
 ## MAS (Avg) ##
@@ -39,7 +41,15 @@
 
 ## Adapt-ktcf_scaledv1
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc_freeze --imp function --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.00003 --lamb 100 --adapt_type ktcf_scaledv1 --ktcf_wgt_use_arel True --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/BehavSH/BehavSH_NoL1LAMAS_AdaptKTCFsv1.13/
+(frel_cut 0.9)
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc_freeze --imp function --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.00003 --lamb 100 --adapt_type ktcf_scaledv1 --ktcf_wgt_use_arel True --frel_cut 0.9 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/BehavSH/BehavSH_NoL1LAMAS_AdaptKTCFsv1.13.4/
+(frel_cut_type pdm)
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc_freeze --imp function --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.00003 --lamb 100 --adapt_type ktcf_scaledv1 --ktcf_wgt_use_arel True --frel_cut_type pdm --save_alpharel True --my_save_path /content/gdrive/MyDrive/Collas24/BehavSH/BehavSH_NoL1LAMAS_AdaptKTCFsv1FF.13.pdm/
+(frel_cut_type pdmsd)
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc_freeze --imp function --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.00003 --lamb 100 --adapt_type ktcf_scaledv1 --ktcf_wgt_use_arel True --frel_cut_type pdmsd --save_alpharel True --my_save_path /content/gdrive/MyDrive/Collas24/BehavSH/BehavSH_NoL1LAMAS_AdaptKTCFsv1FF.13.pdmsd/
 
 ## Adapt-ktcf_scaledv2
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc_freeze --imp function --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.00003 --lamb 600 --adapt_type ktcf_scaledv2 --ktcf_wgt_use_arel True --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/BehavSH/BehavSH_NoL1LAMAS_AdaptKTCFsv2.11/
+(frel_cut 0.6)
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc_freeze --imp function --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.00003 --lamb 100 --adapt_type ktcf_scaledv2 --ktcf_wgt_use_arel True --frel_cut 0.6 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/BehavSH/BehavSH_NoL1LAMAS_AdaptKTCFsv2.13.1/
 

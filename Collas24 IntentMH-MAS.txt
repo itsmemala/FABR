@@ -1,0 +1,2 @@
+## LWF, LWF-ANCL ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_lwf --backbone bert_adapter --baseline lwf --note random0 --idrandom 0 --seed 0 --scenario til --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 0.1 --lwf True --lwf_T 2 --my_save_path /content/gdrive/MyDrive/Collas24/IntentMH/IntentMH_LWF.1/

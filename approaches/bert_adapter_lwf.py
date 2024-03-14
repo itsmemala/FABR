@@ -159,6 +159,10 @@ class Appr(ApprBase):
         self.model_old.eval()
         utils.freeze_model(self.model_old) # Freeze the weights
         
+        if self.args.custom_lamb is not None:
+            # Set lambda for subsequent task
+            self.lamb = self.args.custom_lamb[t+1]
+        
         if t>0:
             wd_old = 0
             wd_old_magn = {}
