@@ -6,7 +6,7 @@ import utils
 
 # Define a custom argument type for a list of integers
 def list_of_ints(arg):
-    return list(map(int, arg.split(',')))
+    return list(map(float, arg.split(',')))
 
 def asc_config(parser):
     # EWC args

@@ -27,6 +27,7 @@
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_lwf_ancl --backbone bert_adapter --baseline lwf_ancl --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.00003 --lamb 100 --alpha_lamb 25 --lwf_ancl True --lwf_T 2 --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/BehavSH/BehavSH_ANCLLWF.1/
 ## CHSF ANCL LWF ##
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_lwf --backbone bert_adapter --baseline lwf --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.00003 --custom_lamb 0,0 --lwf True --lwf_T 2 --break_after_task 1 --my_save_path /content/gdrive/MyDrive/Collas24/BehavSH/BehavSH_LWF_t1gold/
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_lwf_ancl --backbone bert_adapter --baseline lwf_ancl --note random0 --idrandom 0 --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.00003 --custom_lamb 0,1 --custom_alpha_lamb 0,0.01 --lwf_ancl True --lwf_T 2 --break_after_task 1 --my_save_path /content/gdrive/MyDrive/Collas24/BehavSH/BehavSH_ANCLLWF_t1.1/
 
 -------------------------------lambda=0.1 (rand 0,3,6)------------------------------------------
 ## MAS (Avg) ##

@@ -179,7 +179,7 @@ class Appr(ApprBase):
                 self.lamb[n] = torch.clip(self.lamb[n],min=torch.finfo(self.lamb[n].dtype).min,max=torch.finfo(self.lamb[n].dtype).max)
         elif self.args.custom_lamb is not None:
             # Set EWC lambda for subsequent task
-            self.lamb = self.args.custom_lamb[t+1]
+            self.lamb = self.args.custom_lamb[t+1] if t+1<=self.args.break_after_task else 0
         
         if t>0:
             wd_old = 0
