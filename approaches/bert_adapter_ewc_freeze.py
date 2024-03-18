@@ -288,7 +288,6 @@ class Appr(ApprBase):
             elif phase=='mcl' and self.args.custom_lamb is not None:
                 # Set EWC lambda for subsequent task
                 self.lamb = self.args.custom_lamb[t+1] if t+1<=self.args.break_after_task else 0
-                self.alpha_lamb = self.args.custom_alpha_lamb[t+1] if t+1<=self.args.break_after_task else 0
 
             if phase=='fo':
                 fo_model=utils.get_model(self.model)

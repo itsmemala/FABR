@@ -54,3 +54,7 @@
 
 ## ANCL MAS (Fisher Avg) ##
 !python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_ancl --imp function --backbone bert_adapter --baseline ewc_ancl --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --lamb 100 --alpha_lamb 50 --ancl True --save_wd_old_magn True --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_ANCLMAS_wlast.3.1/
+
+### CHSF ANCL MAS ##
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc --imp function --backbone bert_adapter --baseline ewc --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --custom_lamb 0,0 --break_after_task 1 --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_MAS_wlast_t1gold/
+!python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_ancl --imp function --backbone bert_adapter --baseline ewc_ancl --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --custom_lamb 0,0.5 --custom_alpha_lamb 0,0.01 --ancl True --break_after_task 1 --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_ANCLMAS_wlast_t1.1.1/
