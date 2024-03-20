@@ -232,27 +232,30 @@ class Appr(ApprBase):
             optimizer.zero_grad()
             global_step += 1
             
-            if t>0:
-                orthogonal_upds = 0
-                num_params = 0 
-                for k,param_old in self.model_old.named_parameters():
-                    try:
-                        param_upd = updates[optimizer_param_keys.index(k)]
-                        param_old = param_old.detach().cpu().numpy()
-                        assert param_old.shape == param_upd.shape
-                        # print(k, param_upd.shape)
-                        unit_x = param_upd / np.linalg.norm(param_upd)
-                        unit_y = param_old / np.linalg.norm(param_old)
-                        angle_rad = np.arccos(np.dot(unit_x, unit_y))
-                        angle_deg = np.degrees(angle_rad)
-                        # print(k, angle_deg, np.linalg.norm(param_upd), np.linalg.norm(param_old))
-                        num_params += 1
-                        if angle_deg > 89 and angle_deg < 91:
-                            orthogonal_upds += 1
-                    except ValueError:
-                        continue # Skip parameters that are not being optimized
-                step_wise_updates.append(orthogonal_upds*100/num_params)
-            # break
+            # if t>0:
+                # orthogonal_upds = 0
+                # num_params = 0 
+                # for k,param_old in self.model_old.named_parameters():
+                    # try:
+                        # param_upd = updates[optimizer_param_keys.index(k)]
+                        # param_old = param_old.detach().cpu().numpy()
+                        # assert param_old.shape == param_upd.shape
+                        # # print(k, param_upd.shape)
+                        # unit_x = param_upd / np.linalg.norm(param_upd)
+                        # unit_y = param_old / np.linalg.norm(param_old)
+                        # angle_rad = np.arccos(np.dot(unit_x, unit_y))
+                        # angle_deg = np.degrees(angle_rad)
+                        # # print(k, angle_deg, np.linalg.norm(param_upd), np.linalg.norm(param_old))
+                        # num_params += 1
+                        # if angle_deg > 89 and angle_deg < 91:
+                            # orthogonal_upds += 1
+                    # except ValueError:
+                        # continue # Skip parameters that are not being optimized
+                # step_wise_updates.append(orthogonal_upds*100/num_params)
+            # # break
+            
+            if self.args.save_dir_of_curv==True and t==self.args.break_after_task:
+                for name,param in self.model.named_parameters():
                     
 
         return global_step,np.array(step_wise_updates)
