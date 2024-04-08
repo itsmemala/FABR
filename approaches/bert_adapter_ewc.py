@@ -252,11 +252,7 @@ class Appr(ApprBase):
                     # except ValueError:
                         # continue # Skip parameters that are not being optimized
                 # step_wise_updates.append(orthogonal_upds*100/num_params)
-            # # break
-            
-            if self.args.save_dir_of_curv==True and t==self.args.break_after_task:
-                for name,param in self.model.named_parameters():
-                    
+            # # break                    
 
         return global_step,np.array(step_wise_updates)
 
@@ -357,6 +353,9 @@ class Appr(ApprBase):
                 total_num+=real_b
 
             f1=self.f1_compute_fn(y_pred=torch.cat(pred_list,0),y_true=torch.cat(target_list,0),average='macro')
+
+            # if self.args.save_dir_of_curv==True and t==self.args.break_after_task:
+                # for name,param in self.model.named_parameters():
 
                 # break
 

@@ -71,6 +71,8 @@ class Appr(object):
         self.model=model
         self.model_old=None
         self.model_aux=None
+        self.la_model,self.mcl_model,self.plot_la_models,self.plot_mcl_models,self.multi_model,self.plot_model=None,None,{},{},None,None
+        self.training_multi=None
         self.train_batch_size=args.train_batch_size
         self.eval_batch_size=args.eval_batch_size
         self.args=args

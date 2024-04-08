@@ -455,7 +455,8 @@ def modified_fisher(fisher,fisher_old
             
             elif adapt_type=='ktcf_scaledv1':
                 # [1] Important for previous tasks only (or) potential negative transfer -> make it less elastic (i.e. increase fisher scaling)
-                modified_fisher[n][fisher_rel>frel_cut] = fisher_old[n][fisher_rel>frel_cut] + ktcf_wgt*( (1/(lr*lamb_cur)) - (fisher_old[n][fisher_rel>frel_cut]) )
+                # When lamb=0, there is no regularisation so this step doesn't matter
+                if lamb_cur>0: modified_fisher[n][fisher_rel>frel_cut] = fisher_old[n][fisher_rel>frel_cut] + ktcf_wgt*( (1/(lr*lamb_cur)) - (fisher_old[n][fisher_rel>frel_cut]) )
                 # [2] Other situations: Important for both or for only new task or neither -> make it more elastic (i.e. decrease fisher scaling)
                 modified_fisher[n][fisher_rel<=frel_cut] = 0
             
@@ -516,9 +517,9 @@ def modified_fisher(fisher,fisher_old
     # with open(save_path+'_modified_paramcount.pkl', 'wb') as fp:
         # pickle.dump(check_counter, fp)
     if save_alpharel:
-        with open(save_path+'_relative_fisher.pkl', 'wb') as fp:
+        with open(save_path+'_relative_fisher_'+str(lamb_cur)+'_'+str(frel_cut)+'.pkl', 'wb') as fp:
             pickle.dump(rel_fisher_counter, fp)
-        with open(save_path+'_fisher_old.pkl', 'wb') as fp:
+        with open(save_path+'_fisher_old_'+str(lamb_cur)+'_'+str(frel_cut)+'.pkl', 'wb') as fp:
             pickle.dump(fisher_old, fp)
     
     return modified_fisher

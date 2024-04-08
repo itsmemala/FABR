@@ -55,6 +55,9 @@ def asc_config(parser):
                         help='temperature for loss function')
     parser.add_argument('--scenario',default='',type=str,required=True,help='(default=%(default)s)')
     # FABR dev args
+    parser.add_argument('--plot_lambs',default=None,type=list_of_ints,required=False,help='(default=%(default)s)')
+    parser.add_argument('--multi_plot_lail',default=False,type=bool,required=False,help='(default=%(default)s)')
+    parser.add_argument('--plot_lail',default=False,type=bool,required=False,help='(default=%(default)s)')
     parser.add_argument('--custom_alpha_lamb',default=None,type=list_of_ints,required=False,help='(default=%(default)s)')
     parser.add_argument('--custom_lamb',default=None,type=list_of_ints,required=False,help='(default=%(default)s)')
     parser.add_argument('--frel_cut_type',default='',type=str,required=False,help='(default=%(default)s)')

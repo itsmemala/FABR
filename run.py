@@ -249,22 +249,73 @@ for t,ncla in taskcla:
         # pickle.dump(data[t]['test_tokens'], internal_filename)
 
     # Train
-    if args.lfa is None: # No attribution calculation at train time
-        if 'ctr' in args.approach or 'bert_fine_tune' in args.approach:
-            appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path)
-        elif 'bert_adapter_derpp' in args.approach or 'bert_adapter_ewc' in args.approach or 'bert_adapter_lwf' in args.approach or 'bert_adapter_replay' in args.approach or 'bert_adapter_rrr' in args.approach or 'bert_adapter_seq' in args.approach or 'bert_adapter_mtl' in args.approach:
-            appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path,train,valid)
-        else:
-            appr.train(task,train_dataloader,valid_dataloader,args,my_save_path)
-    elif args.lfa=='test0':
-        appr.train(task,train_dataloader,valid_dataloader,args,my_save_path,data[t]['train_tokens'],global_attr=None) # Only local attributions
+    if args.multi_plot_lail and t==args.break_after_task:
+        # Checkpint models and fisher
+        checkpoint_model = utils.get_model(appr.model)
+        checkpoint_fisher, checkpoint_fisher_old, checkpoint_fisher_for_loss = appr.fisher, appr.fisher_old, appr.fisher_for_loss
+        for lamb_i,plot_lamb in enumerate(args.plot_lambs):
+            for thres_i,plot_thres in enumerate([0.5,0.6,0.7,0.8,0.9]):
+                print('\nTraining for',lamb_i,thres_i,'\n')
+                appr.lamb = plot_lamb            
+                appr.args.frel_cut = plot_thres
+                # Train variant
+                appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path,train,valid)
+                # Save varients for plotting later
+                if thres_i==0: appr.plot_la_models[lamb_i] = appr.la_model
+                appr.plot_mcl_models[lamb_i+thres_i] = utils.get_model(appr.model)
+                # Restore checkpoints
+                utils.set_model_(appr.model,checkpoint_model)
+                appr.fisher, appr.fisher_old, appr.fisher_for_loss = checkpoint_fisher, checkpoint_fisher_old, checkpoint_fisher_for_loss
+        # Multi-task model with same initialisation
+        print('\nTraining Multi\n')
+        appr.training_multi = True
+        appr.lamb = 0
+        multi_train=data[0]['train']
+        multi_valid=data[0]['valid']
+        multi_num_train_steps=data[0]['num_train_steps']
+        for temp_tid in range(1,t+1,1):
+            multi_train = ConcatDataset([multi_train,data[temp_tid]['train']])
+            multi_valid = ConcatDataset([multi_valid,data[temp_tid]['valid']])
+            multi_num_train_steps+=data[temp_tid]['num_train_steps']
+        multi_train_sampler = RandomSampler(multi_train)
+        multi_train_dataloader = DataLoader(multi_train, sampler=multi_train_sampler, batch_size=args.train_batch_size)
+        multi_valid_sampler = SequentialSampler(multi_valid)
+        multi_valid_dataloader = DataLoader(multi_valid, sampler=multi_valid_sampler, batch_size=args.eval_batch_size)
+        appr.train(task,multi_train_dataloader,multi_valid_dataloader,args,multi_num_train_steps,my_save_path,multi_train,multi_valid)
+        appr.multi_model = appr.la_model
+        appr.training_multi = False
     else:
-        if t==0:
-            appr.train(task,train_dataloader,valid_dataloader,args,my_save_path) # No attribution calculation at train time
+        if args.lfa is None: # No attribution calculation at train time
+            if 'ctr' in args.approach or 'bert_fine_tune' in args.approach:
+                appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path)
+            elif 'bert_adapter_derpp' in args.approach or 'bert_adapter_ewc' in args.approach or 'bert_adapter_lwf' in args.approach or 'bert_adapter_replay' in args.approach or 'bert_adapter_rrr' in args.approach or 'bert_adapter_seq' in args.approach or 'bert_adapter_mtl' in args.approach:
+                appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path,train,valid)
+            else:
+                appr.train(task,train_dataloader,valid_dataloader,args,my_save_path)
+        elif args.lfa=='test0':
+            appr.train(task,train_dataloader,valid_dataloader,args,my_save_path,data[t]['train_tokens'],global_attr=None) # Only local attributions
         else:
-            appr.train(task,train_dataloader,valid_dataloader,args,my_save_path,data[t]['train_tokens'],global_attr) # Use global attributions from memory
-    print('-'*100)
+            if t==0:
+                appr.train(task,train_dataloader,valid_dataloader,args,my_save_path) # No attribution calculation at train time
+            else:
+                appr.train(task,train_dataloader,valid_dataloader,args,my_save_path,data[t]['train_tokens'],global_attr) # Use global attributions from memory
+        print('-'*100)
 
+    # Plot loss along interpolation line
+    if args.plot_lail and t>0:
+        print('\nPlotting loss along interpolation line...\n')
+        test_sampler = SequentialSampler(data[t]['test'])
+        test_dataloader = DataLoader(data[t]['test'], sampler=test_sampler, batch_size=args.eval_batch_size)
+        valid_dataloader_past = []
+        test_dataloader_past = []
+        for temp_tid in range(t):
+            valid_sampler = SequentialSampler(data[temp_tid]['valid'])
+            valid_dataloader_past.append(DataLoader(data[temp_tid]['valid'], sampler=valid_sampler, batch_size=args.eval_batch_size))
+            test_sampler = SequentialSampler(data[temp_tid]['test'])
+            test_dataloader_past.append(DataLoader(data[temp_tid]['test'], sampler=test_sampler, batch_size=args.eval_batch_size))
+        fig_path = my_save_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'_task'+str(t)+'_interpolation_plot'
+        appr.plot_loss_along_interpolation_line(t,valid_dataloader,valid_dataloader_past,test_dataloader,test_dataloader_past,fig_path)
+    
     # Test
     # for u in range(t+1):
     for u in range(len(taskcla)):
