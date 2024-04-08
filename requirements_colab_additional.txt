@@ -1,0 +1,31 @@
+google==2.0.3
+google-ai-generativelanguage==0.4.0
+google-api-core==2.11.1
+google-api-python-client==2.84.0
+google-auth==2.27.0
+google-auth-httplib2==0.1.1
+google-auth-oauthlib==1.2.0
+google-cloud-aiplatform==1.46.0
+google-cloud-bigquery==3.12.0
+google-cloud-bigquery-connection==1.12.1
+google-cloud-bigquery-storage==2.24.0
+google-cloud-core==2.3.3
+google-cloud-datastore==2.15.2
+google-cloud-firestore==2.11.1
+google-cloud-functions==1.13.3
+google-cloud-iam==2.14.3
+google-cloud-language==2.13.3
+google-cloud-resource-manager==1.12.3
+google-cloud-storage==2.8.0
+google-cloud-translate==3.11.3
+google-colab @ file:///colabtools/dist/google-colab-1.0.0.tar.gz#sha256=0834445814613cace47f422e23da1f3f34ba9fa8725a67e4cf65ae6823480b0d
+google-crc32c==1.5.0
+google-generativeai==0.3.2
+google-pasta==0.2.0
+google-resumable-media==2.7.0
+googleapis-common-protos==1.63.0
+googledrivedownloader==0.4
+grpc-google-iam-v1==0.13.0
+pydata-google-auth==1.8.2
+tensorflow @ https://storage.googleapis.com/colab-tf-builds-public-09h6ksrfwbb9g9xv/tensorflow-2.15.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl#sha256=a2ec79931350b378c1ef300ca836b52a55751acb71a433582508a07f0de57c42
+jaxlib @ https://storage.googleapis.com/jax-releases/cuda12/jaxlib-0.4.26+cuda12.cudnn89-cp310-cp310-manylinux2014_x86_64.whl#sha256=813cf1fe3e7ca4dbf5327d6e7b4fc8521e92d8bba073ee645ae0d5d036a25750
