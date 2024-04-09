@@ -622,7 +622,7 @@ class Appr(ApprBase):
         y_diff = math.sqrt(y_diff)
         
         # Calculate co-ordinates for all the LA and MCL model variants
-        LA_VARIANT_x_pos_list, LA_VARIANT_info_list, plot_la_models_keys = [], [], []
+        LA_VARIANT_x_pos_list, LA_VARIANT_y_pos_list, LA_VARIANT_info_list, plot_la_models_keys = [], [], [], []
         for la_idx,LA_VARIANT_model in self.plot_la_models.items():
             if la_idx==0: continue # This is already used to calculate x_diff so we skip
             plot_la_models_keys.append(la_idx)
@@ -650,7 +650,8 @@ class Appr(ApprBase):
             LA_VARIANT_left_param_diff = math.sqrt(LA_VARIANT_left_param_diff)
             LA_VARIANT_info_list.append((LA_VARIANT_x_pos, LA_VARIANT_y_pos, LA_VARIANT_left_param_diff))
             LA_VARIANT_x_pos_list.append(LA_VARIANT_x_pos)
-        MCL_VARIANT_x_pos_list, MCL_VARIANT_info_list, plot_mcl_models_keys = [], [], []
+            LA_VARIANT_y_pos_list.append(LA_VARIANT_y_pos)
+        MCL_VARIANT_x_pos_list, MCL_VARIANT_y_pos_list, MCL_VARIANT_info_list, plot_mcl_models_keys = [], [], [], []
         for mcl_idx,MCL_VARIANT_model in self.plot_mcl_models.items():
             plot_mcl_models_keys.append(mcl_idx)
             MCL_VARIANT_xdot_product = 0
@@ -677,6 +678,7 @@ class Appr(ApprBase):
             MCL_VARIANT_left_param_diff = math.sqrt(MCL_VARIANT_left_param_diff)
             MCL_VARIANT_info_list.append((MCL_VARIANT_x_pos, MCL_VARIANT_y_pos, MCL_VARIANT_left_param_diff))
             MCL_VARIANT_x_pos_list.append(MCL_VARIANT_x_pos)
+            MCL_VARIANT_y_pos_list.append(MCL_VARIANT_y_pos)
         
         #Divide subspace with n*n points
         num_points = 50
@@ -684,9 +686,11 @@ class Appr(ApprBase):
         all_x_pos = LA_VARIANT_x_pos_list + MCL_VARIANT_x_pos_list
         all_x_pos.append(x_diff)
         all_x_pos.append(x_pos)
-        x_max = np.max(all_x_pos)
+        all_y_pos = LA_VARIANT_y_pos_list + MCL_VARIANT_y_pos_list
+        all_y_pos.append(y_diff)
+        y_max = np.max(all_y_pos)
         xlist = np.linspace(-3/10*x_diff, 13/10*x_max, num_points)
-        ylist = np.linspace(-3/10*y_diff, 13/10*y_diff, num_points)
+        ylist = np.linspace(-3/10*y_diff, 13/10*y_max, num_points)
         X, Y = np.meshgrid(xlist, ylist)
 
         # Valid data
