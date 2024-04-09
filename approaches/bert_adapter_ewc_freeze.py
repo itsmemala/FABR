@@ -751,25 +751,25 @@ class Appr(ApprBase):
                         'cur_task_testloss','cur_task_testacc','cur_task_testf1','past_task_testloss','past_task_testacc','past_task_testf1']
         # All plots
         for plot_name,vals in zip(plot_names,[Z1,Z1_2,Z1_3,Z2,Z2_2,Z2_3,Z3,Z3_2,Z3_3,Z4,Z4_2,Z4_3]):
-            fig,ax=plt.subplots(figsize=(10, 7))
-            cp = ax.contourf(X, Y, vals, cmap = 'gist_rainbow', alpha=0.6)
-            fig.colorbar(cp) # Add a colorbar to a plot
-            # First plot only the three models
-            plt.plot(0, 0, 'o', c='black') 
-            plt.plot(x_diff, 0, 'o', c='black') 
-            plt.plot(x_pos, y_diff, 'o', c='black')
-            plt.text(0, -y_diff/10,'$\u03F4^{{old}}$', fontsize=15.0, fontfamily= 'monospace', fontstyle = 'normal')
-            plt.text(x_diff, -y_diff/10,'$\u03F4_{}^{{la}}$'.format(0), fontsize=15.0, fontfamily= 'monospace', fontstyle = 'normal')
-            plt.text(x_pos, y_diff-y_diff/10,'$\u03F4^{{multi}}$', fontsize=15.0, fontfamily= 'monospace', fontstyle = 'normal')
-            # Now plot the LA and MCL variants
             for i, LA_VARIANT_info in enumerate(LA_VARIANT_info_list):
+                fig,ax=plt.subplots(figsize=(10, 7))
+                cp = ax.contourf(X, Y, vals, cmap = 'gist_rainbow', alpha=0.6)
+                fig.colorbar(cp) # Add a colorbar to a plot
+                # First plot only the three models
+                plt.plot(0, 0, 'o', c='black') 
+                plt.plot(x_diff, 0, 'o', c='black') 
+                plt.plot(x_pos, y_diff, 'o', c='black')
+                plt.text(0, -y_diff/10,'$\u03F4^{{old}}$', fontsize=15.0, fontfamily= 'monospace', fontstyle = 'normal')
+                plt.text(x_diff, -y_diff/10,'$\u03F4_{}^{{la}}$'.format(0), fontsize=15.0, fontfamily= 'monospace', fontstyle = 'normal')
+                plt.text(x_pos, y_diff-y_diff/10,'$\u03F4^{{multi}}$', fontsize=15.0, fontfamily= 'monospace', fontstyle = 'normal')
+                # Now plot the LA and MCL variants
                 plt.plot(LA_VARIANT_info[0], LA_VARIANT_info[1], marker='o', c='saddlebrown', markersize=8)
                 plt.text(LA_VARIANT_info[0], LA_VARIANT_info[1]-y_diff/10,'$\u03F4_{}^{{la}}$'.format(plot_la_models_keys[i]), fontsize=15.0, fontfamily= 'monospace', fontstyle = 'normal')
-            for i, MCL_VARIANT_info in enumerate(MCL_VARIANT_info_list):
-                plt.plot(MCL_VARIANT_info[0], MCL_VARIANT_info[1], marker='*', c='red', markersize=8)
-                plt.text(MCL_VARIANT_info[0], MCL_VARIANT_info[1]-y_diff/10,'$\u03F4_{}^{{mcl}}$'.format(plot_mcl_models_keys[i]), fontsize=15.0, fontfamily= 'monospace', fontstyle = 'normal')
+                for j, MCL_VARIANT_info in enumerate(MCL_VARIANT_info_list):
+                    plt.plot(MCL_VARIANT_info[0], MCL_VARIANT_info[1], marker='*', c='red', markersize=8)
+                    plt.text(MCL_VARIANT_info[0], MCL_VARIANT_info[1]-y_diff/10,'$\u03F4_{}^{{mcl}}$'.format(plot_mcl_models_keys[j]), fontsize=15.0, fontfamily= 'monospace', fontstyle = 'normal')
             
-            plt.savefig(fig_path+'_'+plot_name+'.png')
+                plt.savefig(fig_path+'_'+plot_name+'_lamb'+str(i)+'.png')
             # break        
             
         return
