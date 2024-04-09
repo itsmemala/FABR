@@ -250,7 +250,7 @@ for t,ncla in taskcla:
 
     # Train
     if args.multi_plot_lail and t==args.break_after_task:
-        # Checkpint models and fisher
+        # Checkpoint models and fisher
         checkpoint_model = utils.get_model(appr.model)
         checkpoint_fisher, checkpoint_fisher_old, checkpoint_fisher_for_loss = appr.fisher, appr.fisher_old, appr.fisher_for_loss
         for lamb_i,plot_lamb in enumerate(args.plot_lambs):
@@ -262,7 +262,7 @@ for t,ncla in taskcla:
                 appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path,train,valid)
                 # Save varients for plotting later
                 if thres_i==0: appr.plot_la_models[lamb_i] = appr.la_model
-                appr.plot_mcl_models[lamb_i+thres_i] = utils.get_model(appr.model)
+                appr.plot_mcl_models[str(lamb_i)+str(thres_i)] = utils.get_model(appr.model)
                 # Restore checkpoints
                 utils.set_model_(appr.model,checkpoint_model)
                 appr.fisher, appr.fisher_old, appr.fisher_for_loss = checkpoint_fisher, checkpoint_fisher_old, checkpoint_fisher_for_loss
