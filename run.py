@@ -254,7 +254,7 @@ for t,ncla in taskcla:
         checkpoint_model = utils.get_model(appr.model)
         checkpoint_fisher, checkpoint_fisher_old, checkpoint_fisher_for_loss = appr.fisher, appr.fisher_old, appr.fisher_for_loss
         for lamb_i,plot_lamb in enumerate(args.plot_lambs):
-            for thres_i,plot_thres in enumerate([0.5]):
+            for thres_i,plot_thres in enumerate([0.5,0.6,0.7,0.8,0.9]):
                 print('\nTraining for',lamb_i,thres_i,'\n')
                 appr.lamb = plot_lamb            
                 appr.args.frel_cut = plot_thres
@@ -265,7 +265,7 @@ for t,ncla in taskcla:
                     temp_model_path = my_save_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'_task'+str(t)+'lamsd_'+str(lamb_i)
                     torch.save(appr.la_model, temp_model_path)
                     appr.plot_la_models[plot_lamb] = temp_model_path
-                temp_model_path = my_save_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'_task'+str(t)+'mclmsd_'+str(lamb_i)+'msd_'+str(thres_i)
+                temp_model_path = my_save_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'_task'+str(t)+'mclmsd_'+str(lamb_i)+'_'+str(thres_i)
                 torch.save(utils.get_model(appr.model), temp_model_path)
                 appr.plot_mcl_models[str(plot_lamb)+'_'+str(plot_thres)] = temp_model_path
                 # Restore checkpoints

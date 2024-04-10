@@ -775,10 +775,10 @@ class Appr(ApprBase):
                 plt.text(x_pos, y_diff-y_diff/10,'$\u03F4^{{multi}}$', fontsize=15.0, fontfamily= 'monospace', fontstyle = 'normal')
                 # Now plot the LA and MCL variants
                 plt.plot(LA_VARIANT_info[0], LA_VARIANT_info[1], marker='o', c='saddlebrown', markersize=8)
-                plt.text(LA_VARIANT_info[0], LA_VARIANT_info[1]-y_diff/10,'$\u03F4_{}^{{la}}$'.format(plot_la_models_keys[i]), fontsize=15.0, fontfamily= 'monospace', fontstyle = 'normal')
+                plt.text(LA_VARIANT_info[0], LA_VARIANT_info[1]-y_diff/10,'$\u03F4_{}^{{la}}$'.format(i), fontsize=15.0, fontfamily= 'monospace', fontstyle = 'normal')
                 for j, MCL_VARIANT_info in enumerate(MCL_VARIANT_info_list):
                     plt.plot(MCL_VARIANT_info[0], MCL_VARIANT_info[1], marker='*', c='red', markersize=8)
-                    plt.text(MCL_VARIANT_info[0], MCL_VARIANT_info[1]-y_diff/10,'$\u03F4_{}^{{mcl}}$'.format(plot_mcl_models_keys[j]), fontsize=15.0, fontfamily= 'monospace', fontstyle = 'normal')
+                    plt.text(MCL_VARIANT_info[0], MCL_VARIANT_info[1]-y_diff/10,'$\u03F4_{}^{{mcl}}$'.format(j), fontsize=15.0, fontfamily= 'monospace', fontstyle = 'normal')
             
                 plt.savefig(fig_path+'_'+plot_name+'_lamb'+str(i)+'.png')
             # break        
