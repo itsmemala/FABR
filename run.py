@@ -261,8 +261,13 @@ for t,ncla in taskcla:
                 # Train variant
                 appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path,train,valid)
                 # Save varients for plotting later
-                if thres_i==0: appr.plot_la_models[plot_lamb] = appr.la_model
-                appr.plot_mcl_models[str(plot_lamb)+'_'+str(plot_thres)] = utils.get_model(appr.model)
+                if thres_i==0:
+                    temp_model_path = my_save_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'_task'+str(t)+'lamsd_'+str(lamb_i)
+                    torch.save(appr.la_model, temp_model_path)
+                    appr.plot_la_models[plot_lamb] = temp_model_path
+                temp_model_path = my_save_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'_task'+str(t)+'mclmsd_'+str(lamb_i)+'msd_'+str(thres_i)
+                torch.save(utils.get_model(appr.model), temp_model_path)
+                appr.plot_mcl_models[str(plot_lamb)+'_'+str(plot_thres)] = temp_model_path
                 # Restore checkpoints
                 utils.set_model_(appr.model,checkpoint_model)
                 appr.fisher, appr.fisher_old, appr.fisher_for_loss = checkpoint_fisher, checkpoint_fisher_old, checkpoint_fisher_for_loss
@@ -314,7 +319,7 @@ for t,ncla in taskcla:
             test_sampler = SequentialSampler(data[temp_tid]['test'])
             test_dataloader_past.append(DataLoader(data[temp_tid]['test'], sampler=test_sampler, batch_size=args.eval_batch_size))
         fig_path = my_save_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'_task'+str(t)+'_interpolation_plot'
-        appr.plot_loss_along_interpolation_line(t,valid_dataloader,valid_dataloader_past,test_dataloader,test_dataloader_past,fig_path)
+        appr.plot_loss_along_interpolation_line(network,t,valid_dataloader,valid_dataloader_past,test_dataloader,test_dataloader_past,fig_path)
     
     # Test
     # for u in range(t+1):

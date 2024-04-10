@@ -566,7 +566,7 @@ class Appr(ApprBase):
         return total_loss/total_num,total_acc/total_num,f1
     
     
-    def plot_loss_along_interpolation_line(self,t,valid_dataloader,valid_dataloader_past,test_dataloader,test_dataloader_past,fig_path):
+    def plot_loss_along_interpolation_line(self,network,t,valid_dataloader,valid_dataloader_past,test_dataloader,test_dataloader_past,fig_path):
         # Implementation based on: https://github.com/kim-sanghwan/ANCL/blob/main/src/mean_acc_landscape_analysis.py
         
         # for layer in range(12):
@@ -583,12 +583,15 @@ class Appr(ApprBase):
             # u_norm = torch.sqrt(torch.sum(u**2))
             # v = v - (torch.dot(u, v)/(u_norm**2))*u
         
+        plot_la_model = network.Net(taskcla,args=args).cuda()
+        plot_la_model.load_state_dict(torch.load(plot_la_models[0]))
+        
         x_diff, temp_diff = 0, 0
         x_param_list, temp_param_list = {}, {}
         # Calculate weight vector model2-model1 and set it as axis x direction
         # Calculate weight vector model3-model1 and set is as temp direction
         for n,param in self.model_old.named_parameters():
-            x_param_list[n] = self.plot_la_models[0][n].detach().cpu() - param.detach().cpu()
+            x_param_list[n] = self.plot_la_model[n].detach().cpu() - param.detach().cpu()
             x_diff += torch.sum(x_param_list[n]**2).item()
             temp_param_list[n] = self.multi_model[n].detach().cpu() - param.detach().cpu()
             temp_diff += torch.sum(temp_param_list[n]**2).item()
@@ -623,12 +626,14 @@ class Appr(ApprBase):
         
         # Calculate co-ordinates for all the LA and MCL model variants
         LA_VARIANT_x_pos_list, LA_VARIANT_y_pos_list, LA_VARIANT_info_list, plot_la_models_keys = [], [], [], []
-        for la_idx,LA_VARIANT_model in self.plot_la_models.items():
+        for la_idx,LA_VARIANT_model_path in self.plot_la_models.items():
             if la_idx==0: continue # This is already used to calculate x_diff so we skip
             plot_la_models_keys.append(la_idx)
             LA_VARIANT_xdot_product = 0
             LA_VARIANT_ydot_product = 0
             LA_VARIANT_param_list = {}
+            LA_VARIANT_model = network.Net(taskcla,args=args).cuda()
+            LA_VARIANT_model.load_state_dict(torch.load(LA_VARIANT_model_path))
             for n,param in self.model_old.named_parameters(): 
                 LA_VARIANT_param_list[n] = LA_VARIANT_model[n].detach().cpu() - param.detach().cpu()
                 LA_VARIANT_xdot_product += torch.sum(LA_VARIANT_param_list[n] * x_param_list[n]).item()
@@ -652,11 +657,13 @@ class Appr(ApprBase):
             LA_VARIANT_x_pos_list.append(LA_VARIANT_x_pos)
             LA_VARIANT_y_pos_list.append(LA_VARIANT_y_pos)
         MCL_VARIANT_x_pos_list, MCL_VARIANT_y_pos_list, MCL_VARIANT_info_list, plot_mcl_models_keys = [], [], [], []
-        for mcl_idx,MCL_VARIANT_model in self.plot_mcl_models.items():
+        for mcl_idx,MCL_VARIANT_model_path in self.plot_mcl_models.items():
             plot_mcl_models_keys.append(mcl_idx)
             MCL_VARIANT_xdot_product = 0
             MCL_VARIANT_ydot_product = 0
             MCL_VARIANT_param_list = {}
+            MCL_VARIANT_model = network.Net(taskcla,args=args).cuda()
+            MCL_VARIANT_model.load_state_dict(torch.load(MCL_VARIANT_model_path))
             for n,param in self.model_old.named_parameters(): 
                 MCL_VARIANT_param_list[n] = MCL_VARIANT_model[n].detach().cpu() - param.detach().cpu()
                 MCL_VARIANT_xdot_product += torch.sum(MCL_VARIANT_param_list[n] * x_param_list[n]).item()
