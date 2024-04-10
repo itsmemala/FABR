@@ -591,7 +591,7 @@ class Appr(ApprBase):
         # Calculate weight vector model2-model1 and set it as axis x direction
         # Calculate weight vector model3-model1 and set is as temp direction
         for n,param in self.model_old.named_parameters():
-            x_param_list[n] = plot_la_model[n].detach().cpu() - param.detach().cpu()
+            x_param_list[n] = plot_la_model.state_dict()[n].detach().cpu() - param.detach().cpu()
             x_diff += torch.sum(x_param_list[n]**2).item()
             temp_param_list[n] = self.multi_model[n].detach().cpu() - param.detach().cpu()
             temp_diff += torch.sum(temp_param_list[n]**2).item()
@@ -636,7 +636,7 @@ class Appr(ApprBase):
             LA_VARIANT_model = deepcopy(network)
             LA_VARIANT_model.load_state_dict(torch.load(LA_VARIANT_model_path))
             for n,param in self.model_old.named_parameters(): 
-                LA_VARIANT_param_list[n] = LA_VARIANT_model[n].detach().cpu() - param.detach().cpu()
+                LA_VARIANT_param_list[n] = LA_VARIANT_model.state_dict()[n].detach().cpu() - param.detach().cpu()
                 LA_VARIANT_xdot_product += torch.sum(LA_VARIANT_param_list[n] * x_param_list[n]).item()
                 LA_VARIANT_ydot_product += torch.sum(LA_VARIANT_param_list[n] * y_param_list[n]).item()
             del LA_VARIANT_model
@@ -667,7 +667,7 @@ class Appr(ApprBase):
             MCL_VARIANT_model = deepcopy(network)
             MCL_VARIANT_model.load_state_dict(torch.load(MCL_VARIANT_model_path))
             for n,param in self.model_old.named_parameters(): 
-                MCL_VARIANT_param_list[n] = MCL_VARIANT_model[n].detach().cpu() - param.detach().cpu()
+                MCL_VARIANT_param_list[n] = MCL_VARIANT_model.state_dict()[n].detach().cpu() - param.detach().cpu()
                 MCL_VARIANT_xdot_product += torch.sum(MCL_VARIANT_param_list[n] * x_param_list[n]).item()
                 MCL_VARIANT_ydot_product += torch.sum(MCL_VARIANT_param_list[n] * y_param_list[n]).item()
             del MCL_VARIANT_model
