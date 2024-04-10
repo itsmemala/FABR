@@ -584,14 +584,14 @@ class Appr(ApprBase):
             # v = v - (torch.dot(u, v)/(u_norm**2))*u
         
         plot_la_model = deepcopy(network)
-        plot_la_model.load_state_dict(torch.load(plot_la_models[0]))
+        plot_la_model.load_state_dict(torch.load(self.plot_la_models[0]))
         
         x_diff, temp_diff = 0, 0
         x_param_list, temp_param_list = {}, {}
         # Calculate weight vector model2-model1 and set it as axis x direction
         # Calculate weight vector model3-model1 and set is as temp direction
         for n,param in self.model_old.named_parameters():
-            x_param_list[n] = self.plot_la_model[n].detach().cpu() - param.detach().cpu()
+            x_param_list[n] = plot_la_model[n].detach().cpu() - param.detach().cpu()
             x_diff += torch.sum(x_param_list[n]**2).item()
             temp_param_list[n] = self.multi_model[n].detach().cpu() - param.detach().cpu()
             temp_diff += torch.sum(temp_param_list[n]**2).item()
