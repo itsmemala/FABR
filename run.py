@@ -261,8 +261,8 @@ for t,ncla in taskcla:
                 # Train variant
                 appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path,train,valid)
                 # Save varients for plotting later
-                if thres_i==0: appr.plot_la_models[lamb_i] = appr.la_model
-                appr.plot_mcl_models[str(lamb_i)+str(thres_i)] = utils.get_model(appr.model)
+                if thres_i==0: appr.plot_la_models[plot_lamb] = appr.la_model
+                appr.plot_mcl_models[str(plot_lamb)+'_'+str(plot_thres)] = utils.get_model(appr.model)
                 # Restore checkpoints
                 utils.set_model_(appr.model,checkpoint_model)
                 appr.fisher, appr.fisher_old, appr.fisher_for_loss = checkpoint_fisher, checkpoint_fisher_old, checkpoint_fisher_for_loss

@@ -686,6 +686,7 @@ class Appr(ApprBase):
         all_x_pos = LA_VARIANT_x_pos_list + MCL_VARIANT_x_pos_list
         all_x_pos.append(x_diff)
         all_x_pos.append(x_pos)
+        x_max = np.max(all_x_pos)
         all_y_pos = LA_VARIANT_y_pos_list + MCL_VARIANT_y_pos_list
         all_y_pos.append(y_diff)
         y_max = np.max(all_y_pos)
