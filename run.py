@@ -319,7 +319,7 @@ for t,ncla in taskcla:
             test_sampler = SequentialSampler(data[temp_tid]['test'])
             test_dataloader_past.append(DataLoader(data[temp_tid]['test'], sampler=test_sampler, batch_size=args.eval_batch_size))
         fig_path = my_save_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'_task'+str(t)+'_interpolation_plot'
-        appr.plot_loss_along_interpolation_line(network,t,valid_dataloader,valid_dataloader_past,test_dataloader,test_dataloader_past,fig_path)
+        appr.plot_loss_along_interpolation_line(network.Net(taskcla,args=args).cuda(),t,valid_dataloader,valid_dataloader_past,test_dataloader,test_dataloader_past,fig_path)
     
     # Test
     # for u in range(t+1):

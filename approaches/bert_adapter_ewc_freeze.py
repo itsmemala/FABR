@@ -583,7 +583,7 @@ class Appr(ApprBase):
             # u_norm = torch.sqrt(torch.sum(u**2))
             # v = v - (torch.dot(u, v)/(u_norm**2))*u
         
-        plot_la_model = network.Net(taskcla,args=args).cuda()
+        plot_la_model = deepcopy(network)
         plot_la_model.load_state_dict(torch.load(plot_la_models[0]))
         
         x_diff, temp_diff = 0, 0
@@ -595,6 +595,7 @@ class Appr(ApprBase):
             x_diff += torch.sum(x_param_list[n]**2).item()
             temp_param_list[n] = self.multi_model[n].detach().cpu() - param.detach().cpu()
             temp_diff += torch.sum(temp_param_list[n]**2).item()
+        del plot_la_model
         
         # Calculate y axis given x and temp vector.  
         dot_product = 0
@@ -632,12 +633,13 @@ class Appr(ApprBase):
             LA_VARIANT_xdot_product = 0
             LA_VARIANT_ydot_product = 0
             LA_VARIANT_param_list = {}
-            LA_VARIANT_model = network.Net(taskcla,args=args).cuda()
+            LA_VARIANT_model = deepcopy(network)
             LA_VARIANT_model.load_state_dict(torch.load(LA_VARIANT_model_path))
             for n,param in self.model_old.named_parameters(): 
                 LA_VARIANT_param_list[n] = LA_VARIANT_model[n].detach().cpu() - param.detach().cpu()
                 LA_VARIANT_xdot_product += torch.sum(LA_VARIANT_param_list[n] * x_param_list[n]).item()
-                LA_VARIANT_ydot_product += torch.sum(LA_VARIANT_param_list[n] * y_param_list[n]).item()     
+                LA_VARIANT_ydot_product += torch.sum(LA_VARIANT_param_list[n] * y_param_list[n]).item()
+            del LA_VARIANT_model
 
             LA_VARIANT_x_pos = 0
             LA_VARIANT_y_pos = 0
@@ -662,12 +664,13 @@ class Appr(ApprBase):
             MCL_VARIANT_xdot_product = 0
             MCL_VARIANT_ydot_product = 0
             MCL_VARIANT_param_list = {}
-            MCL_VARIANT_model = network.Net(taskcla,args=args).cuda()
+            MCL_VARIANT_model = deepcopy(network)
             MCL_VARIANT_model.load_state_dict(torch.load(MCL_VARIANT_model_path))
             for n,param in self.model_old.named_parameters(): 
                 MCL_VARIANT_param_list[n] = MCL_VARIANT_model[n].detach().cpu() - param.detach().cpu()
                 MCL_VARIANT_xdot_product += torch.sum(MCL_VARIANT_param_list[n] * x_param_list[n]).item()
-                MCL_VARIANT_ydot_product += torch.sum(MCL_VARIANT_param_list[n] * y_param_list[n]).item()     
+                MCL_VARIANT_ydot_product += torch.sum(MCL_VARIANT_param_list[n] * y_param_list[n]).item()
+            del MCL_VARIANT_model
 
             MCL_VARIANT_x_pos = 0
             MCL_VARIANT_y_pos = 0
