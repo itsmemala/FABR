@@ -628,8 +628,12 @@ class Appr(ApprBase):
         # Calculate co-ordinates for all the LA and MCL model variants
         LA_VARIANT_x_pos_list, LA_VARIANT_y_pos_list, LA_VARIANT_info_list, plot_la_models_keys = [], [], [], []
         for la_idx,LA_VARIANT_model_path in self.plot_la_models.items():
-            if la_idx==0: continue # This is already used to calculate x_diff so we skip
             plot_la_models_keys.append(la_idx)
+            if la_idx==0:  # This is already used to calculate x_diff so we skip
+                LA_VARIANT_info_list.append((x_diff, 0, _))
+                LA_VARIANT_x_pos_list.append(x_diff)
+                LA_VARIANT_y_pos_list.append(0)
+                continue
             LA_VARIANT_xdot_product = 0
             LA_VARIANT_ydot_product = 0
             LA_VARIANT_param_list = {}
@@ -691,7 +695,7 @@ class Appr(ApprBase):
             MCL_VARIANT_y_pos_list.append(MCL_VARIANT_y_pos)
         
         #Divide subspace with n*n points
-        num_points = 50
+        num_points = 3
         # x_max = x_diff if x_diff>x_pos else x_pos
         all_x_pos = LA_VARIANT_x_pos_list + MCL_VARIANT_x_pos_list
         all_x_pos.append(x_diff)
@@ -775,11 +779,11 @@ class Appr(ApprBase):
                 plt.text(x_pos, y_diff-y_diff/10,'$\u03F4^{{multi}}$', fontsize=15.0, fontfamily= 'monospace', fontstyle = 'normal')
                 # Now plot the LA and MCL variants
                 plt.plot(LA_VARIANT_info[0], LA_VARIANT_info[1], marker='o', c='saddlebrown', markersize=8)
-                plt.text(LA_VARIANT_info[0], LA_VARIANT_info[1]-y_diff/10,'$\u03F4_{}^{{la}}$'.format(i), fontsize=15.0, fontfamily= 'monospace', fontstyle = 'normal')
+                plt.text(LA_VARIANT_info[0], LA_VARIANT_info[1]-y_diff/10,'$\u03F4_{}^{{la}}$'.format(plot_la_models_keys[i]), fontsize=15.0, fontfamily= 'monospace', fontstyle = 'normal')
                 for j, MCL_VARIANT_info in enumerate(MCL_VARIANT_info_list):
-                    if plot_mcl_models_keys[j].split('_')[0]==plot_la_models_keys[i]:
+                    if plot_mcl_models_keys[j].split('_')[0]==str(plot_la_models_keys[i]):
                         plt.plot(MCL_VARIANT_info[0], MCL_VARIANT_info[1], marker='*', c='red', markersize=8)
-                        plt.text(MCL_VARIANT_info[0], MCL_VARIANT_info[1]-y_diff/10,'$\u03F4_{}^{{mcl}}$'.format(j), fontsize=15.0, fontfamily= 'monospace', fontstyle = 'normal')
+                        plt.text(MCL_VARIANT_info[0], MCL_VARIANT_info[1]-y_diff/10,'$\u03F4_{:.1f}^{{mcl}}$'.format(plot_mcl_models_keys[j].split('_')[0]), fontsize=15.0, fontfamily= 'monospace', fontstyle = 'normal')
             
                 plt.savefig(fig_path+'_'+plot_name+'_lamb'+str(i)+'.png')
             # break        
