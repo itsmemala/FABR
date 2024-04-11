@@ -254,7 +254,7 @@ for t,ncla in taskcla:
         checkpoint_model = utils.get_model(appr.model)
         checkpoint_fisher, checkpoint_fisher_old, checkpoint_fisher_for_loss = appr.fisher, appr.fisher_old, appr.fisher_for_loss
         for lamb_i,plot_lamb in enumerate(args.plot_lambs):
-            for thres_i,plot_thres in enumerate([0.5]):
+            for thres_i,plot_thres in enumerate([0.5,0.6,0.7,0.8,0.9]):
                 print('\nTraining for',lamb_i,thres_i,'\n')
                 appr.lamb = plot_lamb            
                 appr.args.frel_cut = plot_thres
