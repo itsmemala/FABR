@@ -630,7 +630,7 @@ class Appr(ApprBase):
         for la_idx,LA_VARIANT_model_path in self.plot_la_models.items():
             plot_la_models_keys.append(la_idx)
             if la_idx==0:  # This is already used to calculate x_diff so we skip
-                LA_VARIANT_info_list.append((x_diff, 0, _))
+                LA_VARIANT_info_list.append((x_diff, 0, 0))
                 LA_VARIANT_x_pos_list.append(x_diff)
                 LA_VARIANT_y_pos_list.append(0)
                 continue
