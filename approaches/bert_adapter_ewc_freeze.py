@@ -780,7 +780,7 @@ class Appr(ApprBase):
                 # Now plot the LA and MCL variants
                 if i>0: # la-0 is already plotted above
                     plt.plot(LA_VARIANT_info[0], LA_VARIANT_info[1], marker='o', c='saddlebrown', markersize=8)
-                    plt.text(LA_VARIANT_info[0], LA_VARIANT_info[1]-y_diff/10,'$\u03F4_{:d}^{{la}}$'.format(plot_la_models_keys[i]), fontsize=15.0, fontfamily= 'monospace', fontstyle = 'normal')
+                    plt.text(LA_VARIANT_info[0], LA_VARIANT_info[1]-y_diff/10,'$\u03F4_{:.0f}^{{la}}$'.format(plot_la_models_keys[i]), fontsize=15.0, fontfamily= 'monospace', fontstyle = 'normal')
                 # for j, MCL_VARIANT_info in enumerate(MCL_VARIANT_info_list):
                     # if plot_mcl_models_keys[j].split('_')[0]==str(plot_la_models_keys[i]):
                         # plt.plot(MCL_VARIANT_info[0], MCL_VARIANT_info[1], marker='*', c='red', markersize=8)
