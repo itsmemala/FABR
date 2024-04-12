@@ -307,7 +307,7 @@ for t,ncla in taskcla:
         print('-'*100)
 
     # Plot loss along interpolation line
-    if args.plot_lail and t>0:
+    if args.plot_lail and t==args.break_after_task:
         print('\nPlotting loss along interpolation line...\n')
         test_sampler = SequentialSampler(data[t]['test'])
         test_dataloader = DataLoader(data[t]['test'], sampler=test_sampler, batch_size=args.eval_batch_size)
