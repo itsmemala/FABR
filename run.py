@@ -17,7 +17,6 @@ tstart=time.time()
 
 torch.cuda.empty_cache()
 # os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:<enter-size-here>"
-print(os.environ["PYTORCH_CUDA_ALLOC_CONF"])
 
 # Arguments
 
