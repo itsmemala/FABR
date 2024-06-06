@@ -326,7 +326,7 @@ class Appr(ApprBase):
         for step, batch in enumerate(iter_bar):
             # print('step: ',step)
             batch = [
-                bat.to(self.device) if bat is not None else None for bat in batch]
+                bat.to(self.device, non_blocking=True) if bat is not None else None for bat in batch]
             input_ids, segment_ids, input_mask, targets, tasks= batch
 
             output_dict = self.model.forward(input_ids, segment_ids, input_mask)
