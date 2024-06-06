@@ -241,10 +241,10 @@ for t,ncla in taskcla:
         task=t
 
     train_sampler = RandomSampler(train)
-    train_dataloader = DataLoader(train, sampler=train_sampler, batch_size=args.train_batch_size)
+    train_dataloader = DataLoader(train, sampler=train_sampler, batch_size=args.train_batch_size, pin_memory=True)
 
     valid_sampler = SequentialSampler(valid)
-    valid_dataloader = DataLoader(valid, sampler=valid_sampler, batch_size=args.eval_batch_size)
+    valid_dataloader = DataLoader(valid, sampler=valid_sampler, batch_size=args.eval_batch_size, pin_memory=True)
 
     # with open(my_save_path+str(args.note)+'_seed'+str(args.seed)+"_inputtokens_task"+str(t)+".txt", "wb") as internal_filename:
         # pickle.dump(data[t]['train_tokens'], internal_filename)
@@ -288,9 +288,9 @@ for t,ncla in taskcla:
             multi_valid = ConcatDataset([multi_valid,data[temp_tid]['valid']])
             multi_num_train_steps+=data[temp_tid]['num_train_steps']
         multi_train_sampler = RandomSampler(multi_train)
-        multi_train_dataloader = DataLoader(multi_train, sampler=multi_train_sampler, batch_size=args.train_batch_size)
+        multi_train_dataloader = DataLoader(multi_train, sampler=multi_train_sampler, batch_size=args.train_batch_size, pin_memory=True)
         multi_valid_sampler = SequentialSampler(multi_valid)
-        multi_valid_dataloader = DataLoader(multi_valid, sampler=multi_valid_sampler, batch_size=args.eval_batch_size)
+        multi_valid_dataloader = DataLoader(multi_valid, sampler=multi_valid_sampler, batch_size=args.eval_batch_size, pin_memory=True)
         appr.train(task,multi_train_dataloader,multi_valid_dataloader,args,multi_num_train_steps,my_save_path,multi_train,multi_valid)
         appr.multi_model = appr.la_model
         appr.training_multi = False
@@ -316,16 +316,16 @@ for t,ncla in taskcla:
         print('\nPlotting loss along interpolation line...\n')
         test=data[t]['test']
         test_sampler = SequentialSampler(test)
-        test_dataloader = DataLoader(test, sampler=test_sampler, batch_size=args.eval_batch_size)
+        test_dataloader = DataLoader(test, sampler=test_sampler, batch_size=args.eval_batch_size, pin_memory=True)
         past_test=data[0]['test']
         past_valid=data[0]['valid']
         for temp_tid in range(1,t,1):
             past_test = ConcatDataset([past_test,data[temp_tid]['test']])
             past_valid = ConcatDataset([past_valid,data[temp_tid]['valid']])
         past_test_sampler = RandomSampler(past_test)
-        past_test_dataloader = DataLoader(past_test, sampler=past_test_sampler, batch_size=args.eval_batch_size)
+        past_test_dataloader = DataLoader(past_test, sampler=past_test_sampler, batch_size=args.eval_batch_size, pin_memory=True)
         past_valid_sampler = SequentialSampler(past_valid)
-        past_valid_dataloader = DataLoader(past_valid, sampler=past_valid_sampler, batch_size=args.eval_batch_size)
+        past_valid_dataloader = DataLoader(past_valid, sampler=past_valid_sampler, batch_size=args.eval_batch_size, pin_memory=True)
         fig_path = my_save_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'_task'+str(t)+'_interpolation_plot'
         appr.plot_loss_along_interpolation_line(network.Net(taskcla,args=args).cuda(),t,valid_dataloader,past_valid_dataloader,test_dataloader,past_test_dataloader,fig_path)
     
@@ -342,7 +342,7 @@ for t,ncla in taskcla:
         
         test=data[u]['test']
         test_sampler = SequentialSampler(test)
-        test_dataloader = DataLoader(test, sampler=test_sampler, batch_size=args.eval_batch_size)
+        test_dataloader = DataLoader(test, sampler=test_sampler, batch_size=args.eval_batch_size, pin_memory=True)
 
         if 'kan' in args.approach:
             test_loss,test_acc,test_f1=appr.eval(eval_head,test_dataloader,'mcl')
@@ -376,7 +376,7 @@ for t,ncla in taskcla:
             # Calculate attributions on all previous tasks and current task after training
             train = data[u]['train']
             train_sampler = SequentialSampler(train) # Retain the order of the dataset, i.e. no shuffling
-            train_dataloader = DataLoader(train, sampler=train_sampler, batch_size=args.train_batch_size)
+            train_dataloader = DataLoader(train, sampler=train_sampler, batch_size=args.train_batch_size, pin_memory=True)
             if args.approach=='bert_adapter_ewc_fabr':
                 targets, predictions, attributions = appr.get_attributions(eval_head,train_dataloader)
             elif args.approach=='bert_fine_tune' or args.approach=='bert_adapter_rrr' or args.approach=='ctr' or args.approach=='bert_adapter_seq' or args.approach=='bert_adapter_ewc_freeze':
