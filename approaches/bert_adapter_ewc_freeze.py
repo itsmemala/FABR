@@ -327,7 +327,7 @@ class Appr(ApprBase):
             # print('step: ',step)
             batch = [
                 bat.to(self.device) if bat is not None else None for bat in batch]
-            input_ids, segment_ids, input_mask, targets, _= batch
+            input_ids, segment_ids, input_mask, targets, tasks= batch
 
             output_dict = self.model.forward(input_ids, segment_ids, input_mask)
             # Forward
@@ -338,7 +338,11 @@ class Appr(ApprBase):
                 output = outputs[t]
             elif 'cil' in self.args.scenario:
                 output=output_dict['y']
-            loss=self.criterion(t,output,targets,class_counts=class_counts,phase=phase)
+            
+            if 'cil' in self.args.scenario and self.training_multi:
+                loss=self.criterion_train(tasks,output_dict['y'],targets,class_counts)
+            else:
+                loss=self.criterion(t,output,targets,class_counts=class_counts,phase=phase)
 
             iter_bar.set_description('Train Iter (loss=%5.3f)' % loss.item())
             loss.backward()
@@ -355,6 +359,31 @@ class Appr(ApprBase):
             global_step += 1          
 
         return global_step,np.array(step_wise_updates)
+
+    def criterion_train(self,tasks,outputs,targets,class_counts): # Copied from bert_adapter_seq.py, for multi-task model training during CL
+        loss=0
+        # loss2=0
+        for t in np.unique(tasks.data.cpu().numpy()):
+            t=int(t)
+            # output = outputs  # shared head
+
+            if 'dil' in self.args.scenario:
+                output=outputs #always shared head
+            elif 'til' in self.args.scenario:
+                output = outputs[t]
+            elif 'cil' in self.args.scenario:
+                output = outputs
+
+            idx=(tasks==t).data.nonzero().view(-1)
+            
+            # if 'cil' in self.args.scenario and self.args.use_rbs:
+                # loss+=self.ce(t,output[idx,:],targets[idx],class_counts)*len(idx)
+            # else:
+                # loss+=self.ce(output[idx,:],targets[idx])*len(idx)
+            # Note: We do not need RBS for MTL:
+            loss+=self.ce(output[idx,:],targets[idx])*len(idx)
+        
+        return loss/targets.size(0)
 
     def eval(self,t,data,test=None,trained_task=None,phase=None):
         total_loss=0
@@ -545,10 +574,12 @@ class Appr(ApprBase):
                 elif 'cil' in self.args.scenario:
                     output=output_dict['y']
                 
-                if 'cil' in self.args.scenario and self.args.use_rbs:
-                    loss=self.ce(t,output,targets,class_counts)
-                else:
-                    loss=self.ce(output,targets)
+                # if 'cil' in self.args.scenario and self.args.use_rbs:
+                    # loss=self.ce(t,output,targets,class_counts)
+                # else:
+                    # loss=self.ce(output,targets)
+                # Note: For plots, we only want to see ce loss
+                loss=self.ce(output,targets)
 
                 _,pred=output.max(1)
                 hits=(pred==targets).float()
@@ -741,9 +772,9 @@ class Appr(ApprBase):
                             + ylist[y_tick]/y_diff* y_param_list[n])
         
                 Z1[y_tick, x_tick], Z1_2[y_tick, x_tick], Z1_3[y_tick, x_tick] = self.eval_temp_model(t,valid_dataloader,use_model=self.plot_model)
-                Z2[y_tick, x_tick], Z2_2[y_tick, x_tick], Z2_3[y_tick, x_tick] = self.eval_temp_model(t-1,valid_dataloader_past[-1],use_model=self.plot_model)
+                Z2[y_tick, x_tick], Z2_2[y_tick, x_tick], Z2_3[y_tick, x_tick] = self.eval_temp_model(t-1,valid_dataloader_past,use_model=self.plot_model)
                 Z3[y_tick, x_tick], Z3_2[y_tick, x_tick], Z3_3[y_tick, x_tick] = self.eval_temp_model(t,test_dataloader,use_model=self.plot_model)
-                Z4[y_tick, x_tick], Z4_2[y_tick, x_tick], Z4_3[y_tick, x_tick] = self.eval_temp_model(t-1,test_dataloader_past[-1],use_model=self.plot_model)
+                Z4[y_tick, x_tick], Z4_2[y_tick, x_tick], Z4_3[y_tick, x_tick] = self.eval_temp_model(t-1,test_dataloader_past,use_model=self.plot_model)
         
         # denoise values to make contour smooth
         Z1 = gaussian_filter(Z1, 2)

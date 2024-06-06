@@ -275,6 +275,8 @@ for t,ncla in taskcla:
         print('\nTraining Multi\n')
         appr.training_multi = True
         appr.lamb = 0
+        appr.ce=torch.nn.CrossEntropyLoss()
+        appr.args.use_rbs=False
         multi_train=data[0]['train']
         multi_valid=data[0]['valid']
         multi_num_train_steps=data[0]['num_train_steps']
@@ -309,17 +311,20 @@ for t,ncla in taskcla:
     # Plot loss along interpolation line
     if args.plot_lail and t==args.break_after_task:
         print('\nPlotting loss along interpolation line...\n')
-        test_sampler = SequentialSampler(data[t]['test'])
-        test_dataloader = DataLoader(data[t]['test'], sampler=test_sampler, batch_size=args.eval_batch_size)
-        valid_dataloader_past = []
-        test_dataloader_past = []
-        for temp_tid in range(t):
-            valid_sampler = SequentialSampler(data[temp_tid]['valid'])
-            valid_dataloader_past.append(DataLoader(data[temp_tid]['valid'], sampler=valid_sampler, batch_size=args.eval_batch_size))
-            test_sampler = SequentialSampler(data[temp_tid]['test'])
-            test_dataloader_past.append(DataLoader(data[temp_tid]['test'], sampler=test_sampler, batch_size=args.eval_batch_size))
+        test=data[t]['test']
+        test_sampler = SequentialSampler(test)
+        test_dataloader = DataLoader(test, sampler=test_sampler, batch_size=args.eval_batch_size)
+        past_test=data[0]['test']
+        past_valid=data[0]['valid']
+        for temp_tid in range(1,t,1):
+            past_test = ConcatDataset([past_test,data[temp_tid]['test']])
+            past_valid = ConcatDataset([past_valid,data[temp_tid]['valid']])
+        past_test_sampler = RandomSampler(past_test)
+        past_test_dataloader = DataLoader(past_test, sampler=past_test_sampler, batch_size=args.eval_batch_size)
+        past_valid_sampler = SequentialSampler(past_valid)
+        past_valid_dataloader = DataLoader(past_valid, sampler=past_valid_sampler, batch_size=args.eval_batch_size)
         fig_path = my_save_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'_task'+str(t)+'_interpolation_plot'
-        appr.plot_loss_along_interpolation_line(network.Net(taskcla,args=args).cuda(),t,valid_dataloader,valid_dataloader_past,test_dataloader,test_dataloader_past,fig_path)
+        appr.plot_loss_along_interpolation_line(network.Net(taskcla,args=args).cuda(),t,valid_dataloader,past_valid_dataloader,test_dataloader,past_test_dataloader,fig_path)
     
     # Test
     # for u in range(t+1):

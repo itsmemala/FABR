@@ -462,7 +462,8 @@ def modified_fisher(fisher,fisher_old
             
             elif adapt_type=='ktcf_scaledv2':
                 # [1] Important for previous tasks only (or) potential negative transfer -> make it less elastic (i.e. increase fisher scaling)
-                modified_fisher[n][fisher_rel>frel_cut] = fisher_old[n][fisher_rel>frel_cut] + ktcf_wgt*( (1/(lr*lamb_cur)) - (fisher_old[n][fisher_rel>frel_cut]) )
+                # When lamb=0, there is no regularisation so this step doesn't matter
+                if lamb_cur>0: modified_fisher[n][fisher_rel>frel_cut] = fisher_old[n][fisher_rel>frel_cut] + ktcf_wgt*( (1/(lr*lamb_cur)) - (fisher_old[n][fisher_rel>frel_cut]) )
                 # [2] Other situations: Important for both or for only new task or neither -> make it more elastic (i.e. decrease fisher scaling)
                 modified_fisher[n][fisher_rel<=frel_cut] = fisher_rel[fisher_rel<=frel_cut]*fisher_old[n][fisher_rel<=frel_cut]
             elif adapt_type=='ktcf_scaledv2b':
