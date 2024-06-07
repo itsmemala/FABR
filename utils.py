@@ -408,6 +408,8 @@ def modified_fisher(fisher,fisher_old
         assert fisher_old[n].shape==fisher[n].shape
         # print(n,fisher[n].shape)
         
+        fisher_old[n] = fisher_old[n].cuda()
+        
         if 'output.adapter' in n or 'output.LayerNorm' in n or (modify_fisher_last==True and 'last' in n):
             # if 'last' in n:
                 # print('calculating for last layer...\n\n')
