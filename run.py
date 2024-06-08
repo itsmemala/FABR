@@ -259,7 +259,7 @@ for t,ncla in taskcla:
         checkpoint_fisher, checkpoint_fisher_old, checkpoint_fisher_for_loss = {}, {}, {}
         for n,_ in appr.model.named_parameters():
             checkpoint_fisher[n]=appr.fisher[n].clone().cpu() ## Changes to make space on GPU: #9
-            if fisher_old[n] is not None: checkpoint_fisher_old[n]=appr.fisher_old[n].clone().cpu() #Note: this will be none when only 1 task has been trained so far
+            if appr.fisher_old is not None: checkpoint_fisher_old[n]=appr.fisher_old[n].clone().cpu() #Note: this will be none when only 1 task has been trained so far
             checkpoint_fisher_for_loss[n]=appr.fisher_for_loss[n].clone().cpu()
         for lamb_i,plot_lamb in enumerate(args.plot_lambs):
             for thres_i,plot_thres in enumerate([0.5]): #,0.6,0.7,0.8,0.9]):
@@ -283,7 +283,7 @@ for t,ncla in taskcla:
                 utils.set_model_(appr.model,checkpoint_model)
                 for n,_ in appr.model.named_parameters():
                     appr.fisher[n] = checkpoint_fisher[n].cuda() ## Changes to make space on GPU: #10
-                    if checkpoint_fisher_old[n] is not None: appr.fisher_old[n] = checkpoint_fisher_old[n] #Note: This remains on cpu #Note: this will be none when only 1 task has been trained so far
+                    if checkpoint_fisher_old!={}: appr.fisher_old[n] = checkpoint_fisher_old[n] #Note: This remains on cpu #Note: this will be none when only 1 task has been trained so far
                     appr.fisher_for_loss[n] = checkpoint_fisher_for_loss[n].cuda()
         # Multi-task model with same initialisation
         print('\nTraining Multi\n')
