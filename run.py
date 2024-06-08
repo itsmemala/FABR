@@ -256,10 +256,16 @@ for t,ncla in taskcla:
     if args.multi_plot_lail and t==args.break_after_task:
         # Checkpoint models and fisher
         checkpoint_model = utils.get_model(appr.model)
-        checkpoint_fisher, checkpoint_fisher_old, checkpoint_fisher_for_loss = appr.fisher, appr.fisher_old, appr.fisher_for_loss
+        checkpoint_fisher={}
+        for n,_ in appr.model.named_parameters():
+            checkpoint_fisher[n]=appr.fisher[n].clone().cpu() ## Changes to make space on GPU: #9
+        checkpoint_fisher_old, checkpoint_fisher_for_loss = appr.fisher, appr.fisher_old, appr.fisher_for_loss
         for lamb_i,plot_lamb in enumerate(args.plot_lambs):
             for thres_i,plot_thres in enumerate([0.5]): #,0.6,0.7,0.8,0.9]):
                 print('\nTraining for',lamb_i,thres_i,'\n')
+                print('Researved:',torch.cuda.memory_reserved(0))
+                print('Allocated:',torch.cuda.memory_allocated(0))
+                print('Free:',torch.cuda.memory_reserved(0)-torch.cuda.memory_allocated(0),'\n')
                 appr.lamb = plot_lamb            
                 appr.args.frel_cut = plot_thres
                 # Train variant
@@ -274,6 +280,8 @@ for t,ncla in taskcla:
                 appr.plot_mcl_models[str(plot_lamb)+'_'+str(plot_thres)] = temp_model_path
                 # Restore checkpoints
                 utils.set_model_(appr.model,checkpoint_model)
+                for n,_ in appr.model.named_parameters():
+                    appr.fisher[n] = checkpoint_fisher[n].cuda() ## Changes to make space on GPU: #10
                 appr.fisher, appr.fisher_old, appr.fisher_for_loss = checkpoint_fisher, checkpoint_fisher_old, checkpoint_fisher_for_loss
         # Multi-task model with same initialisation
         print('\nTraining Multi\n')
