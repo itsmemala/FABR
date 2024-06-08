@@ -51,7 +51,7 @@ class Appr(ApprBase):
             train_phases = ['fo']
         
         for phase in train_phases:
-            if phase=='mcl:
+            if phase=='mcl': # DEBUG
                 print('\n ############# DEBUG GPU memory ########### \n')
                 print(torch.cuda.memory_summary())
                 for obj in gc.get_objects():
