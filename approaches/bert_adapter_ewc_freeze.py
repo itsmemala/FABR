@@ -228,6 +228,7 @@ class Appr(ApprBase):
                 if t>0:
                     frozen_paramcount = 0
                     for (name,param),(_,param_old) in zip(self.model.named_parameters(),self.model_old.named_parameters()):
+                        param_old = param_old.cuda()
                         if torch.sum(param_old-param)==0:
                             frozen_paramcount+=1
                     print('Frozen paramcount:',frozen_paramcount)
