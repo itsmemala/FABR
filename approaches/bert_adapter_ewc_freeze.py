@@ -225,13 +225,13 @@ class Appr(ApprBase):
             # torch.save(self.model.state_dict(), save_path+str(args.note)+'_seed'+str(args.seed)+'_model'+str(t))
 
             if phase=='mcl':
-                if t>0:
-                    frozen_paramcount = 0
-                    for (name,param),(_,param_old) in zip(self.model.named_parameters(),self.model_old.named_parameters()):
-                        param_old = param_old.cuda()
-                        if torch.sum(param_old-param)==0:
-                            frozen_paramcount+=1
-                    print('Frozen paramcount:',frozen_paramcount)
+                # if t>0:
+                    # frozen_paramcount = 0
+                    # for (name,param),(_,param_old) in zip(self.model.named_parameters(),self.model_old.named_parameters()):
+                        # param_old = param_old.cuda()
+                        # if torch.sum(param_old-param)==0:
+                            # frozen_paramcount+=1
+                    # print('Frozen paramcount:',frozen_paramcount)
                 # Update old
                 self.model_old=deepcopy(self.model)
                 self.model_old.eval()
@@ -741,7 +741,7 @@ class Appr(ApprBase):
             MCL_VARIANT_y_pos_list.append(MCL_VARIANT_y_pos)
         
         #Divide subspace with n*n points
-        num_points = 2
+        num_points = 50
         # x_max = x_diff if x_diff>x_pos else x_pos
         all_x_pos = LA_VARIANT_x_pos_list + MCL_VARIANT_x_pos_list
         all_x_pos.append(x_diff)
