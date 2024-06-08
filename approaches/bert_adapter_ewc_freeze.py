@@ -737,7 +737,7 @@ class Appr(ApprBase):
             MCL_VARIANT_y_pos_list.append(MCL_VARIANT_y_pos)
         
         #Divide subspace with n*n points
-        num_points = 1
+        num_points = 2
         # x_max = x_diff if x_diff>x_pos else x_pos
         all_x_pos = LA_VARIANT_x_pos_list + MCL_VARIANT_x_pos_list
         all_x_pos.append(x_diff)
