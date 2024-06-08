@@ -52,19 +52,18 @@ class Appr(ApprBase):
             train_phases = ['fo']
         
         for phase in train_phases:
-            if phase=='mcl': # DEBUG
-                print('\n ############# DEBUG GPU memory ########### \n')
-                print(torch.cuda.memory_summary())
-                for obj in gc.get_objects():
-                    try:
-                        if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
-                            print(type(obj), obj.size())
-                    except:
-                        pass
-                
+            # if phase=='mcl': # DEBUG
+                # print('\n ############# DEBUG GPU memory ########### \n')
+                # print(torch.cuda.memory_summary())
+                # for obj in gc.get_objects():
+                    # try:
+                        # if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
+                            # print(type(obj), obj.size())
+                    # except:
+                        # pass                
         
             if phase=='fo':
-                self.mcl_model=utils.get_model(self.model) # Save the main model before commencing fisher overlap check
+                self.mcl_model=utils.get_model(self.model).cpu() # Save the main model before commencing fisher overlap check  ## Changes to make space on GPU: #3
             
             if t>0:
                 torch.manual_seed(args.seed) # Ensure same shuffling order of dataloader and other random behaviour between fo and mcl phases
@@ -309,8 +308,8 @@ class Appr(ApprBase):
                 self.lamb = self.args.custom_lamb[t+1] if t+1<=self.args.break_after_task else 0
 
             if phase=='fo':
-                self.la_model=utils.get_model(self.model)
-                utils.set_model_(self.model,self.mcl_model) # Reset to main model after fisher overlap check
+                self.la_model=utils.get_model(self.model).cpu() ## Changes to make space on GPU: #4
+                utils.set_model_(self.model,self.mcl_model.cuda()) # Reset to main model after fisher overlap check ## Changes to make space on GPU: #5
             
             if phase=='mcl' and t>0:
                 wd_aux = 0
@@ -318,10 +317,10 @@ class Appr(ApprBase):
                 wd_old_magn = {}
                 for n,param in self.model.named_parameters():
                     if 'output.adapter' in n or 'output.LayerNorm' in n or (self.args.modify_fisher_last==True and 'last' in n):
-                        wd_aux += torch.sum((param.detach() - self.la_model[n].detach())**2).item()
-                        wd_old += torch.sum((param.detach() - self.mcl_model[n].detach())**2).item()
+                        wd_aux += torch.sum((param.detach().cpu() - self.la_model[n].detach())**2).item() ## Changes to make space on GPU: #5
+                        wd_old += torch.sum((param.detach().cpu() - self.mcl_model[n].detach())**2).item() ## Changes to make space on GPU: #5
                         # wd_old_magn[n] = math.sqrt(torch.sum((param.detach() - self.mcl_model[n].detach())**2).item())
-                        wd_old_magn[n] = (param.detach() - self.mcl_model[n].detach())**2
+                        wd_old_magn[n] = (param.detach().cpu() - self.mcl_model[n].detach())**2 ## Changes to make space on GPU: #5
                 wd_aux = math.sqrt(wd_aux)
                 wd_old = math.sqrt(wd_old)
                 np.savetxt(save_path+str(args.note)+'_seed'+str(args.seed)+'_task'+str(t)+'wd.txt',np.array([wd_aux,wd_old]),'%.4f',delimiter='\t')
