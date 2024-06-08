@@ -51,6 +51,17 @@ class Appr(ApprBase):
             train_phases = ['fo']
         
         for phase in train_phases:
+            if phase=='mcl: # DEBUG
+                print('\n ############# DEBUG GPU memory ########### \n')
+                print(torch.cuda.memory_summary())
+                for obj in gc.get_objects():
+                    try:
+                        if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
+                            print(type(obj), obj.size())
+                    except:
+                        pass
+                
+        
             if phase=='fo':
                 self.mcl_model=utils.get_model(self.model) # Save the main model before commencing fisher overlap check
             
@@ -229,7 +240,7 @@ class Appr(ApprBase):
             if t>0 and phase=='fo':
                 fisher_old={}
                 for n,_ in self.model.named_parameters():
-                    fisher_old[n]=self.fisher[n].cpu()
+                    fisher_old[n]=self.fisher[n].clone().cpu() ## Changes to make space on GPU: #1
 
             if self.training_multi:
                 pass
