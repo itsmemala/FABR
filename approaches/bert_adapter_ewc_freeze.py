@@ -12,6 +12,7 @@ from tqdm import tqdm, trange
 import numpy as np
 from collections import Counter
 import torch
+import gc
 from torch.utils.data import RandomSampler
 from torch.utils.data.distributed import DistributedSampler
 import torch.distributed as dist

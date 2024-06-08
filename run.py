@@ -11,6 +11,7 @@ from torch.utils.data.distributed import DistributedSampler
 import torch.distributed as dist
 import logging
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler, ConcatDataset
+import gc
 import os
 os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 tstart=time.time()
