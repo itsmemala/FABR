@@ -259,7 +259,7 @@ for t,ncla in taskcla:
         checkpoint_fisher, checkpoint_fisher_old, checkpoint_fisher_for_loss = {}, {}, {}
         for n,_ in appr.model.named_parameters():
             checkpoint_fisher[n]=appr.fisher[n].clone().cpu() ## Changes to make space on GPU: #9
-            checkpoint_fisher_old[n]=appr.fisher_old[n].clone().cpu()
+            if fisher_old[n] is not None: checkpoint_fisher_old[n]=appr.fisher_old[n].clone().cpu() #Note: this will be none when only 1 task has been trained so far
             checkpoint_fisher_for_loss[n]=appr.fisher_for_loss[n].clone().cpu()
         for lamb_i,plot_lamb in enumerate(args.plot_lambs):
             for thres_i,plot_thres in enumerate([0.5]): #,0.6,0.7,0.8,0.9]):
