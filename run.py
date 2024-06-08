@@ -262,7 +262,7 @@ for t,ncla in taskcla:
             if appr.fisher_old is not None: checkpoint_fisher_old[n]=appr.fisher_old[n].clone().cpu() #Note: this will be none when only 1 task has been trained so far
             checkpoint_fisher_for_loss[n]=appr.fisher_for_loss[n].clone().cpu()
         for lamb_i,plot_lamb in enumerate(args.plot_lambs):
-            for thres_i,plot_thres in enumerate([0.5]): #,0.6,0.7,0.8,0.9]):
+            for thres_i,plot_thres in enumerate([0.5,0.6,0.7,0.8,0.9]):
                 print('\nTraining for',lamb_i,thres_i,'\n')
                 print('Researved:',torch.cuda.memory_reserved(0))
                 print('Allocated:',torch.cuda.memory_allocated(0))
