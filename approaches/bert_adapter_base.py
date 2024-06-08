@@ -244,7 +244,10 @@ class Appr(object):
                         for (name,param),(_,param_old) in zip(self.model.named_parameters(),self.model_old.named_parameters()):
                             loss_reg+=torch.sum(self.lamb[name]*fisher[name]*(param_old-param).pow(2))/2
                     else:
+                        if next(self.model_old.parameters()).is_cuda:
+                            self.model_old = self.model_old.cpu() # Move to cpu to free up space  ## Changes to make space on GPU: #3
                         for (name,param),(_,param_old) in zip(self.model.named_parameters(),self.model_old.named_parameters()):
+                            param_old = param_old.cuda()  ## Changes to make space on GPU: #4
                             loss_reg+=torch.sum(fisher[name]*(param_old-param).pow(2))/2
                         loss_reg = self.lamb*loss_reg
             elif self.args.ancl==True:
