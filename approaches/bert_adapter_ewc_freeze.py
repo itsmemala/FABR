@@ -229,7 +229,7 @@ class Appr(ApprBase):
             if t>0 and phase=='fo':
                 fisher_old={}
                 for n,_ in self.model.named_parameters():
-                    fisher_old[n]=self.fisher[n].clone().cpu()
+                    fisher_old[n]=self.fisher[n].cpu()
 
             if self.training_multi:
                 pass
