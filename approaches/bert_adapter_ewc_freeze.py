@@ -605,6 +605,7 @@ class Appr(ApprBase):
                 total_num+=real_b
 
             f1=self.f1_compute_fn(y_pred=torch.cat(pred_list,0),y_true=torch.cat(target_list,0),average='macro')
+            print(t,torch.cat(pred_list,0),torch.cat(target_list,0))
 
         return total_loss/total_num,total_acc/total_num,f1
     
@@ -795,6 +796,7 @@ class Appr(ApprBase):
                 Z2[y_tick, x_tick], Z2_2[y_tick, x_tick], Z2_3[y_tick, x_tick] = self.eval_temp_model(t-1,valid_dataloader_past,use_model=self.plot_model)
                 Z3[y_tick, x_tick], Z3_2[y_tick, x_tick], Z3_3[y_tick, x_tick] = self.eval_temp_model(t,test_dataloader,use_model=self.plot_model)
                 Z4[y_tick, x_tick], Z4_2[y_tick, x_tick], Z4_3[y_tick, x_tick] = self.eval_temp_model(t-1,test_dataloader_past,use_model=self.plot_model)
+                if ylist[y_tick]<25 and xlist[x_tick]<25: print(ylist[y_tick], xlist[x_tick], Z4_3[y_tick, x_tick])
         
         # denoise values to make contour smooth
         Z1 = gaussian_filter(Z1, 2)
