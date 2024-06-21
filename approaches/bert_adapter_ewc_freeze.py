@@ -796,7 +796,7 @@ class Appr(ApprBase):
                 Z2[y_tick, x_tick], Z2_2[y_tick, x_tick], Z2_3[y_tick, x_tick] = self.eval_temp_model(t-1,valid_dataloader_past,use_model=self.plot_model)
                 Z3[y_tick, x_tick], Z3_2[y_tick, x_tick], Z3_3[y_tick, x_tick] = self.eval_temp_model(t,test_dataloader,use_model=self.plot_model)
                 Z4[y_tick, x_tick], Z4_2[y_tick, x_tick], Z4_3[y_tick, x_tick] = self.eval_temp_model(t-1,test_dataloader_past,use_model=self.plot_model)
-                if ylist[y_tick]<25 and xlist[x_tick]<25: print(ylist[y_tick], xlist[x_tick], Z4_3[y_tick, x_tick])
+                # if ylist[y_tick]<25 and xlist[x_tick]<25: print(ylist[y_tick], xlist[x_tick], Z4_3[y_tick, x_tick])
         
         np.save(fig_path+'_xlist.npy', xlist)
         np.save(fig_path+'_ylist.npy', ylist)
