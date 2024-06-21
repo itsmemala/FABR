@@ -605,7 +605,7 @@ class Appr(ApprBase):
                 total_num+=real_b
 
             f1=self.f1_compute_fn(y_pred=torch.cat(pred_list,0),y_true=torch.cat(target_list,0),average='macro')
-            print(t,torch.cat(pred_list,0),torch.cat(target_list,0))
+            # print(t,torch.cat(pred_list,0),torch.cat(target_list,0))
 
         return total_loss/total_num,total_acc/total_num,f1
     
@@ -797,6 +797,21 @@ class Appr(ApprBase):
                 Z3[y_tick, x_tick], Z3_2[y_tick, x_tick], Z3_3[y_tick, x_tick] = self.eval_temp_model(t,test_dataloader,use_model=self.plot_model)
                 Z4[y_tick, x_tick], Z4_2[y_tick, x_tick], Z4_3[y_tick, x_tick] = self.eval_temp_model(t-1,test_dataloader_past,use_model=self.plot_model)
                 if ylist[y_tick]<25 and xlist[x_tick]<25: print(ylist[y_tick], xlist[x_tick], Z4_3[y_tick, x_tick])
+        
+        np.save(fig_path+'_xlist.npy', xlist)
+        np.save(fig_path+'_ylist.npy', ylist)
+        np.save(fig_path+'_Z1.npy', Z1)
+        np.save(fig_path+'_Z1_2.npy', Z1_2)
+        np.save(fig_path+'_Z1_3.npy', Z1_3)
+        np.save(fig_path+'_Z2.npy', Z2)
+        np.save(fig_path+'_Z2_2.npy', Z2_2)
+        np.save(fig_path+'_Z2_3.npy', Z2_3)
+        np.save(fig_path+'_Z3.npy', Z3)
+        np.save(fig_path+'_Z3_2.npy', Z3_2)
+        np.save(fig_path+'_Z3_3.npy', Z3_3)
+        np.save(fig_path+'_Z4.npy', Z4)
+        np.save(fig_path+'_Z4_2.npy', Z4_2)
+        np.save(fig_path+'_Z4_3.npy', Z4_3)
         
         # denoise values to make contour smooth
         Z1 = gaussian_filter(Z1, 2)
