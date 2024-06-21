@@ -669,12 +669,13 @@ class Appr(ApprBase):
         x_pos = math.sqrt(x_pos)
         y_diff = math.sqrt(y_diff)
         
+        print('\nCalculating Coordinates...\n')
         # Calculate co-ordinates for all the LA and MCL model variants
         LA_VARIANT_x_pos_list, LA_VARIANT_y_pos_list, LA_VARIANT_info_list, plot_la_models_keys = [], [], [], []
         for la_idx,LA_VARIANT_model_path in self.plot_la_models.items():
             plot_la_models_keys.append(la_idx)
             if la_idx==0:  # This is already used to calculate x_diff so we skip
-                LA_VARIANT_info_list.append((x_diff, 0, 0))
+                LA_VARIANT_info_list.append(np.array([x_diff, 0, 0]))
                 LA_VARIANT_x_pos_list.append(x_diff)
                 LA_VARIANT_y_pos_list.append(0)
                 continue
@@ -704,9 +705,11 @@ class Appr(ApprBase):
             LA_VARIANT_x_pos = math.sqrt(LA_VARIANT_x_pos)
             LA_VARIANT_y_pos = math.sqrt(LA_VARIANT_y_pos)
             LA_VARIANT_left_param_diff = math.sqrt(LA_VARIANT_left_param_diff)
-            LA_VARIANT_info_list.append((LA_VARIANT_x_pos, LA_VARIANT_y_pos, LA_VARIANT_left_param_diff))
+            LA_VARIANT_info_list.append(np.array([LA_VARIANT_x_pos, LA_VARIANT_y_pos, LA_VARIANT_left_param_diff]))
             LA_VARIANT_x_pos_list.append(LA_VARIANT_x_pos)
             LA_VARIANT_y_pos_list.append(LA_VARIANT_y_pos)
+            print(la_idx,LA_VARIANT_info_list[-1])
+        np.save(fig_path+'_LA_VARIANT_info_list.npy', np.array(LA_VARIANT_info_list))
         MCL_VARIANT_x_pos_list, MCL_VARIANT_y_pos_list, MCL_VARIANT_info_list, plot_mcl_models_keys = [], [], [], []
         for mcl_idx,MCL_VARIANT_model_path in self.plot_mcl_models.items():
             plot_mcl_models_keys.append(mcl_idx)
@@ -736,9 +739,11 @@ class Appr(ApprBase):
             MCL_VARIANT_x_pos = math.sqrt(MCL_VARIANT_x_pos)
             MCL_VARIANT_y_pos = math.sqrt(MCL_VARIANT_y_pos)
             MCL_VARIANT_left_param_diff = math.sqrt(MCL_VARIANT_left_param_diff)
-            MCL_VARIANT_info_list.append((MCL_VARIANT_x_pos, MCL_VARIANT_y_pos, MCL_VARIANT_left_param_diff))
+            MCL_VARIANT_info_list.append(np.array([MCL_VARIANT_x_pos, MCL_VARIANT_y_pos, MCL_VARIANT_left_param_diff]))
             MCL_VARIANT_x_pos_list.append(MCL_VARIANT_x_pos)
             MCL_VARIANT_y_pos_list.append(MCL_VARIANT_y_pos)
+            print(mcl_idx,MCL_VARIANT_info_list[-1])
+            np.save(fig_path+'_MCL_VARIANT_info_list.npy', np.array(MCL_VARIANT_info_list))
         
         #Divide subspace with n*n points
         num_points = 50

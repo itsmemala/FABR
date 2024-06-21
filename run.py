@@ -255,12 +255,12 @@ for t,ncla in taskcla:
     # Train
     if args.multi_plot_lail and t==args.break_after_task:
         # Checkpoint models and fisher
-        checkpoint_model = utils.get_model(appr.model)
+        # checkpoint_model = utils.get_model(appr.model)
         checkpoint_fisher, checkpoint_fisher_old, checkpoint_fisher_for_loss = {}, {}, {}
         for n,_ in appr.model.named_parameters():
-            checkpoint_fisher[n]=appr.fisher[n].clone().cpu() ## Changes to make space on GPU: #9
-            if appr.fisher_old is not None: checkpoint_fisher_old[n]=appr.fisher_old[n].clone().cpu() #Note: this will be none when only 1 task has been trained so far
-            checkpoint_fisher_for_loss[n]=appr.fisher_for_loss[n].clone().cpu()
+            # checkpoint_fisher[n]=appr.fisher[n].clone().cpu() ## Changes to make space on GPU: #9
+            # if appr.fisher_old is not None: checkpoint_fisher_old[n]=appr.fisher_old[n].clone().cpu() #Note: this will be none when only 1 task has been trained so far
+            # checkpoint_fisher_for_loss[n]=appr.fisher_for_loss[n].clone().cpu()
         for lamb_i,plot_lamb in enumerate(args.plot_lambs):
             for thres_i,plot_thres in enumerate([0.5,0.6,0.7,0.8,0.9]):
                 print('\nTraining for',lamb_i,thres_i,'\n')
@@ -270,21 +270,21 @@ for t,ncla in taskcla:
                 appr.lamb = plot_lamb            
                 appr.args.frel_cut = plot_thres
                 # Train variant
-                appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path,train,valid)
+                # appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path,train,valid)
                 # Save varients for plotting later
                 if thres_i==0:
                     temp_model_path = my_save_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'_task'+str(t)+'lamsd_'+str(lamb_i)
-                    torch.save(appr.la_model, temp_model_path)
+                    # torch.save(appr.la_model, temp_model_path)
                     appr.plot_la_models[plot_lamb] = temp_model_path
                 temp_model_path = my_save_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'_task'+str(t)+'mclmsd_'+str(lamb_i)+'_'+str(thres_i)
-                torch.save(utils.get_model(appr.model), temp_model_path)
+                # torch.save(utils.get_model(appr.model), temp_model_path)
                 appr.plot_mcl_models[str(plot_lamb)+'_'+str(plot_thres)] = temp_model_path
                 # Restore checkpoints
-                utils.set_model_(appr.model,checkpoint_model)
+                # utils.set_model_(appr.model,checkpoint_model)
                 for n,_ in appr.model.named_parameters():
-                    appr.fisher[n] = checkpoint_fisher[n].cuda() ## Changes to make space on GPU: #10
-                    if checkpoint_fisher_old!={}: appr.fisher_old[n] = checkpoint_fisher_old[n] #Note: This remains on cpu #Note: this will be none when only 1 task has been trained so far
-                    appr.fisher_for_loss[n] = checkpoint_fisher_for_loss[n].cuda()
+                    # appr.fisher[n] = checkpoint_fisher[n].cuda() ## Changes to make space on GPU: #10
+                    # if checkpoint_fisher_old!={}: appr.fisher_old[n] = checkpoint_fisher_old[n] #Note: This remains on cpu #Note: this will be none when only 1 task has been trained so far
+                    # appr.fisher_for_loss[n] = checkpoint_fisher_for_loss[n].cuda()
         # Multi-task model with same initialisation
         print('\nTraining Multi\n')
         appr.training_multi = True
