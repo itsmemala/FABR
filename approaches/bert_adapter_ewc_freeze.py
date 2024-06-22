@@ -756,9 +756,9 @@ class Appr(ApprBase):
         all_y_pos = LA_VARIANT_y_pos_list + MCL_VARIANT_y_pos_list
         all_y_pos.append(y_diff)
         y_max = np.max(all_y_pos)
-        xlist = np.linspace(-3/10*x_diff, 13/10*x_max, num_points)
-        ylist = np.linspace(-3/10*y_diff, 13/10*y_max, num_points)
-        X, Y = np.meshgrid(xlist, ylist)
+        # xlist = np.linspace(-3/10*x_diff, 13/10*x_max, num_points)
+        # ylist = np.linspace(-3/10*y_diff, 13/10*y_max, num_points)
+        # X, Y = np.meshgrid(xlist, ylist)
 
         # Valid data
         Z1 = np.random.randn(num_points,num_points) #Task t loss landscape
@@ -782,36 +782,52 @@ class Appr(ApprBase):
         self.plot_model = deepcopy(self.model_old).cuda()  ## Changes to make space on GPU: #8
         model_old_dict = utils.get_model(self.model_old)
         
-        # Calculate loss and accuracy at n*n points
-        total_results = []
-        for y_tick in tqdm(range(num_points)):
-            x_results = []
-            for x_tick in range(num_points):
-                with torch.no_grad():
-                   for n,param in self.plot_model.named_parameters(): 
-                        param.copy_(model_old_dict[n].data.cpu() + xlist[x_tick]/x_diff* x_param_list[n] \
-                            + ylist[y_tick]/y_diff* y_param_list[n])
+        # # Calculate loss and accuracy at n*n points
+        # total_results = []
+        # for y_tick in tqdm(range(num_points)):
+            # x_results = []
+            # for x_tick in range(num_points):
+                # with torch.no_grad():
+                   # for n,param in self.plot_model.named_parameters(): 
+                        # param.copy_(model_old_dict[n].data.cpu() + xlist[x_tick]/x_diff* x_param_list[n] \
+                            # + ylist[y_tick]/y_diff* y_param_list[n])
         
-                Z1[y_tick, x_tick], Z1_2[y_tick, x_tick], Z1_3[y_tick, x_tick] = self.eval_temp_model(t,valid_dataloader,use_model=self.plot_model)
-                Z2[y_tick, x_tick], Z2_2[y_tick, x_tick], Z2_3[y_tick, x_tick] = self.eval_temp_model(t-1,valid_dataloader_past,use_model=self.plot_model)
-                Z3[y_tick, x_tick], Z3_2[y_tick, x_tick], Z3_3[y_tick, x_tick] = self.eval_temp_model(t,test_dataloader,use_model=self.plot_model)
-                Z4[y_tick, x_tick], Z4_2[y_tick, x_tick], Z4_3[y_tick, x_tick] = self.eval_temp_model(t-1,test_dataloader_past,use_model=self.plot_model)
-                # if ylist[y_tick]<25 and xlist[x_tick]<25: print(ylist[y_tick], xlist[x_tick], Z4_3[y_tick, x_tick])
+                # Z1[y_tick, x_tick], Z1_2[y_tick, x_tick], Z1_3[y_tick, x_tick] = self.eval_temp_model(t,valid_dataloader,use_model=self.plot_model)
+                # Z2[y_tick, x_tick], Z2_2[y_tick, x_tick], Z2_3[y_tick, x_tick] = self.eval_temp_model(t-1,valid_dataloader_past,use_model=self.plot_model)
+                # Z3[y_tick, x_tick], Z3_2[y_tick, x_tick], Z3_3[y_tick, x_tick] = self.eval_temp_model(t,test_dataloader,use_model=self.plot_model)
+                # Z4[y_tick, x_tick], Z4_2[y_tick, x_tick], Z4_3[y_tick, x_tick] = self.eval_temp_model(t-1,test_dataloader_past,use_model=self.plot_model)
+                # # if ylist[y_tick]<25 and xlist[x_tick]<25: print(ylist[y_tick], xlist[x_tick], Z4_3[y_tick, x_tick])
         
-        np.save(fig_path+'_xlist.npy', xlist)
-        np.save(fig_path+'_ylist.npy', ylist)
-        np.save(fig_path+'_Z1.npy', Z1)
-        np.save(fig_path+'_Z1_2.npy', Z1_2)
-        np.save(fig_path+'_Z1_3.npy', Z1_3)
-        np.save(fig_path+'_Z2.npy', Z2)
-        np.save(fig_path+'_Z2_2.npy', Z2_2)
-        np.save(fig_path+'_Z2_3.npy', Z2_3)
-        np.save(fig_path+'_Z3.npy', Z3)
-        np.save(fig_path+'_Z3_2.npy', Z3_2)
-        np.save(fig_path+'_Z3_3.npy', Z3_3)
-        np.save(fig_path+'_Z4.npy', Z4)
-        np.save(fig_path+'_Z4_2.npy', Z4_2)
-        np.save(fig_path+'_Z4_3.npy', Z4_3)
+        # np.save(fig_path+'_xlist.npy', xlist)
+        # np.save(fig_path+'_ylist.npy', ylist)
+        # np.save(fig_path+'_Z1.npy', Z1)
+        # np.save(fig_path+'_Z1_2.npy', Z1_2)
+        # np.save(fig_path+'_Z1_3.npy', Z1_3)
+        # np.save(fig_path+'_Z2.npy', Z2)
+        # np.save(fig_path+'_Z2_2.npy', Z2_2)
+        # np.save(fig_path+'_Z2_3.npy', Z2_3)
+        # np.save(fig_path+'_Z3.npy', Z3)
+        # np.save(fig_path+'_Z3_2.npy', Z3_2)
+        # np.save(fig_path+'_Z3_3.npy', Z3_3)
+        # np.save(fig_path+'_Z4.npy', Z4)
+        # np.save(fig_path+'_Z4_2.npy', Z4_2)
+        # np.save(fig_path+'_Z4_3.npy', Z4_3)
+        
+        xlist = np.load(fig_path+'_xlist.npy')
+        ylist = np.load(fig_path+'_ylist.npy')
+        X, Y = np.meshgrid(xlist, ylist)
+        Z1 = np.load(fig_path+'_Z1.npy')
+        Z1_2 = np.load(fig_path+'_Z1_2.npy')
+        Z1_3 = np.load(fig_path+'_Z1_3.npy')
+        Z2 = np.load(fig_path+'_Z2.npy')
+        Z2_2 = np.load(fig_path+'_Z2_2.npy')
+        Z2_3 = np.load(fig_path+'_Z2_3.npy')
+        Z3 = np.load(fig_path+'_Z3.npy')
+        Z3_2 = np.load(fig_path+'_Z3_2.npy')
+        Z3_3 = np.load(fig_path+'_Z3_3.npy')
+        Z4 = np.load(fig_path+'_Z4.npy')
+        Z4_2 = np.load(fig_path+'_Z4_2.npy')
+        Z4_3 = np.load(fig_path+'_Z4_3.npy')
         
         # denoise values to make contour smooth
         Z1 = gaussian_filter(Z1, 2)
