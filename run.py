@@ -156,10 +156,10 @@ for t,ncla in taskcla:
         with open(args.start_model_path+'fisher_for_loss.pkl', 'rb') as handle:
             checkpoint_fisher_for_loss = CPU_Unpickler(handle).load()
         appr.fisher, appr.fisher_old, appr.fisher_for_loss = {}, {}, {}
-        for n,_ in appr.model.named_parameters():
-            appr.fisher[n] = checkpoint_fisher[n].cuda()
+        for n,_ in appr.model.named_parameters(): # these will be None in case of non-fisher based approach
+            if checkpoint_fisher is not None: appr.fisher[n] = checkpoint_fisher[n].cuda()
             if checkpoint_fisher_old is not None: appr.fisher_old[n] = checkpoint_fisher_old[n] #Note: This remains on cpu
-            appr.fisher_for_loss[n] = checkpoint_fisher_for_loss[n].cuda()
+            if checkpoint_fisher_for_loss is not None: appr.fisher_for_loss[n] = checkpoint_fisher_for_loss[n].cuda()
             
 
     if 'mtl' in args.approach:
@@ -312,7 +312,6 @@ for t,ncla in taskcla:
             pickle.dump(appr.fisher, fp)
         with open(args.my_save_path+'fisher_for_loss.pkl', 'wb') as fp:
             pickle.dump(appr.fisher_for_loss, fp)
-            print(appr.fisher_for_loss)
         break
 
 # Done
