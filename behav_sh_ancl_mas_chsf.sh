@@ -30,7 +30,7 @@ past_lr=${lr_array[$best_lr_id-1]}  # -1 for array indexing
 past_lamb=0
 past_alpha_lamb=0
 
-start_model_path='~/fabr_data/${res_path}${id}_gold.${best_lr_id}/saved_model/model'
+start_model_path='~/fabr_data/${res_path}${id}_gold.${best_lr_id}/model'
 
 # id_array=(1 2 3 4 5)
 id_array=(1)
@@ -107,7 +107,7 @@ do
 	done
 	
 	past_alpha_lamb="$past_alpha_lamb,$best_alpha_lamb"
-	start_model_path='~/fabr_data/${res_path}${id}.${best_lamb_i}.${best_alpha_lamb_i}/saved_model/model'
+	start_model_path='~/fabr_data/${res_path}${id}.${best_lamb_i}.${best_alpha_lamb_i}/model'
 done
 
 
