@@ -149,6 +149,7 @@ for t,ncla in taskcla:
     if t==args.start_at_task:
         # Restore checkpoints
         appr.model.load_state_dict(torch.load(args.start_model_path+'model'))
+        appr.model_old.load_state_dict(torch.load(args.start_model_path+'model_old'))
         with open(args.start_model_path+'fisher.pkl', 'rb') as handle:
             checkpoint_fisher = CPU_Unpickler(handle).load()
         with open(args.start_model_path+'fisher_old.pkl', 'rb') as handle:
@@ -306,6 +307,7 @@ for t,ncla in taskcla:
     
     if t==args.break_after_task: # 1 implies only first 2 tasks
         torch.save(utils.get_model(appr.model), args.my_save_path+'model')
+        torch.save(utils.get_model(appr.model_old), args.my_save_path+'model_old')
         with open(args.my_save_path+'fisher_old.pkl', 'wb') as fp:
             pickle.dump(appr.fisher_old, fp)
         with open(args.my_save_path+'fisher.pkl', 'wb') as fp:
