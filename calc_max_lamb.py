@@ -14,7 +14,7 @@ def main():
     args = parser.parse_args()
     
     load_path = args.my_save_path + '.' + str(args.best_lr_id) + '/'
-    with open(load_path+'random'+str(args.rand_idx)+'_seed'+str(args.seed)+'model_'+str(args.tid)+'_fisher_old.pkl', 'rb') as handle:
+    with open(load_path+'fisher_old.pkl', 'rb') as handle:
         alpha_rel = CPU_Unpickler(handle).load()
     
     vals = np.array([])
