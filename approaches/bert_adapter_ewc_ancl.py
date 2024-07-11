@@ -184,8 +184,8 @@ class Appr(ApprBase):
                 fisher_old={}
                 self.fisher_old={}
                 for n,_ in self.model.named_parameters():
-                    fisher_old[n]=self.fisher[n].clone()
-                    self.fisher_old[n]=self.fisher[n].detach()
+                    fisher_old[n]=self.fisher[n].clone().cpu()
+                    self.fisher_old[n]=self.fisher[n].detach().cpu()
 
             self.fisher,grad_dir_laend=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion,scenario=args.scenario,imp=self.args.imp,adjust_final=self.args.adjust_final,imp_layer_norm=self.args.imp_layer_norm,get_grad_dir=True)
 
@@ -193,10 +193,10 @@ class Appr(ApprBase):
                 # Watch out! We do not want to keep t models (or fisher diagonals) in memory, therefore we have to merge fisher diagonals
                 for n,_ in self.model.named_parameters():
                     if self.args.fisher_combine=='avg': #default
-                        self.fisher[n]=(self.fisher[n]+fisher_old[n]*t)/(t+1)       # Checked: it is better than the other option
+                        self.fisher[n]=(self.fisher[n]+fisher_old[n].cuda()*t)/(t+1)       # Checked: it is better than the other option
                         #self.fisher[n]=0.5*(self.fisher[n]+fisher_old[n])
                     elif self.args.fisher_combine=='max':
-                        self.fisher[n]=torch.maximum(self.fisher[n],fisher_old[n])
+                        self.fisher[n]=torch.maximum(self.fisher[n],fisher_old[n].cuda())
                 # with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_fisher_task'+str(t)+'.pkl', 'wb') as fp:
                     # pickle.dump(self.fisher, fp)
 

@@ -254,8 +254,11 @@ class Appr(object):
                 if phase=='fo' or phase is None:
                     pass
                 else:
+                    if next(self.model_old.parameters()).is_cuda:
+                            self.model_old = self.model_old.cpu() # Move to cpu to free up space
                     for (name,param),(_,param_old), (_,param_aux) in zip(self.model.named_parameters(),self.model_old.named_parameters(),self.model_aux.named_parameters()):
-                        loss_reg+=torch.sum(self.fisher_old[name]*(param_old-param).pow(2))/2
+                        param_old = param_old.cuda()
+                        loss_reg+=torch.sum(self.fisher_old[name].cuda()*(param_old-param).pow(2))/2
                         loss_ancl_reg+=torch.sum(self.fisher[name]*(param_aux-param).pow(2))/2
                     # print('loss_reg:',loss_reg,' loss_ancl_reg:',loss_ancl_reg)
                     loss_reg = self.lamb*loss_reg
