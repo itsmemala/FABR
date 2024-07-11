@@ -13,7 +13,7 @@ import torch.distributed as dist
 import logging
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler, ConcatDataset
 import gc
-import os
+from copy import deepcopy
 os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 tstart=time.time()
 
