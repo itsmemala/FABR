@@ -8,6 +8,7 @@ def main():
     parser.add_argument('--my_save_path', type=str, default='')
     parser.add_argument('--rand_idx', type=int, default=None)
     parser.add_argument('--seed', type=int, default=None)
+    parser.add_argument('--best_lr_id', type=int, default=None)
     parser.add_argument('--best_lr', type=float, default=None)
     parser.add_argument('--tid', type=int, default=None)
     args = parser.parse_args()

@@ -29,7 +29,7 @@ def main():
     
     load_path = args.my_save_path + '.' + str(args.best_lamb_i) + '/' + get_res_fname(args.rand_idx,args.seed,args.my_save_path,args.dataset)
     baseline_f1 = get_new_at_each_step(load_path)[args.tid]
-    axes[0,2].plot(range(len(l3)), [baseline_f1 for x in range(len(l3)], linestyle='-.', color='gold')
+    axes[0,2].plot(range(len(l3)), [baseline_f1 for x in range(len(l3))], linestyle='-.', color='gold')
     
     axes[0,0].title.set_text('Mean performance on all seen tasks')
     axes[0,1].title.set_text('Mean forgetting on old tasks')

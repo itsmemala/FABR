@@ -29,7 +29,7 @@ def main():
     
     gold_f1 = np.load(args.my_save_path+'_return_best_lr_script_result.npy')[1]
     threshold_f1 = (1 - args.acc_drop_threshold) * gold_f1
-    axes[0,2].plot(range(len(l3)), [threshold_f1 for x in range(len(l3)], linestyle='-.', color='gold')
+    axes[0,2].plot(range(len(l3)), [threshold_f1 for x in range(len(l3))], linestyle='-.', color='gold')
     
     axes[0,0].title.set_text('Mean performance on all seen tasks')
     axes[0,1].title.set_text('Mean forgetting on old tasks')

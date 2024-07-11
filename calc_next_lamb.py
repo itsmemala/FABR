@@ -29,7 +29,7 @@ def main():
     
     gold_f1 = np.load(args.my_save_path+'_return_best_lr_script_result.npy')[1]
     
-    if task_f1 >= ((1 - args.acc_drop_threshold) * gold_f1)
+    if task_f1 >= ((1 - args.acc_drop_threshold) * gold_f1):
         return 'true' # using string since shell script does not work with boolean
     else:
         next_lamb = args.decay * args.lamb
