@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # Initialise the following: res_path, lr_array, decay, acc_drop_threshold, growth, start_alpha_lamb
 note=random0
 randid=0
