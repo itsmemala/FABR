@@ -30,7 +30,7 @@ past_lr=${lr_array[$best_lr_id-1]}  # -1 for array indexing
 past_lamb=0
 past_alpha_lamb=0
 
-start_model_path="~/fabr_data/${res_path}${id}_gold.${best_lr_id}/model"
+start_model_path="/home/ubuntu/fabr_data/${res_path}${id}_gold.${best_lr_id}/model"
 
 # id_array=(1 2 3 4 5)
 id_array=(1)
