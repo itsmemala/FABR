@@ -53,7 +53,7 @@ do
 	best_lr=${lr_array[$best_lr_id-1]}  # -1 for array indexing
 	past_lr="$past_lr,$best_lr"
 	python3 FABR/calc_max_lamb.py --my_save_path ~/fabr_data/${res_path}${id}_gold --rand_idx $randid --seed $seed --best_lr_id $best_lr_id --best_lr $best_lr --tid $id --tid $id
-	start_lamb=`cat ~/fabr_data/${res_path}${id}_gold_max_lamb.txt`
+	start_lamb=$(<~/fabr_data/${res_path}${id}_gold_max_lamb.txt)
 
 	## Lamb
 	lamb=$start_lamb
