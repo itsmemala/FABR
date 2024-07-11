@@ -157,7 +157,7 @@ for t,ncla in taskcla:
             checkpoint_fisher_for_loss = CPU_Unpickler(handle).load()
         for n,_ in appr.model.named_parameters():
             appr.fisher[n] = checkpoint_fisher[n].cuda()
-            if checkpoint_fisher_old!={}: appr.fisher_old[n] = checkpoint_fisher_old[n] #Note: This remains on cpu #Note: this will be none when only 1 task has been trained so far
+            if checkpoint_fisher_old is not None: appr.fisher_old[n] = checkpoint_fisher_old[n] #Note: This remains on cpu #Note: this will be none when only 1 task has been trained so far
             appr.fisher_for_loss[n] = checkpoint_fisher_for_loss[n].cuda()
             
 
@@ -309,6 +309,7 @@ for t,ncla in taskcla:
             pickle.dump(appr.fisher_old, fp)
         with open(args.my_save_path+'fisher.pkl', 'wb') as fp:
             pickle.dump(appr.fisher, fp)
+            print(appr.fisher)
         with open(args.my_save_path+'fisher_for_loss.pkl', 'wb') as fp:
             pickle.dump(appr.fisher_for_loss, fp)
         break
