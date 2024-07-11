@@ -304,7 +304,7 @@ for t,ncla in taskcla:
     # break
     
     if t==args.break_after_task: # 1 implies only first 2 tasks
-        torch.save(appr.model, args.my_save_path+'model')
+        torch.save(utils.get_model(appr.model), args.my_save_path+'model')
         with open(args.my_save_path+'fisher_old.pkl', 'wb') as fp:
             pickle.dump(appr.fisher_old, fp)
         with open(args.my_save_path+'fisher.pkl', 'wb') as fp:
