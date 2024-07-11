@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -Eeuo pipefail
+# set -Eeuo pipefail
 
 # Initialise the following: res_path, lr_array, decay, acc_drop_threshold, growth, start_alpha_lamb
 note=random0
