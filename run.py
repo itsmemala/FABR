@@ -312,6 +312,7 @@ for t,ncla in taskcla:
             pickle.dump(appr.fisher, fp)
         with open(args.my_save_path+'fisher_for_loss.pkl', 'wb') as fp:
             pickle.dump(appr.fisher_for_loss, fp)
+            print(appr.fisher_for_loss)
         break
 
 # Done
