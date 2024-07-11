@@ -22,6 +22,7 @@ def main():
         vals = np.append(vals,v.flatten().numpy())
     
     max_lamb = 1/(args.best_lr * np.max(vals)) # lambda < 1/(eta * alpha)
+    print(max_lamb,'\n\n\n\n\n\n\n')
     
     # write to file
     with open(args.my_save_path+'_max_lamb.txt', 'wb') as file:
