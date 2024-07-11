@@ -67,7 +67,7 @@ do
 		custom_lamb="$past_lamb,$lamb"
 		custom_alpha_lamb="$past_alpha_lamb,0"
 		printf "\n\nLamb Iteration $custom_lamb $custom_alpha_lamb\n\n"
-		mkdir  ~/fabr_data/${res_path}${id}.${lamb_i}/
+		mkdir -p  ~/fabr_data/${res_path}${id}.${lamb_i}/
 		CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc_ancl --imp function --baseline ewc_ancl --backbone bert_adapter --note $note --idrandom $randid --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 1 --valid_loss_es 0.002 --lr_patience 5 --custom_lr $custom_lr --remove_lr_schedule True --remove_wd True --custom_lamb $custom_lamb --custom_alpha_lamb $custom_alpha_lamb --ancl True --break_after_task $id --save_alpharel True --my_save_path ~/fabr_data/${res_path}${id}.${lamb_i}/ --start_at_task $id --start_model_path $start_model_path --la_num_train_epochs 1
 		python3 FABR/calc_next_lamb.py --my_save_path ~/fabr_data/${res_path}${id} --rand_idx $randid --seed $seed --lamb_i $lamb_i --lamb $lamb --decay $decay --acc_drop_threshold $acc_drop_threshold --tid $id
 		found_best=$?
@@ -93,7 +93,7 @@ do
 		custom_lamb=$past_lamb
 		custom_alpha_lamb="$past_alpha_lamb,$alpha_lamb"
 		printf "\n\nAlpha Lamb Iteration $custom_lamb $custom_alpha_lamb\n\n"
-		mkdir ~/fabr_data/${res_path}${id}.${best_lamb_i}.${alpha_lamb_i}/
+		mkdir -p ~/fabr_data/${res_path}${id}.${best_lamb_i}.${alpha_lamb_i}/
 		CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc_ancl --imp function --baseline ewc_ancl --backbone bert_adapter --note $note --idrandom $randid --seed 0 --scenario dil --use_cls_wgts True --train_batch_size 32 --num_train_epochs 1 --valid_loss_es 0.002 --lr_patience 5 --custom_lr $custom_lr --remove_lr_schedule True --remove_wd True --custom_lamb $custom_lamb --custom_alpha_lamb $custom_alpha_lamb --ancl True --break_after_task $id --save_alpharel True --my_save_path ~/fabr_data/${res_path}${id}.${best_lamb_i}.${alpha_lamb_i}/ --start_at_task $id --start_model_path $start_model_path --la_num_train_epochs 1
 		python3 FABR/calc_next_alpha_lamb.py --my_save_path ~/fabr_data/${res_path}${id} --rand_idx $randid --seed $seed --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --alpha_lamb $alpha_lamb --growth $growth --tid $id
 		found_best=$?
