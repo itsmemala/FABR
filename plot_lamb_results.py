@@ -1,5 +1,6 @@
 import sys,os,argparse,time
 import numpy as np
+from matplotlib import pyplot as plt
 from perf_utils import get_new_at_each_step, get_f1_at_each_step, get_forg_at_each_step, get_res_fname
 
 def main():
