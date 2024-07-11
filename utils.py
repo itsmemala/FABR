@@ -520,9 +520,9 @@ def modified_fisher(fisher,fisher_old
     # with open(save_path+'_modified_paramcount.pkl', 'wb') as fp:
         # pickle.dump(check_counter, fp)
     if save_alpharel:
-        with open(save_path+'_relative_fisher_'+str(lamb_cur)+'_'+str(frel_cut)+'.pkl', 'wb') as fp:
+        with open(save_path+'_relative_fisher.pkl', 'wb') as fp: # _'+str(lamb_cur)+'_'+str(frel_cut)+'.pkl', 'wb') as fp:
             pickle.dump(rel_fisher_counter, fp)
-        with open(save_path+'_fisher_old_'+str(lamb_cur)+'_'+str(frel_cut)+'.pkl', 'wb') as fp:
+        with open(save_path+'_fisher_old.pkl', 'wb') as fp: # _'+str(lamb_cur)+'_'+str(frel_cut)+'.pkl', 'wb') as fp:
             pickle.dump(fisher_old, fp)
     
     return modified_fisher
