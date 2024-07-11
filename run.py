@@ -149,11 +149,11 @@ for t,ncla in taskcla:
     if t==args.start_at_task:
         # Restore checkpoints
         appr.model.load_state_dict(torch.load(args.start_model_path))
-        with open(args.my_save_path+'/fisher_info/'+'fisher_old.pkl', 'rb') as handle:
+        with open(args.my_save_path+'fisher_old.pkl', 'rb') as handle:
             checkpoint_fisher_old = CPU_Unpickler(handle).load()
-        with open(args.my_save_path+'/fisher_info/'+'fisher.pkl', 'rb') as handle:
+        with open(args.my_save_path+'fisher.pkl', 'rb') as handle:
             checkpoint_fisher = CPU_Unpickler(handle).load()
-        with open(args.my_save_path+'/fisher_info/'+'fisher_for_loss.pkl', 'rb') as handle:
+        with open(args.my_save_path+'fisher_for_loss.pkl', 'rb') as handle:
             checkpoint_fisher_for_loss = CPU_Unpickler(handle).load()
         for n,_ in appr.model.named_parameters():
             appr.fisher[n] = checkpoint_fisher[n].cuda()
@@ -305,11 +305,11 @@ for t,ncla in taskcla:
     
     if t==args.break_after_task: # 1 implies only first 2 tasks
         torch.save(appr.model, args.my_save_path+'model')
-        with open(args.my_save_path+'/fisher_info/'+'fisher_old.pkl', 'wb') as fp:
+        with open(args.my_save_path+'fisher_old.pkl', 'wb') as fp:
             pickle.dump(appr.fisher_old, fp)
-        with open(args.my_save_path+'/fisher_info/'+'fisher.pkl', 'wb') as fp:
+        with open(args.my_save_path+'fisher.pkl', 'wb') as fp:
             pickle.dump(appr.fisher, fp)
-        with open(args.my_save_path+'/fisher_info/'+'fisher_for_loss.pkl', 'wb') as fp:
+        with open(args.my_save_path+'fisher_for_loss.pkl', 'wb') as fp:
             pickle.dump(appr.fisher_for_loss, fp)
         break
 
