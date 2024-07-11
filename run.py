@@ -149,15 +149,16 @@ for t,ncla in taskcla:
     if t==args.start_at_task:
         # Restore checkpoints
         appr.model.load_state_dict(torch.load(args.start_model_path+'model'))
-        with open(args.start_model_path+'fisher_old.pkl', 'rb') as handle:
-            checkpoint_fisher_old = CPU_Unpickler(handle).load()
         with open(args.start_model_path+'fisher.pkl', 'rb') as handle:
             checkpoint_fisher = CPU_Unpickler(handle).load()
+        with open(args.start_model_path+'fisher_old.pkl', 'rb') as handle:
+            checkpoint_fisher_old = CPU_Unpickler(handle).load()
         with open(args.start_model_path+'fisher_for_loss.pkl', 'rb') as handle:
             checkpoint_fisher_for_loss = CPU_Unpickler(handle).load()
+        appr.fisher, appr.fisher_old, appr.fisher_for_loss = {}, {}, {}
         for n,_ in appr.model.named_parameters():
             appr.fisher[n] = checkpoint_fisher[n].cuda()
-            if checkpoint_fisher_old is not None: appr.fisher_old[n] = checkpoint_fisher_old[n] #Note: This remains on cpu #Note: this will be none when only 1 task has been trained so far
+            appr.fisher_old[n] = checkpoint_fisher_old[n] #Note: This remains on cpu
             appr.fisher_for_loss[n] = checkpoint_fisher_for_loss[n].cuda()
             
 
@@ -309,7 +310,6 @@ for t,ncla in taskcla:
             pickle.dump(appr.fisher_old, fp)
         with open(args.my_save_path+'fisher.pkl', 'wb') as fp:
             pickle.dump(appr.fisher, fp)
-            print(appr.fisher)
         with open(args.my_save_path+'fisher_for_loss.pkl', 'wb') as fp:
             pickle.dump(appr.fisher_for_loss, fp)
         break
