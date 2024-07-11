@@ -158,7 +158,7 @@ for t,ncla in taskcla:
         appr.fisher, appr.fisher_old, appr.fisher_for_loss = {}, {}, {}
         for n,_ in appr.model.named_parameters():
             appr.fisher[n] = checkpoint_fisher[n].cuda()
-            appr.fisher_old[n] = checkpoint_fisher_old[n] #Note: This remains on cpu
+            if checkpoint_fisher_old is not None: appr.fisher_old[n] = checkpoint_fisher_old[n] #Note: This remains on cpu
             appr.fisher_for_loss[n] = checkpoint_fisher_for_loss[n].cuda()
             
 
