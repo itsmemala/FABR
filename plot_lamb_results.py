@@ -29,7 +29,7 @@ def main():
     axes[1].plot(range(len(l2)), l2, marker='o', color='blue')
     axes[2].plot(range(len(l3)), l3, marker='o', color='blue')
     
-    gold_f1 = np.load(args.my_save_path+'_return_best_lr_script_result.npy')[1]
+    gold_f1 = np.load(args.my_save_path+'_gold_return_best_lr_script_result.npy')[1]
     threshold_f1 = (1 - args.acc_drop_threshold) * gold_f1
     axes[2].plot(range(len(l3)), [threshold_f1 for x in range(len(l3))], linestyle='-.', color='gold')
     
