@@ -73,7 +73,7 @@ do
 		python3 FABR/plot_lamb_results.py --my_save_path ~/fabr_data/${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --lamb_i $lamb_i --lamb $lamb --acc_drop_threshold $acc_drop_threshold --tid $id
 		if [ $found_best=true ]; then
 			best_lamb=$lamb
-			best_lamb_i=lamb_i
+			best_lamb_i=$lamb_i
 			break
 		fi
 		lamb=`cat ~/fabr_data/${res_path}${id}_next_lamb.txt`
