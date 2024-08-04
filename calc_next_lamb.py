@@ -21,7 +21,7 @@ def main():
     
     try:
         lamb_array = np.load(args.my_save_path+'_lamb_array.npy')
-        np.save(args.my_save_path+'_lamb_array.npy',np.concatenate((lamb_array,args.lamb)))
+        np.save(args.my_save_path+'_lamb_array.npy',np.concatenate((lamb_array,np.array(args.lamb))))
     except FileNotFoundError:
         np.save(args.my_save_path+'_lamb_array.npy',np.array([args.lamb]))
       
