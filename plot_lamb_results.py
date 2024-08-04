@@ -17,7 +17,8 @@ def main():
     
     lamb_array = np.load(args.my_save_path+'_lamb_array.npy')
     
-    fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(10, 5))
+    fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
+    fig.subplots_adjust(wspace=1)
     l1, l2, l3 = [], [], []
     for i in range(1,args.lamb_i+1,1):
         load_path = args.my_save_path + '.' + str(i) + '/' + get_res_fname(args.rand_idx,args.seed,args.my_save_path,args.dataset)
