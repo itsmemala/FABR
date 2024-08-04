@@ -35,7 +35,7 @@ def main():
     else:
         next_lamb = args.decay * args.lamb
         with open(args.my_save_path+'_next_lamb.txt', 'w') as file:
-            file.write(next_lamb)
+            file.write(str(next_lamb))
         return 'false' # using string since shell script does not work with boolean
 
 
