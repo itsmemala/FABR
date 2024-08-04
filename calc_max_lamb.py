@@ -24,7 +24,7 @@ def main():
     max_lamb = 1/(args.best_lr * np.max(vals)) # lambda < 1/(eta * alpha)
     
     # write to file
-    with open(args.my_save_path+'_max_lamb.txt', 'wb') as file:
+    with open(args.my_save_path+'_max_lamb.txt', 'w') as file:
         file.write(str(max_lamb))
     
     return
