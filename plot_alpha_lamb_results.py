@@ -25,17 +25,17 @@ def main():
         l2.append(get_forg_at_each_step(load_path)[args.tid])
         l3.append(get_new_at_each_step(load_path)[args.tid])
         
-    axes[0,0].plot(range(len(l1)), l1, marker='o', color='blue')
-    axes[0,1].plot(range(len(l2)), l2, marker='o', color='blue')
-    axes[0,2].plot(range(len(l3)), l3, marker='o', color='blue')
+    axes[0].plot(range(len(l1)), l1, marker='o', color='blue')
+    axes[1].plot(range(len(l2)), l2, marker='o', color='blue')
+    axes[2].plot(range(len(l3)), l3, marker='o', color='blue')
     
     load_path = args.my_save_path + '.' + str(args.best_lamb_i) + '/' + get_res_fname(args.rand_idx,args.seed,args.my_save_path,args.dataset)
     baseline_f1 = get_new_at_each_step(load_path)[args.tid]
-    axes[0,2].plot(range(len(l3)), [baseline_f1 for x in range(len(l3))], linestyle='-.', color='gold')
+    axes[2].plot(range(len(l3)), [baseline_f1 for x in range(len(l3))], linestyle='-.', color='gold')
     
-    axes[0,0].title.set_text('Mean performance on all seen tasks')
-    axes[0,1].title.set_text('Mean forgetting on old tasks')
-    axes[0,2].title.set_text('New task performance')
+    axes[0].title.set_text('Mean performance on all seen tasks')
+    axes[1].title.set_text('Mean forgetting on old tasks')
+    axes[2].title.set_text('New task performance')
     fig.savefig(args.my_save_path+'/'+'alpha_lamb_results.png')
 
 if __name__ == '__main__':
