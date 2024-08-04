@@ -25,17 +25,17 @@ def main():
         l2.append(get_forg_at_each_step(load_path)[args.tid])
         l3.append(get_new_at_each_step(load_path)[args.tid])
         
-    axes[0,0].plot(range(len(l1)), l1, marker='o', color='blue')
-    axes[0,1].plot(range(len(l2)), l2, marker='o', color='blue')
-    axes[0,2].plot(range(len(l3)), l3, marker='o', color='blue')
+    axes[0].plot(range(len(l1)), l1, marker='o', color='blue')
+    axes[1].plot(range(len(l2)), l2, marker='o', color='blue')
+    axes[2].plot(range(len(l3)), l3, marker='o', color='blue')
     
     gold_f1 = np.load(args.my_save_path+'_return_best_lr_script_result.npy')[1]
     threshold_f1 = (1 - args.acc_drop_threshold) * gold_f1
-    axes[0,2].plot(range(len(l3)), [threshold_f1 for x in range(len(l3))], linestyle='-.', color='gold')
+    axes[2].plot(range(len(l3)), [threshold_f1 for x in range(len(l3))], linestyle='-.', color='gold')
     
-    axes[0,0].title.set_text('Mean performance on all seen tasks')
-    axes[0,1].title.set_text('Mean forgetting on old tasks')
-    axes[0,2].title.set_text('New task performance')
+    axes[0].title.set_text('Mean performance on all seen tasks')
+    axes[1].title.set_text('Mean forgetting on old tasks')
+    axes[2].title.set_text('New task performance')
     fig.savefig(args.my_save_path+'/'+'lamb_results.png')
 
 if __name__ == '__main__':
