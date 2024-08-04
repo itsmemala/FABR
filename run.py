@@ -152,7 +152,7 @@ for t,ncla in taskcla:
             for line in f:
                 inner_list = [float(elt.strip()) for elt in line.split('\t')]
                 list_of_lists.append(inner_list)
-        for copy_j in range(len(list_of_lists[t]): # Copy task row from logged results
+        for copy_j in range(len(list_of_lists[t])): # Copy task row from logged results
             acc[t,copy_j]=list_of_lists[t][copy_j]
         path = args.start_model_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'_f1.txt'
         list_of_lists = []
@@ -160,7 +160,7 @@ for t,ncla in taskcla:
             for line in f:
                 inner_list = [float(elt.strip()) for elt in line.split('\t')]
                 list_of_lists.append(inner_list)
-        for copy_j in range(len(list_of_lists[t]): # Copy task row from logged results
+        for copy_j in range(len(list_of_lists[t])): # Copy task row from logged results
             f1[t,copy_j]=list_of_lists[t][copy_j]
         continue
     if t==args.start_at_task:
