@@ -28,7 +28,7 @@ def main():
     load_path = args.my_save_path + '.' + str(args.lamb_i) + '/' + get_res_fname(args.rand_idx,args.seed,args.my_save_path,args.dataset)
     task_f1 = get_new_at_each_step(load_path)[args.tid]
     
-    gold_f1 = np.load(args.my_save_path+'_return_best_lr_script_result.npy')[1]
+    gold_f1 = np.load(args.my_save_path+'gold_return_best_lr_script_result.npy')[1]
     
     if task_f1 >= ((1 - args.acc_drop_threshold) * gold_f1):
         return 'true' # using string since shell script does not work with boolean
