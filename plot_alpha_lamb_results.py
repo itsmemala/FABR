@@ -20,7 +20,7 @@ def main():
     fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(10, 5))
     l1, l2, l3 = [], [], []
     for i in range(1,args.alpha_lamb_i+1,1):
-        load_path = args.my_save_path + '.' + str(best_lamb_i) + '.' + str(i) + '/' + get_res_fname(args.rand_idx,args.seed,args.my_save_path,args.dataset)
+        load_path = args.my_save_path + '.' + str(args.best_lamb_i) + '.' + str(i) + '/' + get_res_fname(args.rand_idx,args.seed,args.my_save_path,args.dataset)
         l1.append(get_f1_at_each_step(load_path)[args.tid])
         l2.append(get_forg_at_each_step(load_path)[args.tid])
         l3.append(get_new_at_each_step(load_path)[args.tid])

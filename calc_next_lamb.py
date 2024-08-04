@@ -34,7 +34,7 @@ def main():
         return 'true' # using string since shell script does not work with boolean
     else:
         next_lamb = args.decay * args.lamb
-        with open(args.my_save_path+'_next_lamb.txt', 'wb') as file:
+        with open(args.my_save_path+'_next_lamb.txt', 'w') as file:
             file.write(next_lamb)
         return 'false' # using string since shell script does not work with boolean
 
