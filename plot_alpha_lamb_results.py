@@ -36,7 +36,7 @@ def main():
     axes[0].title.set_text('Mean performance on all seen tasks')
     axes[1].title.set_text('Mean forgetting on old tasks')
     axes[2].title.set_text('New task performance')
-    fig.savefig(args.my_save_path+'/'+'alpha_lamb_results.png')
+    fig.savefig(args.my_save_path+'_alpha_lamb_results.png')
 
 if __name__ == '__main__':
     sys.exit(main())
