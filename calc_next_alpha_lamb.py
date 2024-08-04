@@ -7,6 +7,7 @@ def main():
     parser.add_argument('--my_save_path', type=str, default='')
     parser.add_argument('--rand_idx', type=int, default=None)
     parser.add_argument('--seed', type=int, default=None)
+    parser.add_argument('--dataset', type=str, default='')
     parser.add_argument('--best_lamb_i', type=int, default=None)
     parser.add_argument('--alpha_lamb_i', type=int, default=None)
     parser.add_argument('--alpha_lamb', type=float, default=None)
