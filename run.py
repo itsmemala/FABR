@@ -145,7 +145,24 @@ for t,ncla in taskcla:
 
     if args.transfer_acc==True and t>0: break # Only train on first task
     
-    if args.start_at_task is not None and t<args.start_at_task: continue
+    if args.start_at_task is not None and t<args.start_at_task:
+        path = args.start_model_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt'
+        list_of_lists = []
+        with open(path, 'r') as f:
+            for line in f:
+                inner_list = [float(elt.strip()) for elt in line.split('\t')]
+                list_of_lists.append(inner_list)
+        for copy_j in range(len(list_of_lists[t]): # Copy task row from logged results
+            acc[t,copy_j]=list_of_lists[t][copy_j]
+        path = args.start_model_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'_f1.txt'
+        list_of_lists = []
+        with open(path, 'r') as f:
+            for line in f:
+                inner_list = [float(elt.strip()) for elt in line.split('\t')]
+                list_of_lists.append(inner_list)
+        for copy_j in range(len(list_of_lists[t]): # Copy task row from logged results
+            f1[t,copy_j]=list_of_lists[t][copy_j]
+        continue
     if t==args.start_at_task:
         # Restore checkpoints
         appr.model.load_state_dict(torch.load(args.start_model_path+'model'))
