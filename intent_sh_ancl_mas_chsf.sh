@@ -21,6 +21,7 @@ for lr in "${lr_array[@]}"
 do
 	((lr_id++))
 	printf "\n\nLR Iteration $lr\n\n"
+	mkdir -p  ~/fabr_data/${res_path}${id}_gold.${lr_id}/
 	CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_ancl --imp function --baseline ewc_ancl --backbone bert_adapter --note $note --idrandom $randid --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate $lr --remove_lr_schedule True --remove_wd True --ancl True --break_after_task 0 --my_save_path ~/fabr_data/${res_path}${id}_gold.${lr_id}/
 done
 
@@ -44,6 +45,7 @@ do
 		custom_lamb="$past_lamb,0"
 		custom_alpha_lamb="$past_alpha_lamb,0"
 		custom_lr="$past_lr,$lr"
+		mkdir -p  ~/fabr_data/${res_path}${id}_gold.${lr_id}/
 		CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_ancl --imp function --baseline ewc_ancl --backbone bert_adapter --note $note --idrandom $randid --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --custom_lr $custom_lr --remove_lr_schedule True --remove_wd True --custom_lamb $custom_lamb --custom_alpha_lamb $custom_alpha_lamb --ancl True --break_after_task $id --save_alpharel True --my_save_path ~/fabr_data/${res_path}${id}_gold.${lr_id}/ --start_at_task $id --start_model_path $start_model_path
 	done
 	
