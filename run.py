@@ -317,7 +317,7 @@ for t,ncla in taskcla:
 
     # Save
     print('Save at '+args.output)
-    np.savetxt(args.output,acc,'%.4f',delimiter='\t')
+    # np.savetxt(args.output,acc,'%.4f',delimiter='\t')
     np.savetxt(my_save_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',acc,'%.4f',delimiter='\t')
     np.savetxt(my_save_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'_f1.txt',f1,'%.4f',delimiter='\t')
 
