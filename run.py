@@ -179,10 +179,7 @@ for t,ncla in taskcla:
         for n,_ in appr.model.named_parameters(): # these will be None in case of non-fisher based approach
             if checkpoint_fisher is not None: appr.fisher[n] = checkpoint_fisher[n].cuda()
             if checkpoint_fisher_old is not None: appr.fisher_old[n] = checkpoint_fisher_old[n] #Note: This remains on cpu
-            try:
-                if checkpoint_fisher_for_loss is not None: appr.fisher_for_loss[n] = checkpoint_fisher_for_loss[n].cuda()
-            except KeyError:
-                print(checkpoint_fisher_for_loss.keys(),'\n',appr.fisher_for_loss.keys())                
+            if checkpoint_fisher_for_loss is not None and len(checkpoint_fisher_for_loss.keys())>0: appr.fisher_for_loss[n] = checkpoint_fisher_for_loss[n].cuda() # Note this will be empty dict for ancl methods  
             
 
     if 'mtl' in args.approach:
