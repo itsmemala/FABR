@@ -348,20 +348,20 @@ print('Done!')
 print('[Elapsed time = {:.1f} h]'.format((time.time()-tstart)/(60*60)))
 
 
-with open(performance_output,'w') as file:
-    if 'ncl' in args.approach  or 'mtl' in args.approach:
-        for j in range(acc.shape[1]):
-            file.writelines(str(acc[-1][j]) + '\n')
+# with open(performance_output,'w') as file:
+    # if 'ncl' in args.approach  or 'mtl' in args.approach:
+        # for j in range(acc.shape[1]):
+            # file.writelines(str(acc[-1][j]) + '\n')
 
-    elif 'one' in args.approach:
-        for j in range(acc.shape[1]):
-            file.writelines(str(acc[j][j]) + '\n')
+    # elif 'one' in args.approach:
+        # for j in range(acc.shape[1]):
+            # file.writelines(str(acc[j][j]) + '\n')
 
 
-with open(performance_output_forward,'w') as file:
-    if 'ncl' in args.approach  or 'mtl' in args.approach:
-        for j in range(acc.shape[1]):
-            file.writelines(str(acc[j][j]) + '\n')
+# with open(performance_output_forward,'w') as file:
+    # if 'ncl' in args.approach  or 'mtl' in args.approach:
+        # for j in range(acc.shape[1]):
+            # file.writelines(str(acc[j][j]) + '\n')
 
 
 ########################################################################################################################
