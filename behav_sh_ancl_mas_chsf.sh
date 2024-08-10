@@ -3,8 +3,8 @@
 # set -Eeuo pipefail
 
 # Initialise the following: res_path, lr_array, decay, acc_drop_threshold, growth, start_alpha_lamb
-note=random0
-randid=0
+note=random10
+randid=10
 seed=0
 dataset='annomi'
 res_path="BehavSH/BehavSH_ANCLMAS/${note}seed${seed}/BehavSH_ANCLMAS_t"
