@@ -7,12 +7,12 @@ note=random0
 randid=0
 seed=0
 dataset='hwu64'
-res_path="IntentSH/IntentSH_ANCLMAS/${note}seed${seed}/IntentSH_ANCLMAS_t"
 lr_array=(0.00003 0.0003 0.003 0.03)
 decay=0.9
-acc_drop_threshold=0.2
+acc_drop_threshold=0.1
 growth=0.1
 start_alpha_lamb=0.01
+res_path="IntentSH/IntentSH_ANCLMAS/${note}seed${seed}_{acc_drop_threshold}adt/IntentSH_ANCLMAS_t"
 
 id=0
 printf "\n\nRunning search for task 0\n\n"
