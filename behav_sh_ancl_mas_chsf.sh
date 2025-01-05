@@ -3,9 +3,9 @@
 # set -Eeuo pipefail
 
 # Initialise the following: res_path, lr_array, decay, acc_drop_threshold, growth, start_alpha_lamb
-note=random10
-randid=10
-seed=0
+note=$1 #random10
+randid=$2 #10
+seed=$3 #0
 dataset='annomi'
 lr_array=(0.00003 0.0003 0.003 0.03)
 decay=0.9
