@@ -9,10 +9,10 @@ seed=0
 dataset='annomi'
 lr_array=(0.00003 0.0003 0.003 0.03)
 decay=0.9
-acc_drop_threshold=0.3
+acc_drop_threshold=0.05
 growth=0.1
 start_alpha_lamb=0.01
-res_path="BehavSH/BehavSH_ANCLMAS/${note}seed${seed}_${acc_drop_threshold}adt/BehavSH_ANCLMAS_t"
+res_path="/home/local/data/ms/BehavSH/BehavSH_ANCLMAS/${note}seed${seed}_${acc_drop_threshold}adt/BehavSH_ANCLMAS_t"
 
 id=0
 printf "\n\nRunning search for task 0\n\n"
