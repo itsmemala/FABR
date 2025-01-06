@@ -107,7 +107,7 @@ do
 	done
 	
 	past_alpha_lamb="$past_alpha_lamb,$best_alpha_lamb"
-	start_model_path="/home/ubuntu/fabr_data/${res_path}${id}.${best_lamb_i}.${best_alpha_lamb_i}/"
+	start_model_path="${res_path}${id}.${best_lamb_i}.${best_alpha_lamb_i}/"
 done
 
 
