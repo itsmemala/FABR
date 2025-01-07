@@ -326,12 +326,13 @@ for t,ncla in taskcla:
     
     if t==args.break_after_task: # 1 implies only first 2 tasks
         torch.save(utils.get_model(appr.model), args.my_save_path+'model')
-        with open(args.my_save_path+'fisher_old.pkl', 'wb') as fp:
-            pickle.dump(appr.fisher_old, fp)
-        with open(args.my_save_path+'fisher.pkl', 'wb') as fp:
-            pickle.dump(appr.fisher, fp)
-        with open(args.my_save_path+'fisher_for_loss.pkl', 'wb') as fp:
-            pickle.dump(appr.fisher_for_loss, fp)
+        if 'ewc' in args.approach:
+            with open(args.my_save_path+'fisher_old.pkl', 'wb') as fp:
+                pickle.dump(appr.fisher_old, fp)
+            with open(args.my_save_path+'fisher.pkl', 'wb') as fp:
+                pickle.dump(appr.fisher, fp)
+            with open(args.my_save_path+'fisher_for_loss.pkl', 'wb') as fp:
+                pickle.dump(appr.fisher_for_loss, fp)
         break
 
 # Done
