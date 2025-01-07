@@ -169,17 +169,18 @@ for t,ncla in taskcla:
         appr.model_old = deepcopy(appr.model)
         appr.model_old.eval()
         utils.freeze_model(appr.model_old) # Freeze the weights
-        with open(args.start_model_path+'fisher.pkl', 'rb') as handle:
-            checkpoint_fisher = CPU_Unpickler(handle).load()
-        with open(args.start_model_path+'fisher_old.pkl', 'rb') as handle:
-            checkpoint_fisher_old = CPU_Unpickler(handle).load()
-        with open(args.start_model_path+'fisher_for_loss.pkl', 'rb') as handle:
-            checkpoint_fisher_for_loss = CPU_Unpickler(handle).load()
-        appr.fisher, appr.fisher_old, appr.fisher_for_loss = {}, {}, {}
-        for n,_ in appr.model.named_parameters(): # these will be None in case of non-fisher based approach
-            if checkpoint_fisher is not None: appr.fisher[n] = checkpoint_fisher[n].cuda()
-            if checkpoint_fisher_old is not None: appr.fisher_old[n] = checkpoint_fisher_old[n] #Note: This remains on cpu
-            if checkpoint_fisher_for_loss is not None and len(checkpoint_fisher_for_loss.keys())>0: appr.fisher_for_loss[n] = checkpoint_fisher_for_loss[n].cuda() # Note this will be empty dict for ancl methods  
+        if 'ewc' in args.approach:
+            with open(args.start_model_path+'fisher.pkl', 'rb') as handle:
+                checkpoint_fisher = CPU_Unpickler(handle).load()
+            with open(args.start_model_path+'fisher_old.pkl', 'rb') as handle:
+                checkpoint_fisher_old = CPU_Unpickler(handle).load()
+            with open(args.start_model_path+'fisher_for_loss.pkl', 'rb') as handle:
+                checkpoint_fisher_for_loss = CPU_Unpickler(handle).load()
+            appr.fisher, appr.fisher_old, appr.fisher_for_loss = {}, {}, {}
+            for n,_ in appr.model.named_parameters(): # these will be None in case of non-fisher based approach
+                if checkpoint_fisher is not None: appr.fisher[n] = checkpoint_fisher[n].cuda()
+                if checkpoint_fisher_old is not None: appr.fisher_old[n] = checkpoint_fisher_old[n] #Note: This remains on cpu
+                if checkpoint_fisher_for_loss is not None and len(checkpoint_fisher_for_loss.keys())>0: appr.fisher_for_loss[n] = checkpoint_fisher_for_loss[n].cuda() # Note this will be empty dict for ancl methods  
             
 
     if 'mtl' in args.approach:
