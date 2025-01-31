@@ -133,10 +133,21 @@ else:
 acc=np.zeros((len(taskcla),len(taskcla)),dtype=np.float32)
 lss=np.zeros((len(taskcla),len(taskcla)),dtype=np.float32)
 f1=np.zeros((len(taskcla),len(taskcla)),dtype=np.float32)
+valid_acc=np.zeros((len(taskcla),len(taskcla)),dtype=np.float32)
+valid_lss=np.zeros((len(taskcla),len(taskcla)),dtype=np.float32)
+valid_f1=np.zeros((len(taskcla),len(taskcla)),dtype=np.float32)
 
 my_save_path = args.my_save_path
 
 global_attr = {}
+
+def get_rows_from_text(path):
+    list_of_lists = []
+    with open(path, 'r') as f:
+        for line in f:
+            inner_list = [float(elt.strip()) for elt in line.split('\t')]
+            list_of_lists.append(inner_list)
+    return list_of_lists
 
 for t,ncla in taskcla:
     print('*'*100)
@@ -145,23 +156,23 @@ for t,ncla in taskcla:
 
     if args.transfer_acc==True and t>0: break # Only train on first task
     
-    if args.start_at_task is not None and t<args.start_at_task:
+    if args.start_at_task is not None and t<args.start_at_task: # Copy over prev task results and skip to args.start_at_task
         path = args.start_model_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt'
-        list_of_lists = []
-        with open(path, 'r') as f:
-            for line in f:
-                inner_list = [float(elt.strip()) for elt in line.split('\t')]
-                list_of_lists.append(inner_list)
+        list_of_lists = get_rows_from_text(path)
         for copy_j in range(len(list_of_lists[t])): # Copy task row from logged results
             acc[t,copy_j]=list_of_lists[t][copy_j]
         path = args.start_model_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'_f1.txt'
-        list_of_lists = []
-        with open(path, 'r') as f:
-            for line in f:
-                inner_list = [float(elt.strip()) for elt in line.split('\t')]
-                list_of_lists.append(inner_list)
+        list_of_lists = get_rows_from_text(path)
         for copy_j in range(len(list_of_lists[t])): # Copy task row from logged results
             f1[t,copy_j]=list_of_lists[t][copy_j]
+        path = args.start_model_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'_val.txt'
+        list_of_lists = get_rows_from_text(path)
+        for copy_j in range(len(list_of_lists[t])): # Copy task row from logged results
+            valid_acc[t,copy_j]=list_of_lists[t][copy_j]
+        path = args.start_model_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'_f1_val.txt'
+        list_of_lists = get_rows_from_text(path)
+        for copy_j in range(len(list_of_lists[t])): # Copy task row from logged results
+            valid_f1[t,copy_j]=list_of_lists[t][copy_j]
         continue
     if t==args.start_at_task:
         # Restore checkpoints
@@ -315,12 +326,36 @@ for t,ncla in taskcla:
         acc[t,u]=test_acc
         lss[t,u]=test_loss
         f1[t,u]=test_f1
-
+    
     # Save
     print('Save at '+args.output)
     # np.savetxt(args.output,acc,'%.4f',delimiter='\t')
     np.savetxt(my_save_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',acc,'%.4f',delimiter='\t')
     np.savetxt(my_save_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'_f1.txt',f1,'%.4f',delimiter='\t')
+    
+    # Record Val
+    print('Recording validation... ')
+    for u in range(len(taskcla)):
+        
+        if args.transfer_acc==False and u>t:
+            continue
+        if args.transfer_acc==True:
+            eval_head=t # Eval using same head as the train data
+        else:
+            eval_head=u
+        
+        valid=data[u]['valid']
+        valid_sampler = SequentialSampler(valid)
+        valid_dataloader = DataLoader(valid, sampler=valid_sampler, batch_size=args.eval_batch_size, pin_memory=True)
+
+        valid_loss,valid_acc,valid_f1=appr.eval(eval_head,valid_dataloader)
+        valid_acc[t,u]=valid_acc
+        valid_lss[t,u]=valid_loss
+        valid_f1[t,u]=valid_f1
+
+    # Save
+    np.savetxt(my_save_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'_val.txt',valid_acc,'%.4f',delimiter='\t')
+    np.savetxt(my_save_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'_f1_val.txt',valid_f1,'%.4f',delimiter='\t')
 
     # appr.decode(train_dataloader)
     # break

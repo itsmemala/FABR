@@ -126,10 +126,11 @@ def get_oldtask(path):
     # else:
         # return dataset+'_bert_adapter_ewc_'+'random'+str(rand_idx)+'_seed'+str(seed)+'_f1.txt'
 
-def get_res_fname(rand_idx,seed,path,dataset):
+def get_res_fname(rand_idx,seed,path,dataset,val=True):
+    path_append = '_val.txt' if val else '.txt'
     if 'ANCLMAS' in path or 'ANCLEWC' in path:
-        return dataset+'_bert_adapter_ewc_ancl_'+'random'+str(rand_idx)+'_seed'+str(seed)+'_f1.txt'
+        return dataset+'_bert_adapter_ewc_ancl_'+'random'+str(rand_idx)+'_seed'+str(seed)+'_f1'+path_append
     elif 'ANCLLWF' in path:
-        return dataset+'_bert_adapter_lwf_ancl_'+'random'+str(rand_idx)+'_seed'+str(seed)+'_f1.txt'
+        return dataset+'_bert_adapter_lwf_ancl_'+'random'+str(rand_idx)+'_seed'+str(seed)+'_f1'+path_append
     elif 'LAEWC' in path or 'LAMAS' in path:
-        return dataset+'_bert_adapter_ewc_freeze_'+'random'+str(rand_idx)+'_seed'+str(seed)+'_f1.txt'
+        return dataset+'_bert_adapter_ewc_freeze_'+'random'+str(rand_idx)+'_seed'+str(seed)+'_f1'+path_append
