@@ -348,10 +348,10 @@ for t,ncla in taskcla:
         valid_sampler = SequentialSampler(valid)
         valid_dataloader = DataLoader(valid, sampler=valid_sampler, batch_size=args.eval_batch_size, pin_memory=True)
 
-        valid_loss,valid_acc,valid_f1=appr.eval(eval_head,valid_dataloader)
-        valid_acc[t,u]=valid_acc
-        valid_lss[t,u]=valid_loss
-        valid_f1[t,u]=valid_f1
+        valid_loss_val,valid_acc_val,valid_f1_val=appr.eval(eval_head,valid_dataloader)
+        valid_acc[t,u]=valid_acc_val
+        valid_lss[t,u]=valid_loss_val
+        valid_f1[t,u]=valid_f1_val
 
     # Save
     np.savetxt(my_save_path+args.experiment+'_'+args.approach+'_'+str(args.note)+'_seed'+str(args.seed)+'_val.txt',valid_acc,'%.4f',delimiter='\t')
