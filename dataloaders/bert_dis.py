@@ -69,8 +69,8 @@ domains = [
 
 def get(logger=None,args=None):
     if os.path.exists('FABR/dat/bin/data_dis6'+'_'+str(args.idrandom)+'.pt') and os.path.exists('FABR/dat/bin/taskcla_dis6'+'_'+str(args.idrandom)+'.pt'):
-        data = torch.load('FABR/dat/bin/data_dis6'+'_'+str(args.idrandom)+'.pt')
-        taskcla = torch.load('FABR/dat/bin/taskcla_dis6'+'_'+str(args.idrandom)+'.pt')
+        data = torch.load('FABR/dat/bin/data_dis6'+'_'+str(args.idrandom)+'.pt',weights_only=False) #setting weights_only=False to override new default behav that raises err opn dgx
+        taskcla = torch.load('FABR/dat/bin/taskcla_dis6'+'_'+str(args.idrandom)+'.pt',weights_only=False)
         return data,taskcla
     data={}
     taskcla=[]
