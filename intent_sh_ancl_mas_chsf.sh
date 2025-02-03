@@ -6,6 +6,7 @@
 note=$1 #random10
 randid=$2 #10
 seed=$3 #0
+custom_max_lamb=$4
 dataset='hwu64'
 lr_array=(0.00003 0.0003 0.003 0.03)
 decay=0.9
@@ -53,7 +54,7 @@ do
 	best_lr_id=$?
 	best_lr=${lr_array[$best_lr_id-1]}  # -1 for array indexing
 	past_lr="$past_lr,$best_lr"
-	python3 FABR/calc_max_lamb.py --my_save_path ${res_path}${id}_gold --rand_idx $randid --seed $seed --best_lr_id $best_lr_id --best_lr $best_lr --tid $id --tid $id
+	python3 FABR/calc_max_lamb.py --my_save_path ${res_path}${id}_gold --rand_idx $randid --seed $seed --best_lr_id $best_lr_id --best_lr $best_lr --tid $id --tid $id --custom_max_lamb $custom_max_lamb
 	start_lamb=$(<${res_path}${id}_gold_max_lamb.txt)
 
 	## Lamb
