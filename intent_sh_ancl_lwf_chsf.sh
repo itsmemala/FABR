@@ -11,6 +11,7 @@ lr_array=(0.00003 0.0003 0.003 0.03)
 decay=0.9
 acc_drop_threshold=0.3
 growth=0.1
+start_lamb=1000
 start_alpha_lamb=0.01
 res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_ANCLLWF/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_ANCLLWF_t"
 
@@ -53,8 +54,8 @@ do
 	best_lr_id=$?
 	best_lr=${lr_array[$best_lr_id-1]}  # -1 for array indexing
 	past_lr="$past_lr,$best_lr"
-	python3 FABR/calc_max_lamb.py --my_save_path ${res_path}${id}_gold --rand_idx $randid --seed $seed --best_lr_id $best_lr_id --best_lr $best_lr --tid $id --tid $id
-	start_lamb=$(<${res_path}${id}_gold_max_lamb.txt)
+	# python3 FABR/calc_max_lamb.py --my_save_path ${res_path}${id}_gold --rand_idx $randid --seed $seed --best_lr_id $best_lr_id --best_lr $best_lr --tid $id --tid $id
+	# start_lamb=$(<${res_path}${id}_gold_max_lamb.txt)
 
 	## Lamb
 	lamb=$start_lamb
