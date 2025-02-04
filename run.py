@@ -175,6 +175,12 @@ for t,ncla in taskcla:
             valid_f1[t,copy_j]=list_of_lists[t][copy_j]
         continue
     if t==args.start_at_task:
+        # Set hyper-params
+        if args.custom_lamb is not None:
+            # Set lambda for subsequent task
+            appr.lamb = args.custom_lamb[t]
+            appr.alpha_lamb = args.custom_alpha_lamb[t]
+            print("\n\nSetting lamb=",appr.lamb," alpha_lamb=",appr.alpha_lamb,"\n\n")
         # Restore checkpoints
         appr.model.load_state_dict(torch.load(args.start_model_path+'model'))
         appr.model_old = deepcopy(appr.model)

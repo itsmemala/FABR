@@ -313,6 +313,7 @@ class Appr(object):
             return loss_ce+loss_reg+loss_ancl_reg  
         
         elif self.args.lwf_ancl==True:
+            # print(self.lamb,self.alpha_lamb,loss_ce,loss_reg,loss_ancl_reg)
             return loss_ce+loss_reg+loss_ancl_reg
         elif self.args.lwf==True:
             return loss_ce+loss_reg  

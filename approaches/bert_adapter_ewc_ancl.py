@@ -39,6 +39,8 @@ class Appr(ApprBase):
 
     def train(self,t,train,valid,args,num_train_steps,save_path,train_data,valid_data):
 
+        print("\n\nUsing lamb=",self.lamb," alpha_lamb=",self.alpha_lamb,"\n\n")
+
         if t>0:
             train_phases = ['fo','mcl']
         elif t==0 and self.args.regularize_t0==False:
