@@ -71,9 +71,9 @@ do
 		mkdir -p  ${res_path}${id}.${lamb_i}/
 		CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_lwf_ancl --baseline lwf_ancl --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario cil --use_rbs True --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --custom_lr $custom_lr --remove_lr_schedule True --remove_wd True --custom_lamb $custom_lamb --custom_alpha_lamb $custom_alpha_lamb --lwf_ancl True --lwf_T 2 --break_after_task $id --my_save_path ${res_path}${id}.${lamb_i}/ --start_at_task $id --start_model_path $start_model_path
 		python3 FABR/calc_next_lamb.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --lamb_i $lamb_i --lamb $lamb --decay $decay --acc_drop_threshold $acc_drop_threshold --tid $id
-		found_best=$?
+		found_best=`cat ${res_path}${id}.${lamb_i}_foundbestlamb.txt`
 		python3 FABR/plot_lamb_results.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --lamb_i $lamb_i --lamb $lamb --acc_drop_threshold $acc_drop_threshold --tid $id
-		if [ $found_best=true ]; then
+		if [ $found_best = found ]; then
 			best_lamb=$lamb
 			best_lamb_i=$lamb_i
 			break
@@ -97,9 +97,9 @@ do
 		mkdir -p ${res_path}${id}.${best_lamb_i}.${alpha_lamb_i}/
 		CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_lwf_ancl --baseline lwf_ancl --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario cil --use_rbs True --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --custom_lr $custom_lr --remove_lr_schedule True --remove_wd True --custom_lamb $custom_lamb --custom_alpha_lamb $custom_alpha_lamb --lwf_ancl True --lwf_T 2 --break_after_task $id --my_save_path ${res_path}${id}.${best_lamb_i}.${alpha_lamb_i}/ --start_at_task $id --start_model_path $start_model_path
 		python3 FABR/calc_next_alpha_lamb.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --alpha_lamb $alpha_lamb --growth $growth --tid $id
-		found_best=$?
+		found_best=`cat ${res_path}${id}.${best_lamb_i}.${alpha_lamb_i}_foundbestalphalamb.txt`
 		python3 FABR/plot_alpha_lamb_results.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --alpha_lamb $alpha_lamb --tid $id
-		if [ $found_best=true ]; then
+		if [ $found_best = found ]; then
 			best_alpha_lamb=$alpha_lamb
 			best_alpha_lamb_i=$alpha_lamb_i
 			break

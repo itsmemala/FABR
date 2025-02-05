@@ -19,7 +19,7 @@ def main():
     
     try:
         alpha_lamb_array = np.load(args.my_save_path+'_alpha_lamb_array.npy')
-        np.save(args.my_save_path+'_alpha_lamb_array.npy',np.concatenate((alpha_lamb_array,args.alpha_lamb)))
+        np.save(args.my_save_path+'_alpha_lamb_array.npy',np.concatenate((alpha_lamb_array,np.array([args.alpha_lamb]))))
     except FileNotFoundError:
         np.save(args.my_save_path+'_alpha_lamb_array.npy',np.array([args.alpha_lamb]))
     
@@ -30,12 +30,16 @@ def main():
     baseline_f1 = get_new_at_each_step(load_path)[args.tid]
     
     if task_f1 > baseline_f1:
-        return 'true' # using string since shell script does not work with boolean
+        with open(args.my_save_path+ '.' + str(args.best_lamb_i) + '.' + str(args.alpha_lamb_i) + '_foundbestalphalamb.txt', 'w') as file:
+            file.write(str('found'))
+        return # using string since shell script does not work with boolean
     else:
         next_alpha_lamb = (1 + args.growth) * args.alpha_lamb
         with open(args.my_save_path+'_next_alpha_lamb.txt', 'w') as file:
             file.write(str(next_alpha_lamb))
-        return 'false' # using string since shell script does not work with boolean
+        with open(args.my_save_path+ '.' + str(args.best_lamb_i) + '.' + str(args.alpha_lamb_i) + '_foundbestalphalamb.txt', 'w') as file:
+            file.write(str('notfound'))
+        return # using string since shell script does not work with boolean
 
 
 if __name__ == '__main__':

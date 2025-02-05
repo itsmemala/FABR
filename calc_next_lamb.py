@@ -21,7 +21,7 @@ def main():
     
     try:
         lamb_array = np.load(args.my_save_path+'_lamb_array.npy')
-        np.save(args.my_save_path+'_lamb_array.npy',np.concatenate((lamb_array,np.array(args.lamb))))
+        np.save(args.my_save_path+'_lamb_array.npy',np.concatenate((lamb_array,np.array([args.lamb]))))
     except FileNotFoundError:
         np.save(args.my_save_path+'_lamb_array.npy',np.array([args.lamb]))
       
@@ -31,12 +31,18 @@ def main():
     gold_f1 = np.load(args.my_save_path+'_gold_return_best_lr_script_result.npy')[1]
     
     if task_f1 >= ((1 - args.acc_drop_threshold) * gold_f1):
-        return 'true' # using string since shell script does not work with boolean
+        # print('calc_next_lamb.py:true')
+        with open(args.my_save_path+ '.' + str(args.lamb_i) + '_foundbestlamb.txt', 'w') as file:
+            file.write(str('found'))
+        return # using string since shell script does not work with boolean
     else:
         next_lamb = args.decay * args.lamb
         with open(args.my_save_path+'_next_lamb.txt', 'w') as file:
             file.write(str(next_lamb))
-        return 'false' # using string since shell script does not work with boolean
+        # print('calc_next_lamb.py:false')
+        with open(args.my_save_path+ '.' + str(args.lamb_i) + '_foundbestlamb.txt', 'w') as file:
+            file.write(str('notfound'))
+        return # using string since shell script does not work with boolean
 
 
 if __name__ == '__main__':
