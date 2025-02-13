@@ -179,6 +179,8 @@ for t,ncla in taskcla:
         if args.custom_lamb is not None:
             # Set lambda for subsequent task
             appr.lamb = args.custom_lamb[t]
+        if args.custom_alpha_lamb is not None:
+            # Set alpha_lambda for subsequent task
             appr.alpha_lamb = args.custom_alpha_lamb[t]
             print("\n\nSetting lamb=",appr.lamb," alpha_lamb=",appr.alpha_lamb,"\n\n")
         # Restore checkpoints

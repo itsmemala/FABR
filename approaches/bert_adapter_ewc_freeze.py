@@ -50,6 +50,8 @@ class Appr(ApprBase):
             train_phases = ['fo','mcl']
         if self.training_multi:
             train_phases = ['fo']
+        if self.args.only_mcl==True:
+            train_phases = ['mcl']
         
         for phase in train_phases:
             # if phase=='mcl': # DEBUG

@@ -54,7 +54,8 @@ def asc_config(parser):
     parser.add_argument('--base_temp', type=float, default=1,
                         help='temperature for loss function')
     parser.add_argument('--scenario',default='',type=str,required=True,help='(default=%(default)s)')
-    # FABR dev args
+    # FABR/LA dev args
+    parser.add_argument('--only_mcl',default=False,type=bool,required=False,help='(default=%(default)s)')
     parser.add_argument('--save_model_path',default=None,type=str,help="Path to save model at end of task")
     parser.add_argument('--start_model_path',default=None,type=str,help="Path to model initialisation")
     parser.add_argument('--start_at_task',default=None,type=int,help="Start at specific task id")
