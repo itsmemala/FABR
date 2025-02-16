@@ -284,7 +284,7 @@ class Appr(ApprBase):
                 ,save_alpharel=self.args.save_alpharel
                 ,save_path=save_path+str(args.note)+'_seed'+str(args.seed)+'model_'+str(t))
 
-            if t>0 and phase=='mcl':
+            if t>0 and phase=='mcl' and self.args.only_mcl==False:
                 # Watch out! We do not want to keep t models (or fisher diagonals) in memory, therefore we have to merge fisher diagonals
                 for n,_ in self.model.named_parameters():
                     if self.args.fisher_combine=='avg': #default
