@@ -32,8 +32,8 @@ id=0
 # past_lr=${lr_array[$best_lr_id-1]}  # -1 for array indexing
 # past_lamb=0
 
-best_lr_id=3
-past_lr=0.003
+best_lr_id=2
+past_lr=0.0003
 past_lamb=0
 
 start_model_path="${res_path}${id}_gold.${best_lr_id}/"
