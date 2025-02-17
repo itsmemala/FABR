@@ -55,7 +55,7 @@ do
 	past_lr="$past_lr,$best_lr"
 	python3 FABR/calc_max_lamb.py --my_save_path ${res_path}${id}_gold --rand_idx $randid --seed $seed --best_lr_id $best_lr_id --best_lr $best_lr --tid $id --tid $id --custom_max_lamb $custom_max_lamb
 	start_lamb=$(<${res_path}${id}_gold_max_lamb.txt)
-	if [ $id > 1 ]; then
+	if [ "$id" -gt 1 ]; then
 		start_lamb=$best_lamb
 	fi
 

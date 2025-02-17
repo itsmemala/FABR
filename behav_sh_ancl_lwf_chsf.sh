@@ -7,7 +7,7 @@ note=$1 #random10
 randid=$2 #10
 seed=$3 #0
 dataset='annomi'
-lr_array=(0.00003) #(0.00003 0.0003 0.003 0.03)
+lr_array=(0.00003 0.0003 0.003 0.03)
 decay=0.9
 acc_drop_threshold=0.05
 growth=0.1
@@ -23,7 +23,7 @@ do
 	((lr_id++))
 	printf "\n\nLR Iteration $lr\n\n"
 	mkdir -p  ${res_path}${id}_gold.${lr_id}/
-	CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_lwf_ancl --baseline lwf_ancl --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --use_cls_wgts True --train_batch_size 128 --num_train_epochs 1 --valid_loss_es 0.002 --lr_patience 5 --learning_rate $lr --remove_lr_schedule True --remove_wd True --lwf_ancl True --lwf_T 2 --break_after_task 0 --my_save_path ${res_path}${id}_gold.${lr_id}/ --la_num_train_epochs 1
+	CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_lwf_ancl --baseline lwf_ancl --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --use_cls_wgts True --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate $lr --remove_lr_schedule True --remove_wd True --lwf_ancl True --lwf_T 2 --break_after_task 0 --my_save_path ${res_path}${id}_gold.${lr_id}/
 
 done
 
@@ -48,7 +48,7 @@ do
 		custom_alpha_lamb="$past_alpha_lamb,0"
 		custom_lr="$past_lr,$lr"
 		mkdir -p  ${res_path}${id}_gold.${lr_id}/
-		CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_lwf_ancl --baseline lwf_ancl --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --use_cls_wgts True --train_batch_size 128 --num_train_epochs 1 --valid_loss_es 0.002 --lr_patience 5 --custom_lr $custom_lr --remove_lr_schedule True --remove_wd True --custom_lamb $custom_lamb --custom_alpha_lamb $custom_alpha_lamb --lwf_ancl True --lwf_T 2 --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}_gold.${lr_id}/ --start_at_task $id --start_model_path $start_model_path --la_num_train_epochs 1
+		CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_lwf_ancl --baseline lwf_ancl --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --use_cls_wgts True --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --custom_lr $custom_lr --remove_lr_schedule True --remove_wd True --custom_lamb $custom_lamb --custom_alpha_lamb $custom_alpha_lamb --lwf_ancl True --lwf_T 2 --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}_gold.${lr_id}/ --start_at_task $id --start_model_path $start_model_path
 	
 	done
 	
@@ -58,15 +58,13 @@ do
 	past_lr="$past_lr,$best_lr"
 	# python3 FABR/calc_max_lamb.py --my_save_path ${res_path}${id}_gold --rand_idx $randid --seed $seed --best_lr_id $best_lr_id --best_lr $best_lr --tid $id --tid $id
 	# start_lamb=$(<${res_path}${id}_gold_max_lamb.txt)
-	if [ $id > 1 ]; then
+	if [ "$id" -gt 1 ]; then
 		printf "Setting lamb as best_lamb from previous task"
 		start_lamb=$best_lamb
 	fi
 
 	## Lamb
 	lamb=$start_lamb
-	printf "\n\nLamb=$lamb\n\n"
-	break
 	lamb_i=0
 	found_best=false
 	while [ $found_best=false ]
@@ -77,7 +75,7 @@ do
 		custom_alpha_lamb="$past_alpha_lamb,0"
 		printf "\n\nLamb Iteration $custom_lamb $custom_alpha_lamb\n\n"
 		mkdir -p  ${res_path}${id}.${lamb_i}/
-		CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_lwf_ancl --baseline lwf_ancl --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --use_cls_wgts True --train_batch_size 128 --num_train_epochs 1 --valid_loss_es 0.002 --lr_patience 5 --custom_lr $custom_lr --remove_lr_schedule True --remove_wd True --custom_lamb $custom_lamb --custom_alpha_lamb $custom_alpha_lamb --lwf_ancl True --lwf_T 2 --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${lamb_i}/ --start_at_task $id --start_model_path $start_model_path
+		CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_lwf_ancl --baseline lwf_ancl --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --use_cls_wgts True --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --custom_lr $custom_lr --remove_lr_schedule True --remove_wd True --custom_lamb $custom_lamb --custom_alpha_lamb $custom_alpha_lamb --lwf_ancl True --lwf_T 2 --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${lamb_i}/ --start_at_task $id --start_model_path $start_model_path
 		python3 FABR/calc_next_lamb.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --lamb_i $lamb_i --lamb $lamb --decay $decay --acc_drop_threshold $acc_drop_threshold --tid $id
 		found_best=`cat ${res_path}${id}.${lamb_i}_foundbestlamb.txt`
 		python3 FABR/plot_lamb_results.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --lamb_i $lamb_i --lamb $lamb --acc_drop_threshold $acc_drop_threshold --tid $id
@@ -103,7 +101,7 @@ do
 		custom_alpha_lamb="$past_alpha_lamb,$alpha_lamb"
 		printf "\n\nAlpha Lamb Iteration $custom_lamb $custom_alpha_lamb\n\n"
 		mkdir -p ${res_path}${id}.${best_lamb_i}.${alpha_lamb_i}/
-		CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_lwf_ancl --baseline lwf_ancl --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --use_cls_wgts True --train_batch_size 128 --num_train_epochs 1 --valid_loss_es 0.002 --lr_patience 5 --custom_lr $custom_lr --remove_lr_schedule True --remove_wd True --custom_lamb $custom_lamb --custom_alpha_lamb $custom_alpha_lamb --lwf_ancl True --lwf_T 2 --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.${alpha_lamb_i}/ --start_at_task $id --start_model_path $start_model_path
+		CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_lwf_ancl --baseline lwf_ancl --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --use_cls_wgts True --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --custom_lr $custom_lr --remove_lr_schedule True --remove_wd True --custom_lamb $custom_lamb --custom_alpha_lamb $custom_alpha_lamb --lwf_ancl True --lwf_T 2 --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.${alpha_lamb_i}/ --start_at_task $id --start_model_path $start_model_path
 		python3 FABR/calc_next_alpha_lamb.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lr_id $best_lr_id --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --alpha_lamb $alpha_lamb --growth $growth --tid $id
 		found_best=`cat ${res_path}${id}.${best_lamb_i}.${alpha_lamb_i}_foundbestalphalamb.txt`
 		python3 FABR/plot_alpha_lamb_results.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --alpha_lamb $alpha_lamb --tid $id
