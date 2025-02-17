@@ -56,6 +56,9 @@ do
 	past_lr="$past_lr,$best_lr"
 	python3 FABR/calc_max_lamb.py --my_save_path ${res_path}${id}_gold --rand_idx $randid --seed $seed --best_lr_id $best_lr_id --best_lr $best_lr --tid $id --tid $id --custom_max_lamb $custom_max_lamb
 	start_lamb=$(<${res_path}${id}_gold_max_lamb.txt)
+	if [ $id > 1 ]; then
+		start_lamb=$best_lamb
+	fi
 
 	## Lamb
 	lamb=$start_lamb
@@ -96,7 +99,7 @@ do
 		printf "\n\nAlpha Lamb Iteration $custom_lamb $custom_alpha_lamb\n\n"
 		mkdir -p ${res_path}${id}.${best_lamb_i}.${alpha_lamb_i}/
 		CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc_ancl --imp function --baseline ewc_ancl --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --use_cls_wgts True --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --custom_lr $custom_lr --remove_lr_schedule True --remove_wd True --custom_lamb $custom_lamb --custom_alpha_lamb $custom_alpha_lamb --ancl True --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.${alpha_lamb_i}/ --start_at_task $id --start_model_path $start_model_path
-		python3 FABR/calc_next_alpha_lamb.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --alpha_lamb $alpha_lamb --growth $growth --tid $id
+		python3 FABR/calc_next_alpha_lamb.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lr_id $best_lr_id --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --alpha_lamb $alpha_lamb --growth $growth --tid $id
 		found_best=`cat ${res_path}${id}.${best_lamb_i}.${alpha_lamb_i}_foundbestalphalamb.txt`
 		python3 FABR/plot_alpha_lamb_results.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --alpha_lamb $alpha_lamb --tid $id
 		if [ $found_best = found ]; then

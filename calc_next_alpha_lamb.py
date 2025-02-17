@@ -8,6 +8,7 @@ def main():
     parser.add_argument('--rand_idx', type=int, default=None)
     parser.add_argument('--seed', type=int, default=None)
     parser.add_argument('--dataset', type=str, default='')
+    parser.add_argument('--best_lr_id', type=int, default=None)
     parser.add_argument('--best_lamb_i', type=int, default=None)
     parser.add_argument('--alpha_lamb_i', type=int, default=None)
     parser.add_argument('--alpha_lamb', type=float, default=None)
@@ -29,7 +30,10 @@ def main():
     load_path = args.my_save_path + '.' + str(args.best_lamb_i) + '/' + get_res_fname(args.rand_idx,args.seed,args.my_save_path,args.dataset)
     baseline_f1 = get_new_at_each_step(load_path)[args.tid]
     
-    if task_f1 > baseline_f1:
+    load_path = args.my_save_path + '_gold.' + str(args.best_lr_id) + '/' + get_res_fname(args.rand_idx,args.seed,args.my_save_path,args.dataset)
+    best_f1 = get_new_at_each_step(load_path)[args.tid]
+    
+    if (task_f1 > baseline_f1) or (task_f1 == best_f1):
         with open(args.my_save_path+ '.' + str(args.best_lamb_i) + '.' + str(args.alpha_lamb_i) + '_foundbestalphalamb.txt', 'w') as file:
             file.write(str('found'))
         return # using string since shell script does not work with boolean
