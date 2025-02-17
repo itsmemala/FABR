@@ -14,17 +14,16 @@ def main():
     parser.add_argument('--custom_max_lamb', type=float, default=None) # Override with this value if provided
     args = parser.parse_args()
     
-    load_path = args.my_save_path + '.' + str(args.best_lr_id) + '/'
-    with open(load_path+'fisher_old.pkl', 'rb') as handle:
-        alpha_rel = CPU_Unpickler(handle).load()
-    
-    vals = np.array([])
-    for k,v in alpha_rel.items():
-        vals = np.append(vals,v.flatten().numpy())
-    
     if args.custom_max_lamb is not None:
         max_lamb = args.custom_max_lamb
     else:
+        load_path = args.my_save_path + '.' + str(args.best_lr_id) + '/'
+        with open(load_path+'fisher_old.pkl', 'rb') as handle:
+            alpha_rel = CPU_Unpickler(handle).load()
+        
+        vals = np.array([])
+        for k,v in alpha_rel.items():
+            vals = np.append(vals,v.flatten().numpy())
         max_lamb = 1/(args.best_lr * np.max(vals)) # lambda < 1/(eta * alpha)
     
     # write to file

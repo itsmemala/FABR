@@ -14,22 +14,26 @@ acc_drop_threshold=0.3
 growth=0.1
 res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_LAMAS_t"
 
-id=0
-printf "\n\nRunning search for task 0\n\n"
-lr_id=0
-for lr in "${lr_array[@]}"
-do
-	((lr_id++))
-	printf "\n\nLR Iteration $lr\n\n"
-	mkdir -p  ${res_path}${id}_gold.${lr_id}/
-	CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario cil --use_rbs True --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate $lr --fisher_combine max --use_l1 True --l1_lamb 0.000075 --break_after_task 0 --my_save_path ${res_path}${id}_gold.${lr_id}/ --only_mcl True
-#						   python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --imp function --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 1 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --modify_fisher_last True --plot_lambs 100 --adapt_type ktcf_scaledv2 --ktcf_wgt_use_arel True --plot_lail True --multi_plot_lail True --save_alpharel True --break_after_task 1 --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_NoL1LAMAS_wlast_AdaptKTCFsv2.multi_lail/
-#										 run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.02 --lr_patience 5 --learning_rate 0.003 --lamb 5000 --fisher_combine max --use_l1 True --l1_lamb 0.000075 --my_save_path /results/
-done
+# id=0
+# printf "\n\nRunning search for task 0\n\n"
+# lr_id=0
+# for lr in "${lr_array[@]}"
+# do
+	# ((lr_id++))
+	# printf "\n\nLR Iteration $lr\n\n"
+	# mkdir -p  ${res_path}${id}_gold.${lr_id}/
+	# CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario cil --use_rbs True --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate $lr --fisher_combine max --use_l1 True --l1_lamb 0.000075 --break_after_task 0 --my_save_path ${res_path}${id}_gold.${lr_id}/ --only_mcl True
+# #						   python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --imp function --backbone bert_adapter --baseline ewc_freeze --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 1 --valid_loss_es 0.002 --lr_patience 5 --learning_rate 0.003 --modify_fisher_last True --plot_lambs 100 --adapt_type ktcf_scaledv2 --ktcf_wgt_use_arel True --plot_lail True --multi_plot_lail True --save_alpharel True --break_after_task 1 --my_save_path /content/gdrive/MyDrive/Collas24/IntentSH_NoL1LAMAS_wlast_AdaptKTCFsv2.multi_lail/
+# #										 run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note random0 --idrandom 0 --seed 0 --scenario cil --use_rbs True --train_batch_size 32 --num_train_epochs 50 --valid_loss_es 0.02 --lr_patience 5 --learning_rate 0.003 --lamb 5000 --fisher_combine max --use_l1 True --l1_lamb 0.000075 --my_save_path /results/
+# done
 
-python3 FABR/return_best_lr.py --my_save_path ${res_path}${id}_gold --rand_idx $randid --seed $seed --dataset $dataset --max_lr_id $lr_id --tid $id
-best_lr_id=$?
-past_lr=${lr_array[$best_lr_id-1]}  # -1 for array indexing
+# python3 FABR/return_best_lr.py --my_save_path ${res_path}${id}_gold --rand_idx $randid --seed $seed --dataset $dataset --max_lr_id $lr_id --tid $id
+# best_lr_id=$?
+# past_lr=${lr_array[$best_lr_id-1]}  # -1 for array indexing
+# past_lamb=0
+
+best_lr_id=3
+past_lr=0.003
 past_lamb=0
 
 start_model_path="${res_path}${id}_gold.${best_lr_id}/"
