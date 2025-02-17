@@ -14,7 +14,7 @@ acc_drop_threshold=0.3
 growth=0.1
 res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_LAMAS_t"
 
-# id=0
+id=0
 # printf "\n\nRunning search for task 0\n\n"
 # lr_id=0
 # for lr in "${lr_array[@]}"
