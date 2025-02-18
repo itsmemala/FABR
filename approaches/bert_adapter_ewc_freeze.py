@@ -314,7 +314,7 @@ class Appr(ApprBase):
                 self.la_model=utils.get_model(self.model)
                 utils.set_model_(self.model,self.mcl_model) # Reset to main model after fisher overlap check
             
-            if phase=='mcl' and t>0:
+            if phase=='mcl' and t>0 and self.args.only_mcl==False:
                 wd_aux = 0
                 wd_old = 0
                 wd_old_magn = {}
