@@ -242,8 +242,10 @@ class Appr(ApprBase):
             # Fisher ops
             if t>0 and phase=='fo':
                 fisher_old={}
+                self.fisher_old={}
                 for n,_ in self.model.named_parameters():
                     fisher_old[n]=self.fisher[n].clone().cpu() ## Changes to make space on GPU: #1
+                    self.fisher_old[n]=self.fisher[n].detach().cpu()
 
             if self.training_multi:
                 pass
