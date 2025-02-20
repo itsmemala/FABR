@@ -34,6 +34,11 @@ past_lamb=0
 
 start_model_path="${res_path}${id}_gold.${best_lr_id}/"
 
+# best_lr_id=2
+# past_lr=0.0003
+# past_lamb=0
+# start_model_path="${res_path}0_gold.2/"
+
 id_array=(1 2 3 4 5)
 for id in "${id_array[@]}"
 do
@@ -88,6 +93,7 @@ do
 	custom_lr=$past_lr
 	custom_lamb=$past_lamb
 	printf "\n\nLA Phase\n\n"
+	mkdir -p ${res_path}${id}.${best_lamb_i}.LA_phase/
 	CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario cil --use_rbs True --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --custom_lr $custom_lr --custom_lamb $custom_lamb --fisher_combine max --use_l1 True --l1_lamb 0.000075 --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.LA_phase/ --start_at_task $id --start_model_path $start_model_path
 		
 	start_model_path="${res_path}${id}.${best_lamb_i}.LA_phase/"
