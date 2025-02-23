@@ -34,41 +34,46 @@ res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_ANCLMAS/${note}seed${s
 
 # start_model_path="${res_path}${id}_gold.${best_lr_id}/"
 
-past_lr=0.00003,0.00003
-past_lamb=0,15.91674918
-past_alpha_lamb=0,0.01
-start_model_path="${res_path}1.66.1/"
+past_lr=0.00003,0.00003,0.00003,0.00003,0.00003
+past_lamb=0,15.91674918,7.17897988,4.23911583,2.5031555
+past_alpha_lamb=0,0.01,0.01,0.0121,0.011
+start_model_path="${res_path}4.6.2/"
 custom_max_lamb=100
 
-id_array=(2 3 4 5) #(1 2 3 4 5)
+id_array=(5) #(1 2 3 4 5)
 for id in "${id_array[@]}"
 do
-	printf "\n\nRunning search for task $id\n\n"
-	lr_id=0
-	for lr in "${lr_array[@]}"
-	do
-		((lr_id++))
-		printf "\n\nLR Iteration $lr\n\n"
-		custom_lamb="$past_lamb,0"
-		custom_alpha_lamb="$past_alpha_lamb,0"
-		custom_lr="$past_lr,$lr"
-		mkdir -p  ${res_path}${id}_gold.${lr_id}/
-		CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_ancl --imp function --baseline ewc_ancl --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario cil --use_rbs True --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --custom_lr $custom_lr --remove_lr_schedule True --remove_wd True --custom_lamb $custom_lamb --custom_alpha_lamb $custom_alpha_lamb --ancl True --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}_gold.${lr_id}/ --start_at_task $id --start_model_path $start_model_path
-	done
+	# printf "\n\nRunning search for task $id\n\n"
+	# lr_id=0
+	# for lr in "${lr_array[@]}"
+	# do
+		# ((lr_id++))
+		# printf "\n\nLR Iteration $lr\n\n"
+		# custom_lamb="$past_lamb,0"
+		# custom_alpha_lamb="$past_alpha_lamb,0"
+		# custom_lr="$past_lr,$lr"
+		# mkdir -p  ${res_path}${id}_gold.${lr_id}/
+		# CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_ancl --imp function --baseline ewc_ancl --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario cil --use_rbs True --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --custom_lr $custom_lr --remove_lr_schedule True --remove_wd True --custom_lamb $custom_lamb --custom_alpha_lamb $custom_alpha_lamb --ancl True --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}_gold.${lr_id}/ --start_at_task $id --start_model_path $start_model_path
+	# done
 	
-	python3 FABR/return_best_lr.py --my_save_path ${res_path}${id}_gold --rand_idx $randid --seed $seed --dataset $dataset --max_lr_id $lr_id --tid $id
-	best_lr_id=$?
+	# python3 FABR/return_best_lr.py --my_save_path ${res_path}${id}_gold --rand_idx $randid --seed $seed --dataset $dataset --max_lr_id $lr_id --tid $id
+	# best_lr_id=$?
+	# best_lr=${lr_array[$best_lr_id-1]}  # -1 for array indexing
+	# past_lr="$past_lr,$best_lr"
+	# python3 FABR/calc_max_lamb.py --my_save_path ${res_path}${id}_gold --rand_idx $randid --seed $seed --best_lr_id $best_lr_id --best_lr $best_lr --tid $id --tid $id --custom_max_lamb $custom_max_lamb
+	# start_lamb=$(<${res_path}${id}_gold_max_lamb.txt)
+	# if [ "$id" -gt 2 ]; then
+		# start_lamb=$best_lamb
+	# fi
+	
+	best_lr_id=1
 	best_lr=${lr_array[$best_lr_id-1]}  # -1 for array indexing
 	past_lr="$past_lr,$best_lr"
-	python3 FABR/calc_max_lamb.py --my_save_path ${res_path}${id}_gold --rand_idx $randid --seed $seed --best_lr_id $best_lr_id --best_lr $best_lr --tid $id --tid $id --custom_max_lamb $custom_max_lamb
-	start_lamb=$(<${res_path}${id}_gold_max_lamb.txt)
-	if [ "$id" -gt 2 ]; then
-		start_lamb=$best_lamb
-	fi
+	start_lamb=1.642320324
 
 	## Lamb
 	lamb=$start_lamb
-	lamb_i=0
+	lamb_i=5
 	found_best=false
 	while [ $found_best=false ]
 	do

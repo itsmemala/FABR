@@ -401,8 +401,8 @@ def modified_fisher(fisher,fisher_old
                 train_f1_diff=2
         else:
             train_f1_diff=1
-        elasticity_down=train_f1_diff
-        elasticity_up=1/(train_f1_diff)
+        elasticity_down=train_f1_diff if elasticity_down is None else elasticity_down
+        elasticity_up=1/(train_f1_diff) if elasticity_up is None else elasticity_up
         print('Elasticity adaptation:',train_f1_diff,elasticity_down,elasticity_up)
     elif adapt_type=='kt' or adapt_type=='kt_strict':
         elasticity_up = 1
