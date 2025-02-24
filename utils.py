@@ -449,6 +449,18 @@ def modified_fisher(fisher,fisher_old
                 # [2] Other situations: Important for both or for only new task or neither -> make it more elastic (i.e. decrease fisher scaling)
                 modified_fisher[n][fisher_rel<=frel_cut] = elasticity_up*fisher_rel[fisher_rel<=frel_cut]*fisher_old[n][fisher_rel<=frel_cut]
             
+            elif adapt_type=='orig_enablektonly':
+                # [1] Important for previous tasks only (or) potential negative transfer -> make it less elastic (i.e. increase fisher scaling)
+                modified_fisher[n][fisher_rel>frel_cut] = fisher_old[n][fisher_rel>frel_cut]
+                # [2] Other situations: Important for both or for only new task or neither -> make it more elastic (i.e. decrease fisher scaling)
+                modified_fisher[n][fisher_rel<=frel_cut] = elasticity_up*fisher_rel[fisher_rel<=frel_cut]*fisher_old[n][fisher_rel<=frel_cut]
+            
+            elif adapt_type=='orig_avoidcfonly':
+                # [1] Important for previous tasks only (or) potential negative transfer -> make it less elastic (i.e. increase fisher scaling)
+                modified_fisher[n][fisher_rel>frel_cut] = elasticity_down*fisher_rel[fisher_rel>frel_cut]*fisher_old[n][fisher_rel>frel_cut]
+                # [2] Other situations: Important for both or for only new task or neither -> make it more elastic (i.e. decrease fisher scaling)
+                modified_fisher[n][fisher_rel<=frel_cut] = fisher_old[n][fisher_rel<=frel_cut]
+            
             elif adapt_type=='kt_easy':
                 # [2] Other situations: Important for both or for only new task or neither -> make it fully elastic
                 modified_fisher[n][fisher_rel<=frel_cut] = 0
