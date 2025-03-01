@@ -13,7 +13,7 @@ decay=0.9
 acc_drop_threshold=0.05
 growth=0.1
 res_path="/home/local/data/ms/fabr_data/BehavSH/BehavSH_LAMAS_NoL1_ORIG.4.4/${note}seed${seed}_${acc_drop_threshold}adt/BehavSH_LAMAS_t"
-base_res_path="/home/local/data/ms/fabr_data/BehavSH/BehavSH_LAMAS_NoL1_ACFO.5/${note}seed${seed}_${acc_drop_threshold}adt/BehavSH_LAMAS_t"
+base_res_path="/home/local/data/ms/fabr_data/BehavSH/BehavSH_LAMAS_NoL1/${note}seed${seed}_${acc_drop_threshold}adt/BehavSH_LAMAS_t"
 
 # id=0
 # printf "\n\nRunning search for task 0\n\n"
@@ -33,7 +33,7 @@ base_res_path="/home/local/data/ms/fabr_data/BehavSH/BehavSH_LAMAS_NoL1_ACFO.5/$
 # past_lr=${lr_array[$best_lr_id-1]}  # -1 for array indexing
 # past_lamb=0
 
-start_model_path="${base_res_path}0_gold.2/"
+start_model_path="${base_res_path}0_gold.1/"
 
 id_array=(1)
 for id in "${id_array[@]}"
