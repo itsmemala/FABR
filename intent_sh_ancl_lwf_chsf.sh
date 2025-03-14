@@ -9,9 +9,9 @@ seed=$3 #0
 dataset='hwu64'
 lr_array=(0.00003 0.0003 0.003 0.03)
 decay=0.9
-acc_drop_threshold=0.3
+acc_drop_threshold=0.2
 growth=0.1
-start_lamb=1000
+start_lamb=$4
 start_alpha_lamb=0.01
 res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_ANCLLWF/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_ANCLLWF_t"
 
