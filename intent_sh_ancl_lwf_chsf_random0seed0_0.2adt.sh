@@ -9,32 +9,38 @@ seed=$3 #0
 dataset='hwu64'
 lr_array=(0.00003 0.0003 0.003 0.03)
 decay=0.9
-acc_drop_threshold=0.1
+acc_drop_threshold=0.2
 growth=0.1
 start_lamb=$4
 start_alpha_lamb=0.01
 res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_ANCLLWF/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_ANCLLWF_t"
 
-id=0
-printf "\n\nRunning search for task 0\n\n"
-lr_id=0
-for lr in "${lr_array[@]}"
-do
-	((lr_id++))
-	printf "\n\nLR Iteration $lr\n\n"
-	mkdir -p  ${res_path}${id}_gold.${lr_id}/
-	CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_lwf_ancl --baseline lwf_ancl --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario cil --use_rbs True --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate $lr --remove_lr_schedule True --remove_wd True --lwf_ancl True --lwf_T 2 --break_after_task 0 --my_save_path ${res_path}${id}_gold.${lr_id}/
-done
+# id=0
+# printf "\n\nRunning search for task 0\n\n"
+# lr_id=0
+# for lr in "${lr_array[@]}"
+# do
+	# ((lr_id++))
+	# printf "\n\nLR Iteration $lr\n\n"
+	# mkdir -p  ${res_path}${id}_gold.${lr_id}/
+	# CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_lwf_ancl --baseline lwf_ancl --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario cil --use_rbs True --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate $lr --remove_lr_schedule True --remove_wd True --lwf_ancl True --lwf_T 2 --break_after_task 0 --my_save_path ${res_path}${id}_gold.${lr_id}/
+# done
 
-python3 FABR/return_best_lr.py --my_save_path ${res_path}${id}_gold --rand_idx $randid --seed $seed --dataset $dataset --max_lr_id $lr_id --tid $id
-best_lr_id=$?
-past_lr=${lr_array[$best_lr_id-1]}  # -1 for array indexing
-past_lamb=0
-past_alpha_lamb=0
+# python3 FABR/return_best_lr.py --my_save_path ${res_path}${id}_gold --rand_idx $randid --seed $seed --dataset $dataset --max_lr_id $lr_id --tid $id
+# best_lr_id=$?
+# past_lr=${lr_array[$best_lr_id-1]}  # -1 for array indexing
+# past_lamb=0
+# past_alpha_lamb=0
 
-start_model_path="${res_path}${id}_gold.${best_lr_id}/"
+# start_model_path="${res_path}${id}_gold.${best_lr_id}/"
 
-id_array=(1 2 3 4 5)
+past_lr=0.00003,0.00003,0.00003,0.00003,0.00003
+past_lamb=0,0.36998848,0.36998848,0.36998848,0.36998848
+past_alpha_lamb=0,0.0121,0.01,0.01331,0.01
+
+start_model_path="${res_path}4.1.1/"
+
+id_array=(5)
 for id in "${id_array[@]}"
 do
 	printf "\n\nRunning search for task $id\n\n"
@@ -56,9 +62,9 @@ do
 	past_lr="$past_lr,$best_lr"
 	# python3 FABR/calc_max_lamb.py --my_save_path ${res_path}${id}_gold --rand_idx $randid --seed $seed --best_lr_id $best_lr_id --best_lr $best_lr --tid $id --tid $id
 	# start_lamb=$(<${res_path}${id}_gold_max_lamb.txt)
-	if [ "$id" -gt 1 ]; then
-		start_lamb=$best_lamb
-	fi
+	# if [ "$id" -gt 1 ]; then
+		# start_lamb=$best_lamb
+	# fi
 
 	## Lamb
 	lamb=$start_lamb
