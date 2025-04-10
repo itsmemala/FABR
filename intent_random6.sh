@@ -1,0 +1,28 @@
+
+###### Update lr in ACFO scripts
+
+# bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.1.sh random6 6 0 1823.64981886 "" 0.5;
+# bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.1.sh random6 6 0 1823.64981886 ".1" 0.1;
+# bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.1.sh random6 6 0 1823.64981886 ".2" 0.3;
+# bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.1.sh random6 6 0 1823.64981886 ".3" 0.7;
+# bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.1.sh random6 6 0 1823.64981886 ".4" 0.9;
+bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.2.sh random6 6 0 1823.64981886 "" 0.5;
+bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.2.sh random6 6 0 1823.64981886 ".1" 0.1;
+bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.2.sh random6 6 0 1823.64981886 ".2" 0.3;
+bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.2.sh random6 6 0 1823.64981886 ".3" 0.7;
+bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.2.sh random6 6 0 1823.64981886 ".4" 0.9;
+bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.3.sh random6 6 0 1823.64981886 "" 0.5;
+bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.3.sh random6 6 0 1823.64981886 ".1" 0.1;
+bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.3.sh random6 6 0 1823.64981886 ".2" 0.3;
+bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.3.sh random6 6 0 1823.64981886 ".3" 0.7;
+bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.3.sh random6 6 0 1823.64981886 ".4" 0.9;
+bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.4.sh random6 6 0 1823.64981886 "" 0.5;
+bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.4.sh random6 6 0 1823.64981886 ".1" 0.1;
+bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.4.sh random6 6 0 1823.64981886 ".2" 0.3;
+bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.4.sh random6 6 0 1823.64981886 ".3" 0.7;
+bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.4.sh random6 6 0 1823.64981886 ".4" 0.9;
+bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.5.sh random6 6 0 1823.64981886 "" 0.5;
+bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.5.sh random6 6 0 1823.64981886 ".1" 0.1;
+bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.5.sh random6 6 0 1823.64981886 ".2" 0.3;
+bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.5.sh random6 6 0 1823.64981886 ".3" 0.7;
+bash FABR//intent_sh_la_mas_chsf_nol1_ACFO.5.sh random6 6 0 1823.64981886 ".4" 0.9;
