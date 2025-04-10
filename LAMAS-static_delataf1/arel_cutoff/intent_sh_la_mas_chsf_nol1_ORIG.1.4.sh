@@ -13,7 +13,7 @@ decay=0.9
 acc_drop_threshold=0.3
 growth=0.1
 res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_ORIG.1.4/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_LAMAS_t"
-base_res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_EKTO.1/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_LAMAS_t"
+base_res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_LAMAS_t"
 
 # id=0
 # printf "\n\nRunning search for task 0\n\n"
@@ -33,7 +33,7 @@ base_res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_EKTO.1
 # past_lr=${lr_array[$best_lr_id-1]}  # -1 for array indexing
 # past_lamb=0
 
-start_model_path="${base_res_path}0_gold.1/"
+start_model_path="${base_res_path}0_gold.2/"
 
 id_array=(1)
 for id in "${id_array[@]}"
@@ -89,7 +89,7 @@ do
 	
 	# past_lamb="$past_lamb,$best_lamb"
 	
-	past_lr=0.00003,0.00003
+	past_lr=0.0003,0.0003
 	past_lamb="0,$custom_max_lamb"
 	
 	## With LA phase
