@@ -38,6 +38,11 @@ def main():
     axes[1].title.set_text('Mean forgetting on old tasks')
     axes[2].title.set_text('New task performance')
     fig.savefig(args.my_save_path+'_lamb_results.png')
+    
+    # l3_zero_max_ind = # max index (i.e. smallest lamb) where new task perf = 0
+    # l3_zero_least_lamb = lamb_array[l3_zero_max_ind]# smallest lamb where new task perf = 0
+    # with open(args.my_save_path+'_min_lamb_w_newtask_zero.txt', 'w') as file:
+        # file.write(str(l3_zero_least_lamb))
 
 if __name__ == '__main__':
     sys.exit(main())

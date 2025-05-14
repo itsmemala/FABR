@@ -372,7 +372,7 @@ class CPU_Unpickler(pickle.Unpickler):
 def modified_fisher(fisher,fisher_old
                     ,train_f1,best_index
                     ,model,model_old
-                    ,elasticity_down,elasticity_up
+                    ,elasticity_down,elasticity_up,elasticity_up_max_lamb,elasticity_up_mult
                     ,freeze_cutoff
                     ,lr,lamb,use_ind_lamb_max
                     ,grad_dir_lastart=None,grad_dir_laend=None,lastart_fisher=None
@@ -401,8 +401,8 @@ def modified_fisher(fisher,fisher_old
                 train_f1_diff=2
         else:
             train_f1_diff=1
-        elasticity_down=train_f1_diff if elasticity_down is None else elasticity_down
-        elasticity_up=1/(train_f1_diff) if elasticity_up is None else elasticity_up
+        elasticity_down = train_f1_diff if elasticity_down is None else elasticity_down
+        elasticity_up = 1/(train_f1_diff) if elasticity_up is None else elasticity_up
         print('Elasticity adaptation:',train_f1_diff,elasticity_down,elasticity_up)
     elif adapt_type=='kt' or adapt_type=='kt_strict':
         elasticity_up = 1
@@ -427,9 +427,16 @@ def modified_fisher(fisher,fisher_old
             if frel_cut_type=='pdm':
                 # Get distribution to set threshold
                 frel_cut = torch.mean(fisher_rel.flatten()).item()
+                frel_cut = np.min(frel_cut,0.5)
             elif frel_cut_type=='pdmsd':
                 # Get distribution to set threshold
                 frel_cut = torch.mean(fisher_rel.flatten()).item() + torch.std(fisher_rel.flatten()).item()
+            elasticity_up_min = np.ceil(1/frel_cut)
+            if elasticity_up_max_lamb is not None:
+                elasticity_up_max = np.max(elasticity_up_max_lamb/lamb,elasticity_up_min)
+                elasticity_up = elasticity_up_min + elasticity_up_mult*(elasticity_up_max-elasticity_up_min)
+                assert elasticity_up <= elasticity_up_max
+            assert elasticity_up >= elasticity_up_min
             
             modified_fisher[n] = fisher_old[n]
             

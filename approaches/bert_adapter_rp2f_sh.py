@@ -75,8 +75,8 @@ class Appr(ApprBase):
         for n, p in self.model_old.named_parameters():
             cur_precision_matrices[n] = torch.zeros_like(p.data).to(self.device)
 
-        opt_learner = BertAdam([(k, v) for k, v in self.learner.named_parameters() if v.requires_grad==True and 'last' not in k], lr=self.args.learning_rate, warmup=self.args.warmup_proportion, t_total=t_total)
-        opt_classifier = BertAdam([(k, v) for k, v in self.model.named_parameters() if v.requires_grad==True and 'last' in k], lr=self.args.learning_rate, warmup=self.args.warmup_proportion, t_total=t_total)
+        opt_learner = BertAdam([(k, v) for k, v in self.learner.named_parameters() if v.requires_grad==True], lr=self.args.learning_rate, warmup=self.args.warmup_proportion, t_total=t_total)
+        opt_classifier = BertAdam([(k, v) for k, v in self.learner.named_parameters() if v.requires_grad==True and 'last' in k], lr=self.args.learning_rate, warmup=self.args.warmup_proportion, t_total=t_total)
 
         scheduler_feature = StepLR(opt_learner, step_size=99, gamma=0.1)
         scheduler_classifier = StepLR(opt_classifier, step_size=99, gamma=0.1)
@@ -154,16 +154,16 @@ class Appr(ApprBase):
             input_ids, segment_ids, input_mask, targets, tasks= batch
 
             # =====  =====  ===== update classifier =====  =====  =====
-            with torch.no_grad():
-                feat = self.model.features(input_ids, segment_ids, input_mask)
+            # with torch.no_grad():
+                # feat = self.model.features(input_ids, segment_ids, input_mask)
 
-            outputs = self.model.classifier(feat)['y']
-            loss_ce = self.criterion_train(tasks,outputs,targets,class_counts)
-            classifier_loss = loss_ce
+            # outputs = self.model.classifier(feat)['y']
+            # loss_ce = self.criterion_train(tasks,outputs,targets,class_counts)
+            # classifier_loss = loss_ce
 
-            opt_classifier.zero_grad()
-            classifier_loss.backward()
-            opt_classifier.step()
+            # opt_classifier.zero_grad()
+            # classifier_loss.backward()
+            # opt_classifier.step()
 
             # with torch.no_grad():
                 # feat = self.model.features(input_ids, segment_ids, input_mask)
@@ -173,7 +173,7 @@ class Appr(ApprBase):
                     in zip(self.learner.named_parameters(), self.model.named_parameters(),
                                      self.model_old.named_parameters()):
                 online_weight, target_weight, old_weight = online_params.data, target_params.data, old_params.data
-                if 'last' not in online_params_n and online_params.requires_grad==True:
+                if online_params.requires_grad==True:
                     # print(online_params_n)
                     if t == 0:
                         target_params.data = online_weight * 1.
@@ -181,7 +181,7 @@ class Appr(ApprBase):
                         cur_fisher, old_fisher = cur_precision_matrices[online_params_n], self.precision_matrices[online_params_n]
                         cur_fisher, old_fisher = cur_fisher / (cur_fisher + old_fisher + 1e-10), old_fisher / (cur_fisher + old_fisher + 1e-10)
 
-                        target_params.data = old_fisher #old_fisher * old_weight + cur_fisher * online_weight
+                        target_params.data = old_fisher * old_weight + cur_fisher * online_weight
                         # print(online_params_n,target_params[:2])
                         # if online_params_n=='bert.encoder.layer.0.attention.output.LayerNorm.weight': print(online_params_n, old_fisher[:10], cur_fisher[:10], old_weight[:10], online_weight[:10])
                         # sys.exit()
@@ -191,7 +191,7 @@ class Appr(ApprBase):
             # print(feat[:10])
             # =====  =====  ===== update learner =====  =====  =====
             online_feat = self.learner.features(input_ids, segment_ids, input_mask)
-            outputs = self.model.classifier(online_feat)['y']
+            outputs = self.learner.classifier(online_feat)['y']
             # print(online_feat[:2],outputs[:2,:2])
             supervised_loss = self.criterion_train(tasks,outputs,targets,class_counts)
 
@@ -225,8 +225,8 @@ class Appr(ApprBase):
             # if 'last' in n:
                 # aux_params.data = target_params.data
         # Needs to be implemeneted for BERT-Adapter
-        cur_precision_matrices = self._diag_fisher(t,train_data,self.device,self.aux_net,self.ce,scenario=self.args.scenario)
-        # cur_precision_matrices = self.fisher_matrix_diag_bert(t,train_data,self.device,self.aux_net,self.ce,scenario=self.args.scenario)
+        # cur_precision_matrices = self._diag_fisher(t,train_data,self.device,self.aux_net,self.ce,scenario=self.args.scenario)
+        cur_precision_matrices = self.fisher_matrix_diag_bert(t,train_data,self.device,self.aux_net,self.ce,scenario=self.args.scenario)
         # print('\n\n',global_step,cur_precision_matrices['bert.encoder.layer.0.attention.output.LayerNorm.weight'][:10])
 
 
@@ -404,10 +404,10 @@ class Appr(ApprBase):
                 precision_matrices[n] = torch.zeros_like(p.data).to(device)
         # sys.exit()
 
-        opt = BertAdam([(k, v) for k, v in model.named_parameters() if v.requires_grad==True and 'last' not in k], lr=self.args.learning_rate)
+        opt = BertAdam([(k, v) for k, v in model.named_parameters() if v.requires_grad==True], lr=self.args.learning_rate)
         # count=0
         for n, p in tqdm(model.named_parameters(),desc='Fisher diagonal',ncols=100,ascii=True): # 12 layer BERT * 6 trainable params * 2 (wgt + bias) = 144 (out of 297 named_parameters)
-            if 'last' not in n and p.requires_grad==True and 'bias' not in n:
+            if p.requires_grad==True and 'bias' not in n:
                 param_w_weight = deepcopy(p.data)
                 p.data = torch.ones_like(p.data).to(device) * 0.00001
                 # count += 1

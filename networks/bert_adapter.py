@@ -70,12 +70,46 @@ class Net(torch.nn.Module):
         return
 
     def forward(self,input_ids, segment_ids, input_mask, fa_method=None, tid=None):
-        output_dict = {}
+        # output_dict = {}
 
 
+        # sequence_output, pooled_output = self.bert(input_ids=input_ids, token_type_ids=segment_ids, attention_mask=input_mask)
+        # pooled_output = self.dropout(pooled_output)
+        # #shared head
+
+        # if 'dil' in self.args.scenario:
+            # y = self.last(pooled_output)
+        # elif 'til' in self.args.scenario:
+            # y=[]
+            # for t,i in self.taskcla:
+                # y.append(self.last[t](pooled_output))
+        # elif 'cil' in self.args.scenario:
+            # y = self.last(pooled_output)
+
+        # output_dict['y'] = y
+        # output_dict['normalized_pooled_rep'] = F.normalize(pooled_output, dim=1)
+        
+        # if fa_method=='ig':
+            # # print(input_ids.shape)
+            # # print(pooled_output.shape)
+            # # print(output_dict['y'][tid].shape)
+            # return output_dict['y'][tid]
+        
+        features = self.features(input_ids, segment_ids, input_mask)
+        output_dict = self.classifier(features,fa_method,tid)
+
+        return output_dict
+    
+    def features(self,input_ids, segment_ids, input_mask):
+        
         sequence_output, pooled_output = self.bert(input_ids=input_ids, token_type_ids=segment_ids, attention_mask=input_mask)
         pooled_output = self.dropout(pooled_output)
-        #shared head
+
+        return pooled_output
+    
+    def classifier(self,pooled_output, fa_method=None, tid=None):
+        output_dict = {}
+
 
         if 'dil' in self.args.scenario:
             y = self.last(pooled_output)
@@ -96,3 +130,4 @@ class Net(torch.nn.Module):
             return output_dict['y'][tid]
 
         return output_dict
+    

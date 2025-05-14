@@ -44,6 +44,7 @@ def log_softmax(idrandom,t,x,class_counts=None):
 
 def MyBalancedCrossEntropyLoss(idrandom):
     def my_bal_ce(t, outputs, targets, class_counts=None):
+        # print(log_softmax(idrandom,t,outputs,class_counts))
         return torch.nn.functional.nll_loss(log_softmax(idrandom,t,outputs,class_counts), targets)
     return my_bal_ce
 
@@ -90,6 +91,11 @@ class Appr(object):
             self.ce=torch.nn.CrossEntropyLoss()
         self.taskcla = taskcla
         self.logger = logger
+        
+        if args.baseline=='rp2f':
+            self.precision_matrices = {}
+            self.learner=None
+            self.aux_net=None
 
         if args.baseline=='ewc' or args.baseline=='ewc_freeze' or args.baseline=='ewc_ancl':
             if self.args.use_ind_lamb_max==True:

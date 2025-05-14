@@ -54,6 +54,8 @@ def asc_config(parser):
     parser.add_argument('--base_temp', type=float, default=1,
                         help='temperature for loss function')
     parser.add_argument('--scenario',default='',type=str,required=True,help='(default=%(default)s)')
+    # RP2F args
+    parser.add_argument('--rp2f_lamb',default=0.00001,type=float,required=False,help='(default=%(default)s)')
     # FABR/LA dev args
     parser.add_argument('--only_mcl',default=False,type=bool,required=False,help='(default=%(default)s)')
     parser.add_argument('--save_model_path',default=None,type=str,help="Path to save model at end of task")
@@ -99,6 +101,8 @@ def asc_config(parser):
     parser.add_argument('--mask_scaling',default=0.1,type=float,required=False,help='(default=%(default)s)')
     parser.add_argument('--elasticity_down',default=None,type=float,required=False,help='(default=%(default)s)')
     parser.add_argument('--elasticity_up',default=None,type=float,required=False,help='(default=%(default)s)')
+    parser.add_argument('--elasticity_up_max_lamb',default=None,type=float,required=False,help='(default=%(default)s)')
+    parser.add_argument('--elasticity_up_mult',default=None,type=float,required=False,help='(default=%(default)s)')
     # parser.add_argument('--elasticity_down',default=10,type=float,required=False,help='(default=%(default)s)')
     # parser.add_argument('--elasticity_up',default=0.1,type=float,required=False,help='(default=%(default)s)')
     parser.add_argument('--my_save_path',default='',type=str,required=True,help='(default=%(default)s)')
