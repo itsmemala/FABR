@@ -426,15 +426,16 @@ def modified_fisher(fisher,fisher_old
             
             if frel_cut_type=='pdm':
                 # Get distribution to set threshold
-                frel_cut = torch.mean(fisher_rel.flatten()).item()
-                frel_cut = np.min(frel_cut,0.5)
+                frel_cut = torch.nan_to_num(torch.mean(fisher_rel.flatten())).item()
+                frel_cut = min(frel_cut,0.5)
             elif frel_cut_type=='pdmsd':
                 # Get distribution to set threshold
                 frel_cut = torch.mean(fisher_rel.flatten()).item() + torch.std(fisher_rel.flatten()).item()
-            elasticity_up_min = np.ceil(1/frel_cut)
+            elasticity_up_min = np.ceil(1/max(frel_cut,0.05))
             if elasticity_up_max_lamb is not None:
-                elasticity_up_max = np.max(elasticity_up_max_lamb/lamb,elasticity_up_min)
+                elasticity_up_max = max(elasticity_up_max_lamb/lamb,elasticity_up_min)
                 elasticity_up = elasticity_up_min + elasticity_up_mult*(elasticity_up_max-elasticity_up_min)
+                # print("\n\nLamb_up bounding calc for",n,":",frel_cut,elasticity_up_min,elasticity_up_max,elasticity_up,"\n\n")
                 assert elasticity_up <= elasticity_up_max
             assert elasticity_up >= elasticity_up_min
             
