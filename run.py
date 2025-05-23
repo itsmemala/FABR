@@ -101,6 +101,9 @@ if args.backbone == 'bert_adapter':
     elif args.baseline == 'rp2f_sh':
         from approaches import bert_adapter_rp2f_sh as approach
         from networks import bert_adapter as network
+    elif args.baseline == 'upgd':
+        from approaches import bert_adapter_upgd as approach
+        from networks import bert_adapter as network
     elif args.baseline == 'seq' or args.baseline == 'mtl':
         from approaches import bert_adapter_seq as approach
         from networks import bert_adapter as network
@@ -127,7 +130,7 @@ print('\nTask info =',taskcla)
 print('Inits...')
 net=network.Net(taskcla,args=args).cuda()
 
-if 'ctr' in args.approach or 'bert_fine_tune' in args.approach or 'bert_adapter_ewc' in args.approach or 'bert_adapter_lwf' in args.approach or 'bert_adapter_seq' in args.approach or 'bert_adapter_mtl' in args.approach or 'bert_adapter_rp2f' in args.approach:
+if 'ctr' in args.approach or 'bert_fine_tune' in args.approach or 'bert_adapter_ewc' in args.approach or 'bert_adapter_lwf' in args.approach or 'bert_adapter_seq' in args.approach or 'bert_adapter_mtl' in args.approach or 'bert_adapter_rp2f' in args.approach or 'bert_adapter_upgd' in args.approach:
     appr=approach.Appr(net,logger=logger,taskcla=taskcla,args=args)
 else:
     appr=approach.Appr(net,logger=logger,args=args)

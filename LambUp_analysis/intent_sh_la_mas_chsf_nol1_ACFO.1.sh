@@ -14,13 +14,13 @@ lr_array=(0.00003 0.0003 0.003 0.03)
 decay=0.9
 acc_drop_threshold=0.3
 growth=0.1
-base_res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_Custom_0.1lambup/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_LAMAS_t"
+base_res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_Custom/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_LAMAS_t"
 t0_best_lr_id=$7
 t0_best_lr=$8
 t1_best_lr=$9
-elasticity_down_max_lamb=$10
-elasticity_down_mult=$11
-acfo_id=$12
+elasticity_down_max_lamb=${10}
+elasticity_down_mult=${11}
+acfo_id=${12}
 res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_ACFO_LambUp.${acfo_id}${name_ext}/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_LAMAS_t"
 
 # id=0
