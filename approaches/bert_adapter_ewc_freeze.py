@@ -275,7 +275,7 @@ class Appr(ApprBase):
                 self.fisher_for_loss=utils.modified_fisher(self.fisher,fisher_old
                 ,train_f1_macro_save,best_index
                 ,self.model,self.model_old
-                ,self.args.elasticity_down,self.args.elasticity_up,self.args.elasticity_down_max_lamb,self.args.elasticity_down_mult
+                ,self.args.elasticity_down,self.args.elasticity_up,self.args.elasticity_down_max_lamb,self.args.elasticity_down_mult,self.args.pdm_frac
                 ,self.args.freeze_cutoff
                 ,self.args.learning_rate,self.lamb,self.args.use_ind_lamb_max
                 ,adapt_type=self.args.adapt_type

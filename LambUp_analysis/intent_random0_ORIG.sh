@@ -1,19 +1,19 @@
-bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 "" 0.5 2 0.0003 0.00003 1641.28483697 0.1 1 0.01;
-bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".1" 0.1 2 0.0003 0.00003 1641.28483697 0.1 1 0.01;
-bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".2" 0.3 2 0.0003 0.00003 1641.28483697 0.1 1 0.01;
-bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".3" 0.7 2 0.0003 0.00003 1641.28483697 0.1 1 0.01;
-bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".4" 0.9 2 0.0003 0.00003 1641.28483697 0.1 1 0.01;
-bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 "" 0.5 2 0.0003 0.00003 1641.28483697 0.5 2 0.01;
-bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".1" 0.1 2 0.0003 0.00003 1641.28483697 0.5 2 0.01;
-bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".2" 0.3 2 0.0003 0.00003 1641.28483697 0.5 2 0.01;
-bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".3" 0.7 2 0.0003 0.00003 1641.28483697 0.5 2 0.01;
-bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".4" 0.9 2 0.0003 0.00003 1641.28483697 0.5 2 0.01;
-bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 "" 0.5 2 0.0003 0.00003 1641.28483697 0.9 3 0.01;
-bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".1" 0.1 2 0.0003 0.00003 1641.28483697 0.9 3 0.01;
-bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".2" 0.3 2 0.0003 0.00003 1641.28483697 0.9 3 0.01;
-bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".3" 0.7 2 0.0003 0.00003 1641.28483697 0.9 3 0.01;
+# bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 "" 0.5 2 0.0003 0.00003 1641.28483697 0.1 1 0.01;
+# bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".1" 0.1 2 0.0003 0.00003 1641.28483697 0.1 1 0.01;
+# bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".2" 0.3 2 0.0003 0.00003 1641.28483697 0.1 1 0.01;
+# bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".3" 0.7 2 0.0003 0.00003 1641.28483697 0.1 1 0.01;
+# bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".4" 0.9 2 0.0003 0.00003 1641.28483697 0.1 1 0.01;
+# bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 "" 0.5 2 0.0003 0.00003 1641.28483697 0.5 2 0.01;
+# bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".1" 0.1 2 0.0003 0.00003 1641.28483697 0.5 2 0.01;
+# bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".2" 0.3 2 0.0003 0.00003 1641.28483697 0.5 2 0.01;
+# bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".3" 0.7 2 0.0003 0.00003 1641.28483697 0.5 2 0.01;
+# bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".4" 0.9 2 0.0003 0.00003 1641.28483697 0.5 2 0.01;
+# bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 "" 0.5 2 0.0003 0.00003 1641.28483697 0.9 3 0.01;
+# bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".1" 0.1 2 0.0003 0.00003 1641.28483697 0.9 3 0.01;
+# bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".2" 0.3 2 0.0003 0.00003 1641.28483697 0.9 3 0.01;
+# bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".3" 0.7 2 0.0003 0.00003 1641.28483697 0.9 3 0.01;
 bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".4" 0.9 2 0.0003 0.00003 1641.28483697 0.9 3 0.01;
-;
+
 bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 "" 0.5 2 0.0003 0.00003 1641.28483697 0.1 4 0.5;
 bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".1" 0.1 2 0.0003 0.00003 1641.28483697 0.1 4 0.5;
 bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".2" 0.3 2 0.0003 0.00003 1641.28483697 0.1 4 0.5;
@@ -29,7 +29,7 @@ bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".1" 0.1 
 bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".2" 0.3 2 0.0003 0.00003 1641.28483697 0.9 6 0.5;
 bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".3" 0.7 2 0.0003 0.00003 1641.28483697 0.9 6 0.5;
 bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".4" 0.9 2 0.0003 0.00003 1641.28483697 0.9 6 0.5;
-;
+
 bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 "" 0.5 2 0.0003 0.00003 1641.28483697 0.1 7 1.0;
 bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".1" 0.1 2 0.0003 0.00003 1641.28483697 0.1 7 1.0;
 bash FABR//intent_sh_la_mas_chsf_nol1_ORIG.1.sh random0 0 0 4.50567991 ".2" 0.3 2 0.0003 0.00003 1641.28483697 0.1 7 1.0;

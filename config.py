@@ -103,6 +103,7 @@ def asc_config(parser):
     parser.add_argument('--elasticity_up',default=None,type=float,required=False,help='(default=%(default)s)')
     parser.add_argument('--elasticity_down_max_lamb',default=None,type=float,required=False,help='(default=%(default)s)')
     parser.add_argument('--elasticity_down_mult',default=None,type=float,required=False,help='(default=%(default)s)')
+    parser.add_argument('--pdm_frac',default=None,type=float,required=False,help='(default=%(default)s)')
     # parser.add_argument('--elasticity_down',default=10,type=float,required=False,help='(default=%(default)s)')
     # parser.add_argument('--elasticity_up',default=0.1,type=float,required=False,help='(default=%(default)s)')
     parser.add_argument('--my_save_path',default='',type=str,required=True,help='(default=%(default)s)')

@@ -372,7 +372,7 @@ class CPU_Unpickler(pickle.Unpickler):
 def modified_fisher(fisher,fisher_old
                     ,train_f1,best_index
                     ,model,model_old
-                    ,elasticity_down,elasticity_up,elasticity_down_max_lamb,elasticity_down_mult
+                    ,elasticity_down,elasticity_up,elasticity_down_max_lamb,elasticity_down_mult,pdm_frac
                     ,freeze_cutoff
                     ,lr,lamb,use_ind_lamb_max
                     ,grad_dir_lastart=None,grad_dir_laend=None,lastart_fisher=None
@@ -427,6 +427,7 @@ def modified_fisher(fisher,fisher_old
             if frel_cut_type=='pdm':
                 # Get distribution to set threshold
                 frel_cut = torch.nan_to_num(torch.mean(fisher_rel.flatten())).item()
+                if pdm_frac is not None: frel_cut = pdm_frac*frel_cut
                 frel_cut = min(frel_cut,0.5)
             elif frel_cut_type=='pdmsd':
                 # Get distribution to set threshold
