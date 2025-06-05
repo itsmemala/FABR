@@ -67,6 +67,7 @@ def asc_config(parser):
     parser.add_argument('--custom_lr',default=None,type=list_of_ints,required=False,help='(default=%(default)s)')
     parser.add_argument('--custom_alpha_lamb',default=None,type=list_of_ints,required=False,help='(default=%(default)s)')
     parser.add_argument('--custom_lamb',default=None,type=list_of_ints,required=False,help='(default=%(default)s)')
+    parser.add_argument('--no_frel_cut_max',default=False,type=str,required=False,help='(default=%(default)s)')
     parser.add_argument('--frel_cut_type',default='',type=str,required=False,help='(default=%(default)s)')
     parser.add_argument('--frel_cut',default=0.5,type=float,required=False,help='(default=%(default)s)')
     parser.add_argument('--remove_wd',default=False,type=bool,required=False,help='(default=%(default)s)')

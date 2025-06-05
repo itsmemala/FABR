@@ -281,7 +281,7 @@ class Appr(ApprBase):
                 ,adapt_type=self.args.adapt_type
                 ,ktcf_wgt=self.args.ktcf_wgt
                 ,ktcf_wgt_use_arel=self.args.ktcf_wgt_use_arel
-                ,frel_cut=self.args.frel_cut, frel_cut_type=self.args.frel_cut_type
+                ,frel_cut=self.args.frel_cut, frel_cut_type=self.args.frel_cut_type, no_frel_cut_max=self.args.no_frel_cut_max
                 ,modify_fisher_last=self.args.modify_fisher_last
                 ,save_alpharel=self.args.save_alpharel
                 ,save_path=save_path+str(args.note)+'_seed'+str(args.seed)+'model_'+str(t))

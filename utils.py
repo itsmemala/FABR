@@ -379,7 +379,7 @@ def modified_fisher(fisher,fisher_old
                     ,adapt_type='orig'
                     ,ktcf_wgt=0.0
                     ,ktcf_wgt_use_arel=False
-                    ,frel_cut=0.5, frel_cut_type=''
+                    ,frel_cut=0.5, frel_cut_type='', no_frel_cut_max=False
                     ,modify_fisher_last=False
                     ,save_alpharel=False
                     ,save_path=''):
@@ -428,7 +428,7 @@ def modified_fisher(fisher,fisher_old
                 # Get distribution to set threshold
                 frel_cut = torch.nan_to_num(torch.mean(fisher_rel.flatten())).item()
                 if pdm_frac is not None: frel_cut = pdm_frac*frel_cut
-                frel_cut = min(frel_cut,0.5)
+                if no_frel_cut_max==False: frel_cut = min(frel_cut,0.5)
             elif frel_cut_type=='pdmsd':
                 # Get distribution to set threshold
                 frel_cut = torch.mean(fisher_rel.flatten()).item() + torch.std(fisher_rel.flatten()).item()
