@@ -9,13 +9,14 @@ seed=$3 #0
 custom_max_lamb=$4
 elasticity_up_max_lamb=$5
 elasticity_up_mult=$6
-pdm_frac=$7
+lamb_down=$7
+pdm_frac=$8
 dataset='hwu64'
 lr_array=(0.00003 0.0003 0.003 0.03)
 decay=0.9
 acc_drop_threshold=0.3
 growth=0.1
-res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_Custom_${elasticity_up_mult}lambup_${pdm_frac}pdmfrac/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_LAMAS_t"
+res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_Custom_${elasticity_up_mult}lambup_${lamb_down}_${pdm_frac}pdmfrac/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_LAMAS_t"
 
 id=0
 printf "\n\nRunning search for task 0\n\n"
@@ -97,9 +98,11 @@ do
 	custom_lamb=$past_lamb
 	printf "\n\nLA Phase\n\n"
 	mkdir -p ${res_path}${id}.${best_lamb_i}.LA_phase/
-	python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario cil --use_rbs True --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --custom_lr $custom_lr --custom_lamb $custom_lamb --fisher_combine max --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.LA_phase/ --start_at_task $id --start_model_path $start_model_path --elasticity_down_max_lamb $elasticity_up_max_lamb --elasticity_down_mult $elasticity_up_mult --elasticity_down 1 --frel_cut_type pdm --pdm_frac $pdm_frac
+	python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario cil --use_rbs True --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --custom_lr $custom_lr --custom_lamb $custom_lamb --fisher_combine max --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.LA_phase/ --start_at_task $id --start_model_path $start_model_path --elasticity_down_max_lamb $elasticity_up_max_lamb --elasticity_down_mult $elasticity_up_mult --elasticity_up $lamb_down --frel_cut_type pdm --pdm_frac $pdm_frac
 		
 	start_model_path="${res_path}${id}.${best_lamb_i}.LA_phase/"
 done
 
-
+# CUDA_VISIBLE_DEVICES=1 bash FABR//intent_sh_la_mas_chsf_nol1_custom_autolambup_pdmfrac.sh random0 0 0 4.50567991 1641.28483697 1.0 1.0 1.0
+# CUDA_VISIBLE_DEVICES=1 bash FABR//intent_sh_la_mas_chsf_nol1_custom_autolambup_pdmfrac.sh random3 3 0 6.85163861 77.30662811 1.0 1.0 1.0
+# CUDA_VISIBLE_DEVICES=1 bash FABR//intent_sh_la_mas_chsf_nol1_custom_autolambup_pdmfrac.sh random6 6 0 1823.64981886 2026.27757651 1.0 1.0 1.0
