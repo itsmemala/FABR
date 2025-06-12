@@ -33,7 +33,14 @@ def main():
     load_path = args.my_save_path + '_gold.' + str(args.best_lr_id) + '/' + get_res_fname(args.rand_idx,args.seed,args.my_save_path,args.dataset)
     best_f1 = get_new_at_each_step(load_path)[args.tid]
     
-    if (task_f1 > baseline_f1) or (task_f1 == best_f1):
+    l3 = []
+    for i in range(1,args.alpha_lamb_i+1,1):
+        load_path = args.my_save_path + '.' + str(args.best_lamb_i) + '.LA_phase.' + str(i) + '/' + get_res_fname(args.rand_idx,args.seed,args.my_save_path,args.dataset)
+        l3.append(get_new_at_each_step(load_path)[args.tid])
+    l3_recent = l3[-15:]
+    slope = np.polyfit(range(len(l3_recent)),l3_recent,1)[0]
+    
+    if (task_f1 > baseline_f1) or (task_f1 == best_f1) or (slope < 0.003 and len(l3) > 20):
         with open(args.my_save_path+ '.' + str(args.best_lamb_i) + '.LA_phase.' + str(args.alpha_lamb_i) + '_foundbestlambdown.txt', 'w') as file:
             file.write(str('found'))
         return # using string since shell script does not work with boolean

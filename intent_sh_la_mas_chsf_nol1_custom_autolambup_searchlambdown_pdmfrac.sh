@@ -17,7 +17,7 @@ lr_array=(0.00003 0.0003) #(0.00003 0.0003 0.003 0.03)
 decay=0.9
 acc_drop_threshold=0.3
 growth=0.9
-res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_Custom_${elasticity_up_mult}lambup_searchlambdown_${pdm_frac}pdmfrac{no_frel_cut_max}/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_LAMAS_t"
+res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_Custom_${elasticity_up_mult}lambup_searchlambdown_${pdm_frac}pdmfrac${no_frel_cut_max}/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_LAMAS_t"
 
 id=0
 printf "\n\nRunning search for task 0\n\n"
@@ -120,5 +120,5 @@ do
 done
 
 # CUDA_VISIBLE_DEVICES=1 bash FABR//intent_sh_la_mas_chsf_nol1_custom_autolambup_searchlambdown_pdmfrac.sh random0 0 0 4.50567991 1641.28483697 1.0 1.0 1.0 True
-# CUDA_VISIBLE_DEVICES=1 bash FABR//intent_sh_la_mas_chsf_nol1_custom_autolambup_searchlambdown_pdmfrac.sh random3 3 0 6.85163861 77.30662811 1.0 1.0 1.0 True
-# CUDA_VISIBLE_DEVICES=1 bash FABR//intent_sh_la_mas_chsf_nol1_custom_autolambup_searchlambdown_pdmfrac.sh random6 6 0 1823.64981886 2026.27757651 1.0 1.0 1.0 True
+# CUDA_VISIBLE_DEVICES=0 bash FABR//intent_sh_la_mas_chsf_nol1_custom_autolambup_searchlambdown_pdmfrac.sh random3 3 0 6.85163861 77.30662811 1.0 1.0 1.0 True
+# CUDA_VISIBLE_DEVICES=0 bash FABR//intent_sh_la_mas_chsf_nol1_custom_autolambup_searchlambdown_pdmfrac.sh random6 6 0 1823.64981886 2026.27757651 1.0 1.0 1.0 True
