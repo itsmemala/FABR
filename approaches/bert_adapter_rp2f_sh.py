@@ -64,13 +64,19 @@ class Appr(ApprBase):
         self.aux_net = deepcopy(self.model)  # cal fisher for online model
         
         # Initialise learner
-        self.learner=deepcopy(self.model)
+        if self.args.learner_is_seq:
+            if t==0:
+                self.learner=deepcopy(self.model)
+            else:
+                self.learner=deepcopy(self.learner_old)
+        else:
+            self.learner=deepcopy(self.model)
         
         if t==0:
             self.precision_matrices = {}
             for n, p in self.model.named_parameters():
                 self.precision_matrices[n] = torch.zeros_like(p.data).to(self.device)
-                             
+        
         cur_precision_matrices = {}
         for n, p in self.model_old.named_parameters():
             cur_precision_matrices[n] = torch.zeros_like(p.data).to(self.device)
@@ -111,8 +117,7 @@ class Appr(ApprBase):
             iter_bar = tqdm(train, desc='Train Iter (loss=X.XXX)')
             global_step,cur_precision_matrices=self.train_epoch(t,train,iter_bar, opt_classifier,opt_learner,scheduler_feature,scheduler_classifier,cur_precision_matrices,global_step,class_counts,train_data)
             # print('\n\n',global_step,cur_precision_matrices['bert.encoder.layer.0.attention.output.LayerNorm.weight'][:10])
-            for n, p in self.model_old.named_parameters():
-                self.precision_matrices[n] += cur_precision_matrices[n]
+            
             clock1=time.time()
             # print('\n\n',global_step,self.precision_matrices['bert.encoder.layer.0.attention.output.LayerNorm.weight'][:10])
 
@@ -138,6 +143,10 @@ class Appr(ApprBase):
 
             print()
             # break
+        
+        for n, p in self.model_old.named_parameters():
+            self.precision_matrices[n] += cur_precision_matrices[n]
+        
         # Restore best
         utils.set_model_(self.model,best_model)
 
@@ -180,6 +189,7 @@ class Appr(ApprBase):
                     else:
                         cur_fisher, old_fisher = cur_precision_matrices[online_params_n], self.precision_matrices[online_params_n]
                         cur_fisher, old_fisher = cur_fisher / (cur_fisher + old_fisher + 1e-10), old_fisher / (cur_fisher + old_fisher + 1e-10)
+                        print(online_params_n,old_fisher.shape,old_fisher.min(),old_fisher.max())
 
                         target_params.data = old_fisher * old_weight + cur_fisher * online_weight
                         # print(online_params_n,target_params[:2])

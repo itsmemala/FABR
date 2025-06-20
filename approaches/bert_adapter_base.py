@@ -92,9 +92,10 @@ class Appr(object):
         self.taskcla = taskcla
         self.logger = logger
         
-        if args.baseline=='rp2f':
+        if 'rp2f' in args.baseline:
             self.precision_matrices = {}
             self.learner=None
+            self.learner_old=model
             self.aux_net=None
 
         if args.baseline=='ewc' or args.baseline=='ewc_freeze' or args.baseline=='ewc_ancl':

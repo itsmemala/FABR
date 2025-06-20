@@ -197,6 +197,13 @@ for t,ncla in taskcla:
         appr.model_old = deepcopy(appr.model)
         appr.model_old.eval()
         utils.freeze_model(appr.model_old) # Freeze the weights
+        if 'rp2f' in args.approach:
+            appr.learner_old.load_state_dict(torch.load(args.start_model_path+'learner'))
+            appr.precision_matrices = {}
+            with open(args.start_model_path+'precision_matrices.pkl', 'rb') as handle:
+                checkpoint_precision_matrices = CPU_Unpickler(handle).load()
+                for n,_ in appr.model.named_parameters(): # these will be None in case of non-fisher based approach
+                    if checkpoint_precision_matrices is not None: appr.precision_matrices[n] = checkpoint_precision_matrices[n].cuda()
         if 'ewc' in args.approach:
             with open(args.start_model_path+'fisher.pkl', 'rb') as handle:
                 checkpoint_fisher = CPU_Unpickler(handle).load()
@@ -379,6 +386,10 @@ for t,ncla in taskcla:
     
     if t==args.break_after_task: # 1 implies only first 2 tasks
         torch.save(utils.get_model(appr.model), args.my_save_path+'model')
+        if 'rp2f' in args.approach:
+            torch.save(utils.get_model(appr.learner), args.my_save_path+'learner')
+            with open(args.my_save_path+'precision_matrices.pkl', 'wb') as fp:
+                pickle.dump(appr.precision_matrices, fp)
         if 'ewc' in args.approach:
             with open(args.my_save_path+'fisher_old.pkl', 'wb') as fp:
                 pickle.dump(appr.fisher_old, fp)

@@ -33,12 +33,12 @@ res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_ANCLMAS/${note}seed${s
 # past_alpha_lamb=0
 
 
-past_lr=0.00003,0.00003,0.00003
-past_lamb=0,3.28464065,0.83491158
-past_alpha_lamb=0,0.45259256
-start_model_path="${res_path}1.4.41/"
+past_lr=0.00003,0.00003,0.00003,0.00003
+past_lamb=0,2.66055893,1.4139301,0.83491158
+past_alpha_lamb=0,0.011,0.10834702
+start_model_path="${res_path}2.7.26/"
 
-id_array=(2)
+id_array=(3)
 for id in "${id_array[@]}"
 do
 	# printf "\n\nRunning search for task $id\n\n"
@@ -92,12 +92,12 @@ do
 	
 	# past_lamb="$past_lamb,$best_lamb"
 	
-	best_lamb_i=14
+	best_lamb_i=6
 	best_lamb=0.83491158
 	
 	## Alpha lamb
-	alpha_lamb=0.04177248
-	alpha_lamb_i=15
+	alpha_lamb=0.011
+	alpha_lamb_i=1
 	found_best=false
 	while [ $found_best=false ]
 	do
@@ -123,7 +123,7 @@ do
 	start_model_path="${res_path}${id}.${best_lamb_i}.${best_alpha_lamb_i}/"
 done
 
-id_array=(3 4 5)
+id_array=(4 5)
 for id in "${id_array[@]}"
 do
 	printf "\n\nRunning search for task $id\n\n"
