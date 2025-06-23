@@ -10,8 +10,9 @@ import argparse
 import random
 from tqdm import tqdm, trange
 import numpy as np
-from collections import Counter
+from collections import Counter,defaultdict
 import torch
+import torch.nn as nn
 from torch.utils.data import RandomSampler
 from torch.utils.data.distributed import DistributedSampler
 import torch.distributed as dist
@@ -43,6 +44,7 @@ class Appr(ApprBase):
         global_step = 0
         self.model.to(self.device)
 
+        t_total = num_train_steps
         if t==0:
             param_optimizer = [(k, v) for k, v in self.model.named_parameters() if v.requires_grad==True]
             param_optimizer = [n for n in param_optimizer if 'pooler' not in n[0]]
@@ -51,32 +53,13 @@ class Appr(ApprBase):
                 {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01, 'svd': True, 'lr': self.args.svd_lr, 'thres': self.args.svd_thres},
                 {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
                 ]
-            t_total = num_train_steps
             # optimizer = BertAdam(optimizer_grouped_parameters,
                                  # lr=self.args.learning_rate,
                                  # warmup=self.args.warmup_proportion,
                                  # t_total=t_total)
-            self.model_optimizer = AdaBop(optimizer_grouped_parameters,lr=self.args.learning_rate)
+            self.model_optimizer = Adam(optimizer_grouped_parameters,lr=self.args.learning_rate)
 
-        # get correlation
-        if t == '0':
-            self.grad = self.train_task_correlation(train,valid)
-            self.tc_lamb = 1.0 # Set to 1 for first task
-        else:
-            grad_pre = copy.deepcopy(self.grad)
-            self.grad = self.train_task_correlation(train,valid)
-
-            # print('grad:',grad[0].shape)
-            # print('grad_pre:',grad_pre[0].shape)
-            for i in range(len(grad)):
-                grad_norm = np.linalg.norm(self.grad[i])
-                projection = np.dot(self.grad[i],grad_pre[i].T)
-                projection_norm = np.linalg.norm(projection)
-                if projection_norm > self.args.tc_epsilon * grad_norm:
-                    self.tc_lamb = self.args.tc_lamb_s
-                else:
-                    self.tc_lamb = self.args.tc_lamb_l
-
+        
         all_targets = []
         for step, batch in enumerate(train):
             batch = [
@@ -94,6 +77,30 @@ class Appr(ApprBase):
             all_targets += list(targets.cpu().numpy())
         class_counts_dict = dict(Counter(all_targets))
         valid_class_counts = [class_counts_dict[k] for k in np.unique(all_targets)]
+
+        
+        # get correlation
+        self.tc_lamb = {}
+        if t == 0:
+            self.grad = self.train_task_correlation(train,valid,class_counts)
+            for p in self.grad.keys():
+                self.tc_lamb[p] = 1.0 # Set to 1 for first task
+        else:
+            grad_pre = deepcopy(self.grad)
+            self.grad = self.train_task_correlation(train,valid,class_counts)
+
+            # print('grad:',grad[0].shape)
+            # print('grad_pre:',grad_pre[0].shape)
+            # for i in range(len(self.grad)):
+            for p in self.grad.keys():
+                grad_norm = np.linalg.norm(self.grad[p])
+                projection = np.dot(self.grad[p],grad_pre[p].T)
+                projection_norm = np.linalg.norm(projection)
+                if projection_norm > self.args.tc_epsilon * grad_norm:
+                    self.tc_lamb[p] = self.args.tc_lamb_s
+                else:
+                    self.tc_lamb[p] = self.args.tc_lamb_l
+
 
         best_loss=np.inf
         best_model=utils.get_model(self.model)
@@ -292,8 +299,7 @@ class Appr(ApprBase):
             input_ids, segment_ids, input_mask, targets, tasks= batch
 
             output_dict = self.model.forward(input_ids, segment_ids, input_mask)
-            sys.exit()
-            # self.fea_in = # Check compute_cov()            
+            # sys.exit()         
             
         self.model_optimizer.get_eigens(self.fea_in, self.tc_lamb)
         time_svd_start = time.time()
@@ -306,8 +312,9 @@ class Appr(ApprBase):
         torch.cuda.empty_cache()
     
     def compute_cov(self, module, fea_in, fea_out):
-        if isinstance(module, nn.Linear):
-            self.update_cov(torch.mean(fea_in[0], 0, True), module.weight)
+        if isinstance(module, nn.Linear) or isinstance(module, nn.LayerNorm): # MS: Include layernorm
+            # print(module, len(fea_in), fea_in[0].shape)
+            self.update_cov(torch.squeeze(torch.mean(fea_in[0], 0, True)), module.weight) # Take mean of all samples in batch, MS: Then, remove the first dimension with size=1
 
         # elif isinstance(module, nn.Conv2d):
             # kernel_size = module.kernel_size
@@ -322,22 +329,22 @@ class Appr(ApprBase):
             # fea_in_ = fea_in_.reshape(-1, fea_in_.shape[-1])
             # self.update_cov(fea_in_, module.weight)
         
-        else:
-            print(module)
+        # else:
+            # print('comput_cov not implemented:',module) # Checked that this consists of only the Embedding layer
 
         torch.cuda.empty_cache()
         return None
 
     def update_cov(self, fea_in, k):
+        if len(fea_in.shape)==1: fea_in = torch.stack([fea_in]) # MS: Handle cases with single dimension
         cov = torch.mm(fea_in.transpose(0, 1), fea_in)
         if len(self.fea_in[k]) == 0:
             self.fea_in[k] = cov
         else:
             self.fea_in[k] = self.fea_in[k] +  cov
     
-    def train_task_correlation(self,train_loader,val_loader=None):
+    def train_task_correlation(self,train_loader,val_loader=None,class_counts=None):
         self.model.train()
-        grad_list = []
         for step, batch in enumerate(train_loader):
             # print('step: ',step)
             batch = [
@@ -358,12 +365,14 @@ class Appr(ApprBase):
             self.model_optimizer.zero_grad()
             # self.model_scheduler.step(epoch)
             loss.backward()
-            grad_list = self.model_optimizer.get_correlation()
+        grad_list = self.model_optimizer.get_correlation()
+        # for k in grad_list.keys():
+            # grad_list[k] /= (step+1) # MS: Average the gradients
         return grad_list
 
     
 # source: https://github.com/hyscn/AdaBOP/blob/main/optim/adam_svd.py
-class AdaBop(torch.optim.Optimizer):
+class Adam(torch.optim.Optimizer):
     r"""Implements Adam algorithm.
 
     It has been proposed in `Adam: A Method for Stochastic Optimization`_.
@@ -450,14 +459,14 @@ class AdaBop(torch.optim.Optimizer):
         return loss
 
     def get_correlation(self,closure = None):
-        grad_list = []
+        grad_list = {}
         for group in self.param_groups:
             for p in group['params']:
                 if p.grad is None:
                     continue
                 grad = p.grad.data.detach().cpu().numpy()
                 grad = grad.reshape(grad.shape[0],-1)
-                grad_list.append(grad)
+                grad_list[p] = grad
         return grad_list
 
     def get_transforms(self):
@@ -495,7 +504,7 @@ class AdaBop(torch.optim.Optimizer):
                 eigen = self.eigens[p]
                 device=torch.device("cuda")
                 # _, eigen_value, eigen_vector = torch.svd(fea_in[p] + 0.0075 * torch.eye(fea_in[p].size(0)).cuda())
-                _, eigen_value, eigen_vector = torch.svd(tc_lamb*fea_in[p] + torch.eye(fea_in[p].size(0)).cuda()) # MS: Above original line looks wrong compared to eq 26 of paper
+                _, eigen_value, eigen_vector = torch.svd(tc_lamb[p]*fea_in[p] + torch.eye(fea_in[p].size(0)).cuda()) # MS: Above original line looks wrong compared to eq 26 of paper
                 eigen['eigen_value'] = eigen_value
                 eigen['eigen_vector'] = eigen_vector
 

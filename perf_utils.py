@@ -138,3 +138,5 @@ def get_res_fname(rand_idx,seed,path,dataset,val=True):
         return dataset+'_bert_adapter_upgd_'+'random'+str(rand_idx)+'_seed'+str(seed)+'_f1'+path_append
     elif 'RP2F' in path:
         return dataset+'_bert_adapter_rp2f_sh_'+'random'+str(rand_idx)+'_seed'+str(seed)+'_f1'+path_append
+    elif 'Adabop' in path:
+        return dataset+'_bert_adapter_adabop_'+'random'+str(rand_idx)+'_seed'+str(seed)+'_f1'+path_append
