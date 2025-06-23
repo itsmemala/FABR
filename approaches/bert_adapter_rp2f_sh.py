@@ -236,7 +236,7 @@ class Appr(ApprBase):
                 # aux_params.data = target_params.data
         # Needs to be implemeneted for BERT-Adapter
         # cur_precision_matrices = self._diag_fisher(t,train_data,self.device,self.aux_net,self.ce,scenario=self.args.scenario)
-        cur_precision_matrices = self.fisher_matrix_diag_bert(t,train_data,self.device,self.aux_net,self.ce,scenario=self.args.scenario)
+        cur_precision_matrices = self.fisher_matrix_diag_bert(t,train_data,self.device,self.aux_net,self.ce,scenario=self.args.scenario,imp=self.args.imp)
         # print('\n\n',global_step,cur_precision_matrices['bert.encoder.layer.0.attention.output.LayerNorm.weight'][:10])
 
 
@@ -291,7 +291,7 @@ class Appr(ApprBase):
 
         return total_loss/total_num,total_acc/total_num,f1
     
-    def eval_validation(self,_,data,class_counts):
+    def eval_validation(self,t,data,class_counts):
         total_loss=0
         total_num=0
         self.model.eval()
@@ -359,7 +359,7 @@ class Appr(ApprBase):
         assert n == m
         return x.flatten()[:-1].view(n - 1, n + 1)[:, 1:].flatten()
     
-    def fisher_matrix_diag_bert(self,t,train,device,model,criterion,sbatch=20,scenario='til'):
+    def fisher_matrix_diag_bert(self,t,train,device,model,criterion,sbatch=20,scenario='til',imp='loss'):
         # Init
         fisher={}
         for n, p in model.named_parameters():
@@ -387,13 +387,22 @@ class Appr(ApprBase):
             elif 'dil' in scenario:
                 output=output_dict['y']
 
-            
-            loss=criterion(t,output,targets) if scenario=='cil' and self.args.use_rbs else criterion(output,targets)
-            loss.backward()
-            # Get gradients
-            for n,p in model.named_parameters():
-                if p.grad is not None:
-                    fisher[n]+=sbatch*p.grad.data.pow(2)
+            if imp=='loss':
+                loss=criterion(t,output,targets) if scenario=='cil' and self.args.use_rbs else criterion(output,targets)
+                loss.backward()
+                # Get gradients
+                for n,p in model.named_parameters():
+                    if p.grad is not None:
+                        fisher[n]+=sbatch*p.grad.data.pow(2)
+            elif imp=='function':
+                # Square of the l2-norm: output.pow(2).sum(dim=1)
+                # Calculate square of the l2-norm and then sum for all samples in the batch
+                output = output.pow(2).sum(dim=1).sum()
+                output.backward()
+                # Get gradients
+                for n,p in model.named_parameters():
+                    if p.grad is not None:
+                        fisher[n]+=sbatch*torch.abs(p.grad.data)
             
         # Mean
         for n,_ in model.named_parameters():

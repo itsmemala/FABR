@@ -10,7 +10,7 @@ learner_is_seq=$4
 dataset='hwu64'
 lr_array=(0.00003 0.00003 0.00003 0.0003 0.0003 0.0003 0.003 0.003 0.003)
 lamb_array=(0.0000001 0.000001 0.00001 0.0000001 0.000001 0.00001 0.0000001 0.000001 0.00001)
-res_path="/home/local/data/ms/fabr_data/IntentSH/RP2F_${learner_is_seq}/${note}seed${seed}/IntentSH_RP2F_t"
+res_path="/home/local/data/ms/fabr_data/IntentSH/RP2F_MAS_${learner_is_seq}/${note}seed${seed}/IntentSH_RP2F_t"
 
 id=0
 printf "\n\nRunning search for task 0\n\n"
@@ -21,7 +21,7 @@ do
 	((lr_id++))
 	printf "\n\nLR,LAMB Iteration $lr\n\n"
 	mkdir -p  ${res_path}${id}_gold.${lr_id}/
-	python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_rp2f_sh --backbone bert_adapter --baseline rp2f_sh --note $note --idrandom $randid --seed $seed --scenario cil --use_rbs True --train_batch_size 128 --num_train_epochs 30 --eval_batch_size 128 --valid_loss_es 0.002 --lr_patience 3 --learning_rate $lr --rp2f_lamb $lamb --break_after_task 0 --my_save_path ${res_path}${id}_gold.${lr_id}/ --learner_is_seq $learner_is_seq
+	python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_rp2f_sh --backbone bert_adapter --baseline rp2f_sh --note $note --idrandom $randid --seed $seed --scenario cil --use_rbs True --train_batch_size 128 --num_train_epochs 30 --eval_batch_size 128 --valid_loss_es 0.002 --lr_patience 3 --learning_rate $lr --rp2f_lamb $lamb --break_after_task 0 --my_save_path ${res_path}${id}_gold.${lr_id}/ --learner_is_seq $learner_is_seq --imp function
 done
 
 python3 FABR/return_best_lr.py --my_save_path ${res_path}${id}_gold --rand_idx $randid --seed $seed --dataset $dataset --max_lr_id $lr_id --tid $id
@@ -46,7 +46,7 @@ do
 		printf "\n\nLR Iteration $lr\n\n"
 		custom_lr="$past_lr,$lr"
 		mkdir -p  ${res_path}${id}_gold.${lr_id}/
-		python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_rp2f_sh --backbone bert_adapter --baseline rp2f_sh --note $note --idrandom $randid --seed $seed --scenario cil --use_rbs True --train_batch_size 128 --num_train_epochs 30 --eval_batch_size 128 --valid_loss_es 0.002 --lr_patience 3 --custom_lr $custom_lr --rp2f_lamb $lamb --break_after_task $id --my_save_path ${res_path}${id}_gold.${lr_id}/ --start_at_task $id --start_model_path $start_model_path --learner_is_seq $learner_is_seq
+		python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_rp2f_sh --backbone bert_adapter --baseline rp2f_sh --note $note --idrandom $randid --seed $seed --scenario cil --use_rbs True --train_batch_size 128 --num_train_epochs 30 --eval_batch_size 128 --valid_loss_es 0.002 --lr_patience 3 --custom_lr $custom_lr --rp2f_lamb $lamb --break_after_task $id --my_save_path ${res_path}${id}_gold.${lr_id}/ --start_at_task $id --start_model_path $start_model_path --learner_is_seq $learner_is_seq --imp function
 	done
 	
 	python3 FABR/return_best_lr.py --my_save_path ${res_path}${id}_gold --rand_idx $randid --seed $seed --dataset $dataset --max_lr_id $lr_id --tid $id

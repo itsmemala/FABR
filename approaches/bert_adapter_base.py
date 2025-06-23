@@ -92,6 +92,10 @@ class Appr(object):
         self.taskcla = taskcla
         self.logger = logger
         
+        if 'adabop' in args.baseline:
+            self.model_optimizer = None
+            self.grad = {}
+        
         if 'rp2f' in args.baseline:
             self.precision_matrices = {}
             self.learner=None
@@ -182,7 +186,10 @@ class Appr(object):
         # Set the criterion function
         if args.baseline=='ewc_freeze':
             if 'cil' in self.args.scenario and self.args.use_rbs:
-                self.criterion=self.criterion_ewc_freeze_cil_rbs
+                if self.args.use_l1==True or self.args.use_l2==True:
+                    self.criterion=self.criterion_ewc_freeze_cil_rbs
+                else:
+                    self.criterion=self.criterion_ewc_freeze_cil_rbs_nol1l2
             else:
                 if self.args.use_l1==True:
                     self.criterion=self.criterion_ewc_freeze_l1
@@ -336,6 +343,34 @@ class Appr(object):
         # assert self.ce(output,targets)==self.ce2(output,targets)
 
         loss_ce = self.ce(output,targets)
+
+        return loss_ce+loss_reg
+    
+    def criterion_ewc_freeze_cil_rbs_nol1l2(self,t,output,targets,class_counts=None,phase=None, outputs_cur1=None, targets_old=None, outputs_cur2=None, targets_aux=None):
+        # Regularization for all previous tasks
+        loss_reg=0
+        if t>0:
+            # Disabled to speed up
+            # if (phase=='fo' and self.args.no_reg_in_LA==True) or phase is None:
+                # pass
+            # else:
+            fisher = self.fisher_for_loss # self.fisher if self.fisher_for_loss is None else self.fisher_for_loss # baseline:self.fisher, LA:self.fisher_for_loss
+            # Disabled to speed up
+            # if self.args.use_ind_lamb_max==True:
+                # for (name,param),(_,param_old) in zip(self.model.named_parameters(),self.model_old.named_parameters()):
+                    # loss_reg+=torch.sum(self.lamb[name]*fisher[name]*(param_old-param).pow(2))/2
+            # else:
+            # if next(self.model_old.parameters()).is_cuda:
+                # self.model_old = self.model_old.cpu() # Move to cpu to free up space  ## Changes to make space on GPU: #3
+            for (name,param),(_,param_old) in zip(self.model.named_parameters(),self.model_old.named_parameters()):
+                # param_old = param_old.cuda()  ## Changes to make space on GPU: #4
+                loss_reg+=torch.sum(fisher[name]*(param_old-param).pow(2))/2
+            loss_reg = self.lamb*loss_reg
+            
+
+        # assert self.ce(output,targets)==self.ce2(output,targets)
+
+        loss_ce = self.ce(t,output,targets,class_counts)
 
         return loss_ce+loss_reg
     

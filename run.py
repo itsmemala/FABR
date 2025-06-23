@@ -101,6 +101,9 @@ if args.backbone == 'bert_adapter':
     elif args.baseline == 'rp2f_sh':
         from approaches import bert_adapter_rp2f_sh as approach
         from networks import bert_adapter as network
+    elif args.baseline == 'adabop':
+        from approaches import bert_adapter_adabop as approach
+        from networks import bert_adapter as network
     elif args.baseline == 'upgd':
         from approaches import bert_adapter_upgd as approach
         from networks import bert_adapter as network
@@ -130,7 +133,7 @@ print('\nTask info =',taskcla)
 print('Inits...')
 net=network.Net(taskcla,args=args).cuda()
 
-if 'ctr' in args.approach or 'bert_fine_tune' in args.approach or 'bert_adapter_ewc' in args.approach or 'bert_adapter_lwf' in args.approach or 'bert_adapter_seq' in args.approach or 'bert_adapter_mtl' in args.approach or 'bert_adapter_rp2f' in args.approach or 'bert_adapter_upgd' in args.approach:
+if 'ctr' in args.approach or 'bert_fine_tune' in args.approach or 'bert_adapter_ewc' in args.approach or 'bert_adapter_lwf' in args.approach or 'bert_adapter_seq' in args.approach or 'bert_adapter_mtl' in args.approach or 'bert_adapter_rp2f' in args.approach or 'bert_adapter_upgd' in args.approach or 'bert_adapter_adabop' in args.approach:
     appr=approach.Appr(net,logger=logger,taskcla=taskcla,args=args)
 else:
     appr=approach.Appr(net,logger=logger,args=args)
@@ -197,6 +200,12 @@ for t,ncla in taskcla:
         appr.model_old = deepcopy(appr.model)
         appr.model_old.eval()
         utils.freeze_model(appr.model_old) # Freeze the weights
+        if 'adabop' in args.approach:
+            appr.model_optimizer = torch.load(args.start_model_path+'optimizer')
+            with open(args.start_model_path+'grad.pkl', 'rb') as handle:
+                checkpoint_grad = CPU_Unpickler(handle).load()
+            for n,_ in appr.model.named_parameters(): # these will be None in case of non-fisher based approach
+                appr.grad[n] = checkpoint_grad[n]
         if 'rp2f' in args.approach:
             appr.learner_old.load_state_dict(torch.load(args.start_model_path+'learner'))
             appr.precision_matrices = {}
@@ -386,6 +395,10 @@ for t,ncla in taskcla:
     
     if t==args.break_after_task: # 1 implies only first 2 tasks
         torch.save(utils.get_model(appr.model), args.my_save_path+'model')
+        if 'adabop' in args.approach:
+            torch.save(appr.model_optimizer, args.my_save_path+'optimizer')
+            with open(args.my_save_path+'grad.pkl', 'wb') as fp:
+                pickle.dump(appr.grad, fp)
         if 'rp2f' in args.approach:
             torch.save(utils.get_model(appr.learner), args.my_save_path+'learner')
             with open(args.my_save_path+'precision_matrices.pkl', 'wb') as fp:

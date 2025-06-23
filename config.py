@@ -54,6 +54,12 @@ def asc_config(parser):
     parser.add_argument('--base_temp', type=float, default=1,
                         help='temperature for loss function')
     parser.add_argument('--scenario',default='',type=str,required=True,help='(default=%(default)s)')
+    # AdaBOP args
+    parser.add_argument('--svd_lr',default=0.0005,type=float,required=False,help='(default=%(default)s)')
+    parser.add_argument('--svd_thres',default=1.0,type=float,required=False,help='(default=%(default)s)')
+    parser.add_argument('--tc_epsilon',default=None,type=float,required=False,help='(default=%(default)s)')
+    parser.add_argument('--tc_lamb_s',default=None,type=float,required=False,help='(default=%(default)s)')
+    parser.add_argument('--tc_lamb_l',default=None,type=float,required=False,help='(default=%(default)s)')
     # RP2F args
     parser.add_argument('--rp2f_lamb',default=0.00001,type=float,required=False,help='(default=%(default)s)')
     parser.add_argument('--learner_is_seq',default=False,type=bool,required=False,help='(default=%(default)s)')
