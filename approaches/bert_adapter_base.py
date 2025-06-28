@@ -8,6 +8,7 @@ import math
 import json
 import argparse
 import random
+from collections import defaultdict
 from tqdm import tqdm, trange
 import numpy as np
 import torch
@@ -94,7 +95,9 @@ class Appr(object):
         
         if 'adabop' in args.baseline:
             self.model_optimizer = None
-            self.grad = {}        
+            # self.grad = {}        
+            # self.grad = []
+            self.grad = defaultdict(dict)
         if 'rp2f' in args.baseline:
             self.precision_matrices = {}
             self.learner=None

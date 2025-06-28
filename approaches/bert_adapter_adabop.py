@@ -41,6 +41,8 @@ class Appr(ApprBase):
 
     def train(self,t,train,valid,args,num_train_steps,save_path,train_data,valid_data):
 
+        print('We are at task :',t)
+        
         global_step = 0
         self.model.to(self.device)
 
@@ -81,20 +83,29 @@ class Appr(ApprBase):
         
         # get correlation
         self.tc_lamb = {}
+        # self.tc_lamb = []
         if t == 0:
             self.grad = self.train_task_correlation(train,valid,class_counts)
+            # for i in range(len(self.grad)):
             for p in self.grad.keys():
                 self.tc_lamb[p] = 1.0 # Set to 1 for first task
         else:
-            grad_pre = deepcopy(self.grad)
+            # grad_pre = deepcopy(self.grad) # This cuases keyerror for grad_pre[p]
+            grad_pre = [self.grad[p] for p in self.grad.keys()]            
             self.grad = self.train_task_correlation(train,valid,class_counts)
 
             # print('grad:',grad[0].shape)
             # print('grad_pre:',grad_pre[0].shape)
             # for i in range(len(self.grad)):
+            i = -1
             for p in self.grad.keys():
+                i += 1
                 grad_norm = np.linalg.norm(self.grad[p])
-                projection = np.dot(self.grad[p],grad_pre[p].T)
+                print(type(grad_pre),len(grad_pre))
+                print(type(self.grad),len(self.grad))
+                print(grad_pre[i])
+                print(grad_pre[i].T)
+                projection = np.dot(self.grad[p],grad_pre[i].T)
                 projection_norm = np.linalg.norm(projection)
                 if projection_norm > self.args.tc_epsilon * grad_norm:
                     self.tc_lamb[p] = self.args.tc_lamb_s
@@ -460,12 +471,14 @@ class Adam(torch.optim.Optimizer):
 
     def get_correlation(self,closure = None):
         grad_list = {}
+        # grad_list = []
         for group in self.param_groups:
             for p in group['params']:
                 if p.grad is None:
                     continue
                 grad = p.grad.data.detach().cpu().numpy()
                 grad = grad.reshape(grad.shape[0],-1)
+                # grad_list.append[grad]
                 grad_list[p] = grad
         return grad_list
 
@@ -494,6 +507,7 @@ class Adam(torch.optim.Optimizer):
                 self.transforms[p].detach_()
 
     def get_eigens(self, fea_in, tc_lamb): #MS: passing tc_lamb from outside
+        i = -1
         for group in self.param_groups:
             svd = group['svd']
             if svd is False:
@@ -501,6 +515,7 @@ class Adam(torch.optim.Optimizer):
             for p in group['params']:
                 if p.grad is None:
                     continue
+                i += 1
                 eigen = self.eigens[p]
                 device=torch.device("cuda")
                 # _, eigen_value, eigen_vector = torch.svd(fea_in[p] + 0.0075 * torch.eye(fea_in[p].size(0)).cuda())

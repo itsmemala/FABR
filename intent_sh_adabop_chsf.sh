@@ -15,9 +15,9 @@ lr_array_t0=(0.00003 0.0003)
 # tc_lamb_l_array=(0.1 0.03 0.1 0.03 0.1 0.03 0.1 0.03)
 lr_array=(0.00003 0.00003 0.00003 0.00003 0.0003 0.0003 0.0003 0.0003)
 tc_epsilon_array=(0.3 0.3 0.5 0.5 0.3 0.3 0.5 0.5)
-tc_lamb_s_array=(0.3 0.08 0.3 0.08 0.3 0.08 0.3 0.08)
-tc_lamb_l_array=(0.1 0.03 0.1 0.03 0.1 0.03 0.1 0.03)
-res_path="/home/local/data/ms/fabr_data/IntentSH/Adabop_svd${svd_thres}/${note}seed${seed}/IntentSH_Adabop_t"
+tc_lamb_s_array=(0.01 0.001 0.01 0.001 0.01 0.001 0.01 0.001)
+tc_lamb_l_array=(0.005 0.0005 0.005 0.0005 0.005 0.0005 0.005 0.0005)
+res_path="/home/local/data/ms/fabr_data/IntentSH/Adabop_svd${svd_thres}_smalltclambs/${note}seed${seed}/IntentSH_Adabop_t"
 
 id=0
 printf "\n\nRunning search for task 0\n\n"
@@ -36,7 +36,7 @@ past_lr=${lr_array[$best_lr_id-1]}  # -1 for array indexing
 
 start_model_path="${res_path}${id}_gold.${best_lr_id}/"
 
-id_array=(1 2 3 4 5)
+id_array=(1)
 for id in "${id_array[@]}"
 do
 	printf "\n\nRunning search for task $id\n\n"
