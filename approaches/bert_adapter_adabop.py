@@ -524,7 +524,8 @@ class Adam(torch.optim.Optimizer):
             for p in group['params']:
                 if p.grad is None:
                     continue
-                if self.eigens[p] is None:
+                if self.eigens[p]['eigen_value'] is None:
+                    # print('skipping this p')
                     continue
                 thres = group['thres']
                 ind = self.eigens[p]['eigen_value'] <= self.eigens[p]['eigen_value'][-1] * thres
@@ -559,7 +560,7 @@ class Adam(torch.optim.Optimizer):
                 # _, eigen_value, eigen_vector = torch.svd(fea_in[p] + 0.0075 * torch.eye(fea_in[p].size(0)).cuda())
                 if fea_in[p]=={}: 
                     excl_params += 1
-                    eigen = None
+                    eigen['eigen_value'],eigen['eigen_vector'] = None, None
                 else:
                     _, eigen_value, eigen_vector = torch.svd(tc_lamb[i]*fea_in[p] + torch.eye(fea_in[p].size(0)).cuda()) # MS: Above original line looks wrong compared to eq 26 of paper
                     eigen['eigen_value'] = eigen_value
