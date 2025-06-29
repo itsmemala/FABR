@@ -52,14 +52,30 @@ class Appr(ApprBase):
             param_optimizer = [n for n in param_optimizer if 'pooler' not in n[0]]
             no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
             optimizer_grouped_parameters = [
-                {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01, 'svd': True, 'lr': self.args.svd_lr, 'thres': self.args.svd_thres},
-                {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+                {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01, 'svd': True, 'lr': self.args.learning_rate, 'thres': self.args.svd_thres},
+                {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0, 'svd': True, 'lr': self.args.learning_rate, 'thres': self.args.svd_thres}
                 ]
             # optimizer = BertAdam(optimizer_grouped_parameters,
                                  # lr=self.args.learning_rate,
                                  # warmup=self.args.warmup_proportion,
                                  # t_total=t_total)
             self.model_optimizer = Adam(optimizer_grouped_parameters,lr=self.args.learning_rate)
+        if t>0 and self.model_optimizer is None: # Only need to do this when loading optimizer from checkpoint
+            param_optimizer = [(k, v) for k, v in self.model.named_parameters() if v.requires_grad==True]
+            param_optimizer = [n for n in param_optimizer if 'pooler' not in n[0]]
+            no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+            optimizer_grouped_parameters = [
+                {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01, 'svd': True, 'lr': self.args.svd_lr, 'thres': self.args.svd_thres},
+                {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0, 'svd': True, 'lr': self.args.learning_rate, 'thres': self.args.svd_thres}
+                ]
+            # optimizer = BertAdam(optimizer_grouped_parameters,
+                                 # lr=self.args.learning_rate,
+                                 # warmup=self.args.warmup_proportion,
+                                 # t_total=t_total)
+            self.model_optimizer = Adam(optimizer_grouped_parameters,lr=self.args.learning_rate)
+
+            self.model_optimizer.load_state_dict(self.model_optimizer_state_dict)
+            print('\nCheck transforms',len(self.model_optimizer.transforms))
 
         
         all_targets = []
@@ -82,35 +98,36 @@ class Appr(ApprBase):
 
         
         # get correlation
-        self.tc_lamb = {}
-        # self.tc_lamb = []
+        # self.tc_lamb = {}
+        self.tc_lamb = []
         if t == 0:
             self.grad = self.train_task_correlation(train,valid,class_counts)
-            # for i in range(len(self.grad)):
-            for p in self.grad.keys():
-                self.tc_lamb[p] = 1.0 # Set to 1 for first task
+            for i in range(len(self.grad)):
+                self.tc_lamb.append(1.0) # Set to 1 for first task
+            # for p in self.grad.keys():
+                # self.tc_lamb[p] = 1.0 # Set to 1 for first task
         else:
-            # grad_pre = deepcopy(self.grad) # This cuases keyerror for grad_pre[p]
-            grad_pre = [self.grad[p] for p in self.grad.keys()]            
+            grad_pre = deepcopy(self.grad) # This cuases keyerror for grad_pre[p]
+            # grad_pre = [self.grad[p] for p in self.grad.keys()]            
             self.grad = self.train_task_correlation(train,valid,class_counts)
 
             # print('grad:',grad[0].shape)
             # print('grad_pre:',grad_pre[0].shape)
-            # for i in range(len(self.grad)):
-            i = -1
-            for p in self.grad.keys():
-                i += 1
-                grad_norm = np.linalg.norm(self.grad[p])
-                print(type(grad_pre),len(grad_pre))
-                print(type(self.grad),len(self.grad))
-                print(grad_pre[i])
-                print(grad_pre[i].T)
-                projection = np.dot(self.grad[p],grad_pre[i].T)
+            for i in range(len(self.grad)):
+            # for p in self.grad.keys():
+                grad_norm = np.linalg.norm(self.grad[i])
+                # print(type(grad_pre),len(grad_pre))
+                # print(type(self.grad),len(self.grad))
+                # print(grad_pre[i])
+                # print(grad_pre[i].T)
+                projection = np.dot(self.grad[i],grad_pre[i].T)
                 projection_norm = np.linalg.norm(projection)
                 if projection_norm > self.args.tc_epsilon * grad_norm:
-                    self.tc_lamb[p] = self.args.tc_lamb_s
+                    # self.tc_lamb[p] = self.args.tc_lamb_s
+                    self.tc_lamb.append(self.args.tc_lamb_s)
                 else:
-                    self.tc_lamb[p] = self.args.tc_lamb_l
+                    # self.tc_lamb[p] = self.args.tc_lamb_l
+                    self.tc_lamb.append(self.args.tc_lamb_l)
 
 
         best_loss=np.inf
@@ -153,8 +170,8 @@ class Appr(ApprBase):
         # Save model
         # torch.save(self.model.state_dict(), save_path+str(args.note)+'_seed'+str(args.seed)+'_model'+str(t))
         
-        with torch.no_grad():
-            self.update_optim_transforms(train)         
+        # with torch.no_grad(): # This doesn't makse sense. get_eigens() and get_transforms() require grad to exist
+        self.update_optim_transforms(train)         
 
         return
 
@@ -186,6 +203,7 @@ class Appr(ApprBase):
                            self.warmup_linear(global_step/t_total, self.args.warmup_proportion)
             for param_group in self.model_optimizer.param_groups:
                 param_group['lr'] = lr_this_step
+            self.model_optimizer.zero_grad()
             self.model_optimizer.step()
             self.model_optimizer.zero_grad()
             global_step += 1
@@ -310,7 +328,19 @@ class Appr(ApprBase):
             input_ids, segment_ids, input_mask, targets, tasks= batch
 
             output_dict = self.model.forward(input_ids, segment_ids, input_mask)
-            # sys.exit()         
+            # sys.exit()
+            if 'dil' in self.args.scenario:
+                outputs=output_dict['y']
+            elif 'til' in self.args.scenario:
+                outputs=output_dict['y']
+                # output = outputs[t]
+            elif 'cil' in self.args.scenario:
+                outputs=output_dict['y']
+            loss=self.criterion_train(tasks,outputs,targets,class_counts=None) # MS: We don't actually need the right loss or grad values
+            
+            self.model_optimizer.zero_grad()
+            # self.model_scheduler.step(epoch)
+            loss.backward()
             
         self.model_optimizer.get_eigens(self.fea_in, self.tc_lamb)
         time_svd_start = time.time()
@@ -318,6 +348,7 @@ class Appr(ApprBase):
         time_svd_end = time.time()
         time_svd = time_svd_end - time_svd_start
         print('Time for updating the Orthogonal Projection:  ', time_svd)
+        self.model_optimizer.zero_grad()
         for h in handles:
             h.remove()
         torch.cuda.empty_cache()
@@ -455,6 +486,7 @@ class Adam(torch.optim.Optimizer):
                         'Adam does not support sparse gradients, please consider SparseAdam instead')
 
                 update = self.get_update(group, grad, p)
+                print('Checking .step():',svd,len(self.transforms))
                 if svd and len(self.transforms) > 0:
                     if len(update.shape) == 4:
                         # the transpose of the manuscript
@@ -470,25 +502,29 @@ class Adam(torch.optim.Optimizer):
         return loss
 
     def get_correlation(self,closure = None):
-        grad_list = {}
-        # grad_list = []
+        # grad_list = {}
+        grad_list = []
         for group in self.param_groups:
             for p in group['params']:
                 if p.grad is None:
                     continue
                 grad = p.grad.data.detach().cpu().numpy()
                 grad = grad.reshape(grad.shape[0],-1)
-                # grad_list.append[grad]
-                grad_list[p] = grad
+                grad_list.append(grad)
+                # grad_list[p] = grad
         return grad_list
 
     def get_transforms(self):
+        # print(len(self.param_groups))
         for group in self.param_groups:
             svd = group['svd']
+            # print(svd)
             if svd is False:
                 continue
             for p in group['params']:
                 if p.grad is None:
+                    continue
+                if self.eigens[p] is None:
                     continue
                 thres = group['thres']
                 ind = self.eigens[p]['eigen_value'] <= self.eigens[p]['eigen_value'][-1] * thres
@@ -505,9 +541,11 @@ class Adam(torch.optim.Optimizer):
                 transform = torch.mm(basis, basis.transpose(1, 0))
                 self.transforms[p] = transform / torch.norm(transform)
                 self.transforms[p].detach_()
+        print(len(self.transforms))
+        # sys.exit()
 
     def get_eigens(self, fea_in, tc_lamb): #MS: passing tc_lamb from outside
-        i = -1
+        i, excl_params = -1, 0
         for group in self.param_groups:
             svd = group['svd']
             if svd is False:
@@ -519,9 +557,14 @@ class Adam(torch.optim.Optimizer):
                 eigen = self.eigens[p]
                 device=torch.device("cuda")
                 # _, eigen_value, eigen_vector = torch.svd(fea_in[p] + 0.0075 * torch.eye(fea_in[p].size(0)).cuda())
-                _, eigen_value, eigen_vector = torch.svd(tc_lamb[p]*fea_in[p] + torch.eye(fea_in[p].size(0)).cuda()) # MS: Above original line looks wrong compared to eq 26 of paper
-                eigen['eigen_value'] = eigen_value
-                eigen['eigen_vector'] = eigen_vector
+                if fea_in[p]=={}: 
+                    excl_params += 1
+                    eigen = None
+                else:
+                    _, eigen_value, eigen_vector = torch.svd(tc_lamb[i]*fea_in[p] + torch.eye(fea_in[p].size(0)).cuda()) # MS: Above original line looks wrong compared to eq 26 of paper
+                    eigen['eigen_value'] = eigen_value
+                    eigen['eigen_vector'] = eigen_vector
+        print('\nExcluded params where eigen not calculated:',excl_params,'\n')
 
     def get_update(self, group, grad, p):
         amsgrad = group['amsgrad']

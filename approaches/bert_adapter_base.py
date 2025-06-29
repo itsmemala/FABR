@@ -95,9 +95,10 @@ class Appr(object):
         
         if 'adabop' in args.baseline:
             self.model_optimizer = None
+            self.model_optimizer_state_dict = None
             # self.grad = {}        
-            # self.grad = []
-            self.grad = defaultdict(dict)
+            self.grad = []
+            # self.grad = defaultdict(dict)
         if 'rp2f' in args.baseline:
             self.precision_matrices = {}
             self.learner=None

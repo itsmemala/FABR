@@ -201,11 +201,11 @@ for t,ncla in taskcla:
         appr.model_old.eval()
         utils.freeze_model(appr.model_old) # Freeze the weights
         if 'adabop' in args.approach:
-            appr.model_optimizer = torch.load(args.start_model_path+'optimizer', weights_only=False)
-            # with open(args.start_model_path+'grad.pkl', 'rb') as infile:
-                # appr.grad = pickle.load(infile)
-            with open(args.start_model_path+'grad.pkl', 'rb') as handle:
-                appr.grad = CPU_Unpickler(handle).load()
+            appr.model_optimizer_state_dict = torch.load(args.start_model_path+'optimizer', weights_only=False)
+            with open(args.start_model_path+'grad.pkl', 'rb') as infile:
+                appr.grad = pickle.load(infile)
+            # with open(args.start_model_path+'grad.pkl', 'rb') as handle:
+                # appr.grad = CPU_Unpickler(handle).load()
             # for p in appr.model_optimizer.named_parameters(): # these will be None in case of non-fisher based approach
                 # appr.grad[n] = checkpoint_grad[n]
             print('Loaded grad:',type(appr.grad),len(appr.grad))
@@ -399,7 +399,7 @@ for t,ncla in taskcla:
     if t==args.break_after_task: # 1 implies only first 2 tasks
         torch.save(utils.get_model(appr.model), args.my_save_path+'model')
         if 'adabop' in args.approach:
-            torch.save(appr.model_optimizer, args.my_save_path+'optimizer')
+            torch.save(appr.model_optimizer.state_dict(), args.my_save_path+'optimizer')
             # with open(args.my_save_path+'grad.pkl', 'wb') as outfile:
                 # pickle.dump(appr.grad, outfile, pickle.HIGHEST_PROTOCOL)
             with open(args.my_save_path+'grad.pkl', 'wb') as fp:
