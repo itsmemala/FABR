@@ -201,8 +201,8 @@ for t,ncla in taskcla:
         appr.model_old.eval()
         utils.freeze_model(appr.model_old) # Freeze the weights
         if 'adabop' in args.approach:
-            appr.model_optimizer_state_dict = torch.load(args.start_model_path+'optimizer', weights_only=False)
-            appr.model_optimizer_transforms = torch.load(args.start_model_path+'optimizer_transforms', weights_only=False)
+            # appr.model_optimizer_state_dict = torch.load(args.start_model_path+'optimizer', weights_only=False)
+            appr.prev_task_fea_in = torch.load(args.start_model_path+'fea_in', weights_only=False)
             with open(args.start_model_path+'grad.pkl', 'rb') as infile:
                 appr.grad = pickle.load(infile)
             # with open(args.start_model_path+'grad.pkl', 'rb') as handle:
@@ -400,11 +400,11 @@ for t,ncla in taskcla:
     if t==args.break_after_task: # 1 implies only first 2 tasks
         torch.save(utils.get_model(appr.model), args.my_save_path+'model')
         if 'adabop' in args.approach:
-            torch.save(appr.model_optimizer.state_dict(), args.my_save_path+'optimizer')
-            task_transforms = []
-            for k in appr.model_optimizer.transforms.keys():
-                task_transforms.append(appr.model_optimizer.transforms[k])
-            torch.save(task_transforms, args.my_save_path+'optimizer_transforms')
+            # torch.save(appr.model_optimizer.state_dict(), args.my_save_path+'optimizer')
+            task_fea_in = []
+            for k in appr.fea_in.keys():
+                task_fea_in.append(appr.fea_in[k])
+            torch.save(task_fea_in, args.my_save_path+'fea_in')
             # with open(args.my_save_path+'grad.pkl', 'wb') as outfile:
                 # pickle.dump(appr.grad, outfile, pickle.HIGHEST_PROTOCOL)
             with open(args.my_save_path+'grad.pkl', 'wb') as fp:

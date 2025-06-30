@@ -47,48 +47,35 @@ class Appr(ApprBase):
         self.model.to(self.device)
 
         t_total = num_train_steps
-        if t==0:
-            param_optimizer = [(k, v) for k, v in self.model.named_parameters() if v.requires_grad==True]
-            param_optimizer = [n for n in param_optimizer if 'pooler' not in n[0]]
-            no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
-            optimizer_grouped_parameters = [
-                {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01, 'svd': True, 'lr': self.args.learning_rate, 'thres': self.args.svd_thres},
-                {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0, 'svd': True, 'lr': self.args.learning_rate, 'thres': self.args.svd_thres}
-                ]
-            # optimizer = BertAdam(optimizer_grouped_parameters,
-                                 # lr=self.args.learning_rate,
-                                 # warmup=self.args.warmup_proportion,
-                                 # t_total=t_total)
-            self.model_optimizer = Adam(optimizer_grouped_parameters,lr=self.args.learning_rate)
-        if t>0 and self.model_optimizer is None: # Only need to do this when loading optimizer from checkpoint
-            param_optimizer = [(k, v) for k, v in self.model.named_parameters() if v.requires_grad==True]
-            param_optimizer = [n for n in param_optimizer if 'pooler' not in n[0]]
-            no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
-            optimizer_grouped_parameters = [
-                {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01, 'svd': True, 'lr': self.args.learning_rate, 'thres': self.args.svd_thres},
-                {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0, 'svd': True, 'lr': self.args.learning_rate, 'thres': self.args.svd_thres}
-                ]
-            # optimizer = BertAdam(optimizer_grouped_parameters,
-                                 # lr=self.args.learning_rate,
-                                 # warmup=self.args.warmup_proportion,
-                                 # t_total=t_total)
-            self.model_optimizer = Adam(optimizer_grouped_parameters,lr=self.args.learning_rate)
-
-            self.model_optimizer.load_state_dict(self.model_optimizer_state_dict)
-            # # self.model_optimizer.transforms = self.model_optimizer_transforms
-            # i = -1
-            # for group in self.model_optimizer.param_groups:
-                # svd = group['svd']
-                # # print(svd)
-                # if svd is False:
-                    # continue
-                # for p in group['params']:
-                    # if p.requires_grad is False:
-                        # continue
-                    # i += 1
-                    # self.model_optimizer.transforms[p] = self.model_optimizer_transforms[i]
-                    # # print(p.shape, self.model_optimizer_transforms[i].shape)
-            print('\nCheck transforms',len(self.model_optimizer.transforms))
+        # if t==0:
+        param_optimizer = [(k, v) for k, v in self.model.named_parameters() if v.requires_grad==True]
+        param_optimizer = [n for n in param_optimizer if 'pooler' not in n[0]]
+        no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+        optimizer_grouped_parameters = [
+            {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01, 'svd': True, 'lr': self.args.learning_rate, 'thres': self.args.svd_thres},
+            {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0, 'svd': True, 'lr': self.args.learning_rate, 'thres': self.args.svd_thres}
+            ]
+        # optimizer = BertAdam(optimizer_grouped_parameters,
+                             # lr=self.args.learning_rate,
+                             # warmup=self.args.warmup_proportion,
+                             # t_total=t_total)
+        self.model_optimizer = Adam(optimizer_grouped_parameters,lr=self.args.learning_rate)
+        
+        if t>0 and len(self.fea_in)==0: # Only need to do this when loading from checkpoint to continue training
+            # self.model_optimizer.load_state_dict(self.model_optimizer_state_dict)
+            # self.model_optimizer.transforms = self.model_optimizer_transforms
+            i = -1
+            for group in self.model_optimizer.param_groups:
+                svd = group['svd']
+                # print(svd)
+                if svd is False:
+                    continue
+                for p in group['params']:
+                    if p.requires_grad is False:
+                        continue
+                    i += 1
+                    self.fea_in[p] = self.prev_task_fea_in[i]
+            print('\nCheck fea_in',len(self.fea_in))
 
         
         all_targets = []
