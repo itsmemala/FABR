@@ -202,13 +202,14 @@ for t,ncla in taskcla:
         utils.freeze_model(appr.model_old) # Freeze the weights
         if 'adabop' in args.approach:
             appr.model_optimizer_state_dict = torch.load(args.start_model_path+'optimizer', weights_only=False)
+            appr.model_optimizer_transforms = torch.load(args.start_model_path+'optimizer_transforms', weights_only=False)
             with open(args.start_model_path+'grad.pkl', 'rb') as infile:
                 appr.grad = pickle.load(infile)
             # with open(args.start_model_path+'grad.pkl', 'rb') as handle:
                 # appr.grad = CPU_Unpickler(handle).load()
             # for p in appr.model_optimizer.named_parameters(): # these will be None in case of non-fisher based approach
                 # appr.grad[n] = checkpoint_grad[n]
-            print('Loaded grad:',type(appr.grad),len(appr.grad))
+            print('Loaded grad:',type(appr.grad),len(appr.grad))            
         if 'rp2f' in args.approach:
             appr.learner_old.load_state_dict(torch.load(args.start_model_path+'learner'))
             appr.precision_matrices = {}
@@ -400,6 +401,10 @@ for t,ncla in taskcla:
         torch.save(utils.get_model(appr.model), args.my_save_path+'model')
         if 'adabop' in args.approach:
             torch.save(appr.model_optimizer.state_dict(), args.my_save_path+'optimizer')
+            task_transforms = []
+            for k in appr.model_optimizer.transforms.keys():
+                task_transforms.append(appr.model_optimizer.transforms[k])
+            torch.save(task_transforms, args.my_save_path+'optimizer_transforms')
             # with open(args.my_save_path+'grad.pkl', 'wb') as outfile:
                 # pickle.dump(appr.grad, outfile, pickle.HIGHEST_PROTOCOL)
             with open(args.my_save_path+'grad.pkl', 'wb') as fp:

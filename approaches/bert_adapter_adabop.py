@@ -65,7 +65,7 @@ class Appr(ApprBase):
             param_optimizer = [n for n in param_optimizer if 'pooler' not in n[0]]
             no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
             optimizer_grouped_parameters = [
-                {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01, 'svd': True, 'lr': self.args.svd_lr, 'thres': self.args.svd_thres},
+                {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01, 'svd': True, 'lr': self.args.learning_rate, 'thres': self.args.svd_thres},
                 {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0, 'svd': True, 'lr': self.args.learning_rate, 'thres': self.args.svd_thres}
                 ]
             # optimizer = BertAdam(optimizer_grouped_parameters,
@@ -75,6 +75,19 @@ class Appr(ApprBase):
             self.model_optimizer = Adam(optimizer_grouped_parameters,lr=self.args.learning_rate)
 
             self.model_optimizer.load_state_dict(self.model_optimizer_state_dict)
+            # # self.model_optimizer.transforms = self.model_optimizer_transforms
+            # i = -1
+            # for group in self.model_optimizer.param_groups:
+                # svd = group['svd']
+                # # print(svd)
+                # if svd is False:
+                    # continue
+                # for p in group['params']:
+                    # if p.requires_grad is False:
+                        # continue
+                    # i += 1
+                    # self.model_optimizer.transforms[p] = self.model_optimizer_transforms[i]
+                    # # print(p.shape, self.model_optimizer_transforms[i].shape)
             print('\nCheck transforms',len(self.model_optimizer.transforms))
 
         
@@ -128,6 +141,9 @@ class Appr(ApprBase):
                 else:
                     # self.tc_lamb[p] = self.args.tc_lamb_l
                     self.tc_lamb.append(self.args.tc_lamb_l)
+            # calc projections
+            # with torch.no_grad(): # This doesn't makse sense. get_eigens() and get_transforms() require grad to exist
+            self.update_optim_transforms()
 
 
         best_loss=np.inf
@@ -170,9 +186,9 @@ class Appr(ApprBase):
         # Save model
         # torch.save(self.model.state_dict(), save_path+str(args.note)+'_seed'+str(args.seed)+'_model'+str(t))
         
-        # with torch.no_grad(): # This doesn't makse sense. get_eigens() and get_transforms() require grad to exist
-        self.update_optim_transforms(train)         
-
+        # Calc and save fea to use to calc projections (0transforms) for subsequent task
+        self.calc_fea(train)
+        
         return
 
     def train_epoch(self,t,data,iter_bar,t_total,global_step,class_counts):
@@ -203,7 +219,6 @@ class Appr(ApprBase):
                            self.warmup_linear(global_step/t_total, self.args.warmup_proportion)
             for param_group in self.model_optimizer.param_groups:
                 param_group['lr'] = lr_this_step
-            self.model_optimizer.zero_grad()
             self.model_optimizer.step()
             self.model_optimizer.zero_grad()
             global_step += 1
@@ -315,6 +330,15 @@ class Appr(ApprBase):
         return loss/targets.size(0)
 
     def update_optim_transforms(self, train_loader):
+                   
+        self.model_optimizer.get_eigens(self.fea_in, self.tc_lamb)
+        time_svd_start = time.time()
+        self.model_optimizer.get_transforms()
+        time_svd_end = time.time()
+        time_svd = time_svd_end - time_svd_start
+        print('Time for updating the Orthogonal Projection:  ', time_svd)
+    
+    def calc_fea(self, train_loader):
         modules = [m for n, m in self.model.named_modules() if hasattr(
             m, 'weight')] # and not bool(re.match('last', n))]
         handles = []
@@ -341,13 +365,7 @@ class Appr(ApprBase):
             self.model_optimizer.zero_grad()
             # self.model_scheduler.step(epoch)
             loss.backward()
-            
-        self.model_optimizer.get_eigens(self.fea_in, self.tc_lamb)
-        time_svd_start = time.time()
-        self.model_optimizer.get_transforms()
-        time_svd_end = time.time()
-        time_svd = time_svd_end - time_svd_start
-        print('Time for updating the Orthogonal Projection:  ', time_svd)
+
         self.model_optimizer.zero_grad()
         for h in handles:
             h.remove()
@@ -486,7 +504,7 @@ class Adam(torch.optim.Optimizer):
                         'Adam does not support sparse gradients, please consider SparseAdam instead')
 
                 update = self.get_update(group, grad, p)
-                print('Checking .step():',svd,len(self.transforms))
+                # print('Checking .step():',svd,len(self.transforms))
                 if svd and len(self.transforms) > 0:
                     if len(update.shape) == 4:
                         # the transpose of the manuscript
@@ -494,7 +512,11 @@ class Adam(torch.optim.Optimizer):
                             0), -1), self.transforms[p]).view_as(update)
                        
                     else:
-                        update_ = torch.mm(update, self.transforms[p])
+                        if self.transforms[p] is not None: # For the params where we don't calc COV in compute_cov()
+                            # print(update.shape, self.transforms[p].shape)
+                            update_ = torch.matmul(update, self.transforms[p]) # torch.mm(update, self.transforms[p])
+                        else:
+                            update_ = update
                         
                 else:
                     update_ = update
@@ -526,9 +548,13 @@ class Adam(torch.optim.Optimizer):
                     continue
                 if self.eigens[p]['eigen_value'] is None:
                     # print('skipping this p')
+                    self.transforms[p] = None # For the params where we don't calc COV in compute_cov()
                     continue
                 thres = group['thres']
-                ind = self.eigens[p]['eigen_value'] <= self.eigens[p]['eigen_value'][-1] * thres
+                # ind = self.eigens[p]['eigen_value'] <= self.eigens[p]['eigen_value'][-1] * thres # MS: Does not work - will choose only the last eigen value always, or None if thres<1?!
+                thres = int(self.eigens[p]['eigen_value'].shape[0] * thres)
+                ind = [True if i < thres else False for i in range(self.eigens[p]['eigen_value'].shape[0])]  # MS: Take top-K eigen values using 0<thres<=1
+                ind = torch.tensor(ind)
                 print('reserving basis {}/{}; cond: {}, radio:{}'.format(
                     ind.sum(), self.eigens[p]['eigen_value'].shape[0],
                     self.eigens[p]['eigen_value'][0] /
@@ -558,7 +584,7 @@ class Adam(torch.optim.Optimizer):
                 eigen = self.eigens[p]
                 device=torch.device("cuda")
                 # _, eigen_value, eigen_vector = torch.svd(fea_in[p] + 0.0075 * torch.eye(fea_in[p].size(0)).cuda())
-                if fea_in[p]=={}: 
+                if fea_in[p]=={}: # Presumably for the params where we don't calc COV in compute_cov()
                     excl_params += 1
                     eigen['eigen_value'],eigen['eigen_vector'] = None, None
                 else:

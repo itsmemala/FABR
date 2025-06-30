@@ -96,6 +96,7 @@ class Appr(object):
         if 'adabop' in args.baseline:
             self.model_optimizer = None
             self.model_optimizer_state_dict = None
+            self.model_optimizer_transforms = None
             # self.grad = {}        
             self.grad = []
             # self.grad = defaultdict(dict)
