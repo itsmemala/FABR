@@ -55,11 +55,11 @@ class Appr(ApprBase):
             {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01, 'svd': True, 'lr': self.args.learning_rate, 'thres': self.args.svd_thres},
             {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0, 'svd': True, 'lr': self.args.learning_rate, 'thres': self.args.svd_thres}
             ]
-        # optimizer = BertAdam(optimizer_grouped_parameters,
-                             # lr=self.args.learning_rate,
-                             # warmup=self.args.warmup_proportion,
-                             # t_total=t_total)
-        self.model_optimizer = Adam(optimizer_grouped_parameters,lr=self.args.learning_rate)
+        self.model_optimizer = BertAdam(optimizer_grouped_parameters,
+                             lr=self.args.learning_rate,
+                             warmup=self.args.warmup_proportion,
+                             t_total=t_total)
+        # self.model_optimizer = Adam(optimizer_grouped_parameters,lr=self.args.learning_rate)
         
         if t>0 and len(self.fea_in)==0: # Only need to do this when loading from checkpoint to continue training
             # self.model_optimizer.load_state_dict(self.model_optimizer_state_dict)
@@ -99,38 +99,38 @@ class Appr(ApprBase):
         
         # get correlation
         # self.tc_lamb = {}
-        self.tc_lamb = []
-        if t == 0:
-            self.grad = self.train_task_correlation(train,valid,class_counts)
-            for i in range(len(self.grad)):
-                self.tc_lamb.append(1.0) # Set to 1 for first task
-            # for p in self.grad.keys():
-                # self.tc_lamb[p] = 1.0 # Set to 1 for first task
-        else:
-            grad_pre = deepcopy(self.grad) # This cuases keyerror for grad_pre[p]
-            # grad_pre = [self.grad[p] for p in self.grad.keys()]            
-            self.grad = self.train_task_correlation(train,valid,class_counts)
+        # self.tc_lamb = []
+        # if t == 0:
+            # self.grad = self.train_task_correlation(train,valid,class_counts)
+            # for i in range(len(self.grad)):
+                # self.tc_lamb.append(1.0) # Set to 1 for first task
+            # # for p in self.grad.keys():
+                # # self.tc_lamb[p] = 1.0 # Set to 1 for first task
+        # else:
+            # grad_pre = deepcopy(self.grad) # This cuases keyerror for grad_pre[p]
+            # # grad_pre = [self.grad[p] for p in self.grad.keys()]            
+            # self.grad = self.train_task_correlation(train,valid,class_counts)
 
-            # print('grad:',grad[0].shape)
-            # print('grad_pre:',grad_pre[0].shape)
-            for i in range(len(self.grad)):
-            # for p in self.grad.keys():
-                grad_norm = np.linalg.norm(self.grad[i])
-                # print(type(grad_pre),len(grad_pre))
-                # print(type(self.grad),len(self.grad))
-                # print(grad_pre[i])
-                # print(grad_pre[i].T)
-                projection = np.dot(self.grad[i],grad_pre[i].T)
-                projection_norm = np.linalg.norm(projection)
-                if projection_norm > self.args.tc_epsilon * grad_norm:
-                    # self.tc_lamb[p] = self.args.tc_lamb_s
-                    self.tc_lamb.append(self.args.tc_lamb_s)
-                else:
-                    # self.tc_lamb[p] = self.args.tc_lamb_l
-                    self.tc_lamb.append(self.args.tc_lamb_l)
-            # calc projections
-            # with torch.no_grad(): # This doesn't makse sense. get_eigens() and get_transforms() require grad to exist
-            self.update_optim_transforms()
+            # # print('grad:',grad[0].shape)
+            # # print('grad_pre:',grad_pre[0].shape)
+            # for i in range(len(self.grad)):
+            # # for p in self.grad.keys():
+                # grad_norm = np.linalg.norm(self.grad[i])
+                # # print(type(grad_pre),len(grad_pre))
+                # # print(type(self.grad),len(self.grad))
+                # # print(grad_pre[i])
+                # # print(grad_pre[i].T)
+                # projection = np.dot(self.grad[i],grad_pre[i].T)
+                # projection_norm = np.linalg.norm(projection)
+                # if projection_norm > self.args.tc_epsilon * grad_norm:
+                    # # self.tc_lamb[p] = self.args.tc_lamb_s
+                    # self.tc_lamb.append(self.args.tc_lamb_s)
+                # else:
+                    # # self.tc_lamb[p] = self.args.tc_lamb_l
+                    # self.tc_lamb.append(self.args.tc_lamb_l)
+            # # calc projections
+            # # with torch.no_grad(): # This doesn't makse sense. get_eigens() and get_transforms() require grad to exist
+            # self.update_optim_transforms()
 
 
         best_loss=np.inf
@@ -316,7 +316,7 @@ class Appr(ApprBase):
         
         return loss/targets.size(0)
 
-    def update_optim_transforms(self, train_loader):
+    def update_optim_transforms(self):
                    
         self.model_optimizer.get_eigens(self.fea_in, self.tc_lamb)
         time_svd_start = time.time()
@@ -533,11 +533,11 @@ class Adam(torch.optim.Optimizer):
             for p in group['params']:
                 if p.grad is None:
                     continue
-                if self.eigens[p]['eigen_value'] is None:
-                    # print('skipping this p')
-                    self.transforms[p] = None # For the params where we don't calc COV in compute_cov()
-                    continue
                 thres = group['thres']
+                if self.eigens[p]['eigen_value'] is None or thres<0.01:  # For the params where we don't calc COV in compute_cov() (OR) thres is too low
+                    # print('skipping this p')
+                    self.transforms[p] = None
+                    continue
                 # ind = self.eigens[p]['eigen_value'] <= self.eigens[p]['eigen_value'][-1] * thres # MS: Does not work - will choose only the last eigen value always, or None if thres<1?!
                 thres = int(self.eigens[p]['eigen_value'].shape[0] * thres)
                 ind = [True if i < thres else False for i in range(self.eigens[p]['eigen_value'].shape[0])]  # MS: Take top-K eigen values using 0<thres<=1

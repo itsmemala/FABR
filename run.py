@@ -402,8 +402,19 @@ for t,ncla in taskcla:
         if 'adabop' in args.approach:
             # torch.save(appr.model_optimizer.state_dict(), args.my_save_path+'optimizer')
             task_fea_in = []
-            for k in appr.fea_in.keys():
-                task_fea_in.append(appr.fea_in[k])
+            # for k in appr.fea_in.keys():
+                # task_fea_in.append(appr.fea_in[k])
+            i = -1
+            for group in appr.model_optimizer.param_groups:
+                svd = group['svd']
+                if svd is False:
+                    continue
+                for p in group['params']:
+                    if p.requires_grad is False:
+                        continue
+                    i += 1
+                    task_fea_in.append(appr.fea_in[p])
+            print('task fea_in saved:',len(task_fea_in))
             torch.save(task_fea_in, args.my_save_path+'fea_in')
             # with open(args.my_save_path+'grad.pkl', 'wb') as outfile:
                 # pickle.dump(appr.grad, outfile, pickle.HIGHEST_PROTOCOL)
