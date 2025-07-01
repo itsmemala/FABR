@@ -51,14 +51,14 @@ class Appr(ApprBase):
                              # lr=self.args.learning_rate,
                              # warmup=self.args.warmup_proportion,
                              # t_total=t_total)
-        optimizer = UPGD(optimizer_grouped_parameters,lr=self.args.learning_rate)
+        self.optimizer = UPGD(optimizer_grouped_parameters,lr=self.args.learning_rate)
         if t>0 and t==self.args.start_at_task: # Only need to do this when loading from checkpoint to continue training
-            print('Loading optimizer state (utilities) from prev task...'
+            print('Loading optimizer state (utilities) from prev task...')
             i = -1
-            for group in optimizer.param_groups:
+            for group in self.optimizer.param_groups:
                 for p in group["params"]:
                     i += 1
-                    optimizer.state[p] = self.opt_param_state[i]
+                    self.optimizer.state[p] = self.opt_param_state[i]
 
 
         all_targets = []
@@ -88,7 +88,7 @@ class Appr(ApprBase):
             # Train
             clock0=time.time()
             iter_bar = tqdm(train, desc='Train Iter (loss=X.XXX)')
-            global_step=self.train_epoch(t,train,iter_bar, optimizer,t_total,global_step,class_counts)
+            global_step=self.train_epoch(t,train,iter_bar, t_total,global_step,class_counts)
             clock1=time.time()
 
             train_loss=self.eval_validation(t,train,class_counts)
@@ -121,7 +121,7 @@ class Appr(ApprBase):
 
         return
 
-    def train_epoch(self,t,data,iter_bar,optimizer,t_total,global_step,class_counts):
+    def train_epoch(self,t,data,iter_bar,t_total,global_step,class_counts):
         self.num_labels = self.taskcla[t][1]
         self.model.train()
         
@@ -147,10 +147,10 @@ class Appr(ApprBase):
 
             lr_this_step = self.args.learning_rate * \
                            self.warmup_linear(global_step/t_total, self.args.warmup_proportion)
-            for param_group in optimizer.param_groups:
+            for param_group in self.optimizer.param_groups:
                 param_group['lr'] = lr_this_step
-            optimizer.step()
-            optimizer.zero_grad()
+            self.optimizer.step()
+            self.optimizer.zero_grad()
             global_step += 1
 
         return global_step

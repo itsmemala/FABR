@@ -101,6 +101,7 @@ class Appr(object):
             self.grad = []
             # self.grad = defaultdict(dict)
         if 'upgd' in args.baseline:
+            self.optimizer = None
             self.opt_param_state = None
         if 'rp2f' in args.baseline:
             self.precision_matrices = {}

@@ -546,10 +546,10 @@ class Adam(torch.optim.Optimizer):
                     # print('skipping this p')
                     self.transforms[p] = None
                     continue
-                # ind = self.eigens[p]['eigen_value'] <= self.eigens[p]['eigen_value'][-1] * thres # MS: Does not work - will choose only the last eigen value always, or None if thres<1?!
-                thres = int(self.eigens[p]['eigen_value'].shape[0] * thres)
-                ind = [True if i < thres else False for i in range(self.eigens[p]['eigen_value'].shape[0])]  # MS: Take top-K eigen values using 0<thres<=1
-                ind = torch.tensor(ind)
+                ind = self.eigens[p]['eigen_value'] <= self.eigens[p]['eigen_value'][-1] * thres # MS: Does not work - will choose only the last eigen value always, or None if thres<1?!
+                # thres = int(self.eigens[p]['eigen_value'].shape[0] * thres)
+                # ind = [True if i < thres else False for i in range(self.eigens[p]['eigen_value'].shape[0])]  # MS: Take top-K eigen values using 0<thres<=1
+                # ind = torch.tensor(ind)
                 print('reserving basis {}/{}; cond: {}, radio:{}'.format(
                     ind.sum(), self.eigens[p]['eigen_value'].shape[0],
                     self.eigens[p]['eigen_value'][0] /
@@ -583,6 +583,7 @@ class Adam(torch.optim.Optimizer):
                     excl_params += 1
                     eigen['eigen_value'],eigen['eigen_vector'] = None, None
                 else:
+                    print('At param ',i,' fea_in:',tc_lamb[i],fea_in[p],'\n')
                     _, eigen_value, eigen_vector = torch.svd(tc_lamb[i]*fea_in[p] + torch.eye(fea_in[p].size(0)).cuda()) # MS: Above original line looks wrong compared to eq 26 of paper
                     eigen['eigen_value'] = eigen_value
                     eigen['eigen_vector'] = eigen_vector
