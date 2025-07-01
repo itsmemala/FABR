@@ -52,6 +52,13 @@ class Appr(ApprBase):
                              # warmup=self.args.warmup_proportion,
                              # t_total=t_total)
         optimizer = UPGD(optimizer_grouped_parameters,lr=self.args.learning_rate)
+        if t>0 and t==self.args.start_at_task: # Only need to do this when loading from checkpoint to continue training
+            print('Loading optimizer state (utilities) from prev task...'
+            i = -1
+            for group in optimizer.param_groups:
+                for p in group["params"]:
+                    i += 1
+                    optimizer.state[p] = self.opt_param_state[i]
 
 
         all_targets = []

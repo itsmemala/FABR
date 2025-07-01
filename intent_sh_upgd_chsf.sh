@@ -8,7 +8,7 @@ randid=$2 #10
 seed=$3 #0
 dataset='hwu64'
 lr_array=(0.00003 0.0003 0.003 0.03)
-res_path="/home/local/data/ms/fabr_data/IntentSH/UPGD/${note}seed${seed}/IntentSH_UPGD_t"
+res_path="/home/local/data/ms/fabr_data/IntentSH/UPGD_FixedLR/${note}seed${seed}/IntentSH_UPGD_t"
 
 id=0
 printf "\n\nRunning search for task 0\n\n"

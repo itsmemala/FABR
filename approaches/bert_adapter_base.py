@@ -100,13 +100,13 @@ class Appr(object):
             # self.grad = {}        
             self.grad = []
             # self.grad = defaultdict(dict)
+        if 'upgd' in args.baseline:
+            self.opt_param_state = None
         if 'rp2f' in args.baseline:
             self.precision_matrices = {}
             self.learner=None
             self.learner_old=model
             self.aux_net=None
-        if 'upgd' in args.baseline:
-            self.model_optimizer_param_state = None
 
         if args.baseline=='ewc' or args.baseline=='ewc_freeze' or args.baseline=='ewc_ancl':
             if self.args.use_ind_lamb_max==True:

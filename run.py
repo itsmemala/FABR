@@ -210,6 +210,8 @@ for t,ncla in taskcla:
             # for p in appr.model_optimizer.named_parameters(): # these will be None in case of non-fisher based approach
                 # appr.grad[n] = checkpoint_grad[n]
             print('Loaded grad:',type(appr.grad),len(appr.grad))            
+        if 'upgd' in args.approach:
+            appr.opt_param_state = torch.load(args.start_model_path+'opt_param_state', weights_only=False)
         if 'rp2f' in args.approach:
             appr.learner_old.load_state_dict(torch.load(args.start_model_path+'learner'))
             appr.precision_matrices = {}
@@ -404,7 +406,6 @@ for t,ncla in taskcla:
             task_fea_in = []
             # for k in appr.fea_in.keys():
                 # task_fea_in.append(appr.fea_in[k])
-            i = -1
             for group in appr.model_optimizer.param_groups:
                 svd = group['svd']
                 if svd is False:
@@ -412,7 +413,6 @@ for t,ncla in taskcla:
                 for p in group['params']:
                     if p.requires_grad is False:
                         continue
-                    i += 1
                     task_fea_in.append(appr.fea_in[p])
             print('task fea_in saved:',len(task_fea_in))
             torch.save(task_fea_in, args.my_save_path+'fea_in')
@@ -420,6 +420,12 @@ for t,ncla in taskcla:
                 # pickle.dump(appr.grad, outfile, pickle.HIGHEST_PROTOCOL)
             with open(args.my_save_path+'grad.pkl', 'wb') as fp:
                 pickle.dump(appr.grad, fp)
+        if 'upgd' in args.approach:
+            opt_param_state = []
+            for group in appr.optimizer.param_groups:
+                for p in group["params"]:
+                    opt_param_state.append(appr.optimizer.state[p])
+            torch.save(opt_param_state, args.my_save_path+'opt_param_state')
         if 'rp2f' in args.approach:
             torch.save(utils.get_model(appr.learner), args.my_save_path+'learner')
             with open(args.my_save_path+'precision_matrices.pkl', 'wb') as fp:
