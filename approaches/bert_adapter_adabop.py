@@ -55,11 +55,11 @@ class Appr(ApprBase):
             {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01, 'svd': True, 'lr': self.args.learning_rate, 'thres': self.args.svd_thres},
             {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0, 'svd': True, 'lr': self.args.learning_rate, 'thres': self.args.svd_thres}
             ]
-        self.model_optimizer = BertAdam(optimizer_grouped_parameters,
-                             lr=self.args.learning_rate,
-                             warmup=self.args.warmup_proportion,
-                             t_total=t_total)
-        # self.model_optimizer = Adam(optimizer_grouped_parameters,lr=self.args.learning_rate)
+        # self.model_optimizer = BertAdam(optimizer_grouped_parameters,
+                             # lr=self.args.learning_rate,
+                             # warmup=self.args.warmup_proportion,
+                             # t_total=t_total)
+        self.model_optimizer = Adam(optimizer_grouped_parameters,lr=self.args.learning_rate)
         
         if t>0 and len(self.fea_in)==0: # Only need to do this when loading from checkpoint to continue training
             # self.model_optimizer.load_state_dict(self.model_optimizer_state_dict)
@@ -99,38 +99,41 @@ class Appr(ApprBase):
         
         # get correlation
         # self.tc_lamb = {}
-        # self.tc_lamb = []
-        # if t == 0:
-            # self.grad = self.train_task_correlation(train,valid,class_counts)
+        self.tc_lamb = []
+        if t == 0:
+            self.grad = self.train_task_correlation(train,valid,class_counts)
             # for i in range(len(self.grad)):
                 # self.tc_lamb.append(1.0) # Set to 1 for first task
-            # # for p in self.grad.keys():
-                # # self.tc_lamb[p] = 1.0 # Set to 1 for first task
-        # else:
-            # grad_pre = deepcopy(self.grad) # This cuases keyerror for grad_pre[p]
-            # # grad_pre = [self.grad[p] for p in self.grad.keys()]            
-            # self.grad = self.train_task_correlation(train,valid,class_counts)
+            # for p in self.grad.keys():
+                # self.tc_lamb[p] = 1.0 # Set to 1 for first task
+        else:
+            grad_pre = deepcopy(self.grad) # This cuases keyerror for grad_pre[p]
+            # grad_pre = [self.grad[p] for p in self.grad.keys()]            
+            self.grad = self.train_task_correlation(train,valid,class_counts)
 
-            # # print('grad:',grad[0].shape)
-            # # print('grad_pre:',grad_pre[0].shape)
-            # for i in range(len(self.grad)):
-            # # for p in self.grad.keys():
-                # grad_norm = np.linalg.norm(self.grad[i])
-                # # print(type(grad_pre),len(grad_pre))
-                # # print(type(self.grad),len(self.grad))
-                # # print(grad_pre[i])
-                # # print(grad_pre[i].T)
-                # projection = np.dot(self.grad[i],grad_pre[i].T)
-                # projection_norm = np.linalg.norm(projection)
-                # if projection_norm > self.args.tc_epsilon * grad_norm:
-                    # # self.tc_lamb[p] = self.args.tc_lamb_s
-                    # self.tc_lamb.append(self.args.tc_lamb_s)
-                # else:
-                    # # self.tc_lamb[p] = self.args.tc_lamb_l
-                    # self.tc_lamb.append(self.args.tc_lamb_l)
-            # # calc projections
-            # # with torch.no_grad(): # This doesn't makse sense. get_eigens() and get_transforms() require grad to exist
-            # self.update_optim_transforms()
+            # print('grad:',grad[0].shape)
+            # print('grad_pre:',grad_pre[0].shape)
+            tc_vals = []
+            for i in range(len(self.grad)):
+            # for p in self.grad.keys():
+                grad_norm = np.linalg.norm(self.grad[i])
+                # print(type(grad_pre),len(grad_pre))
+                # print(type(self.grad),len(self.grad))
+                # print(grad_pre[i])
+                # print(grad_pre[i].T)
+                projection = np.dot(self.grad[i],grad_pre[i].T)
+                projection_norm = np.linalg.norm(projection)
+                tc_vals.append(projection_norm/grad_norm)
+                if projection_norm > self.args.tc_epsilon * grad_norm:
+                    # self.tc_lamb[p] = self.args.tc_lamb_s
+                    self.tc_lamb.append(self.args.tc_lamb_s)
+                else:
+                    # self.tc_lamb[p] = self.args.tc_lamb_l
+                    self.tc_lamb.append(self.args.tc_lamb_l)
+            # calc projections
+            # with torch.no_grad(): # This doesn't makse sense. get_eigens() and get_transforms() require grad to exist
+            print('TC Hist:',np.histogram(tc_vals))
+            self.update_optim_transforms()
 
 
         best_loss=np.inf
@@ -306,7 +309,8 @@ class Appr(ApprBase):
             if 'cil' in self.args.scenario and self.args.use_rbs:
                 loss+=self.ce(t,output[idx,:],targets[idx],class_counts)*len(idx)
             else:
-                loss+=self.ce(output[idx,:],targets[idx])*len(idx)                
+                # print(output[idx,:],targets[idx])
+                loss+=self.ce(output[idx,:],targets[idx])*len(idx)
             
             # loss2+=self.ce2(output[idx,:],targets[idx])*len(idx)
         # try:
@@ -376,8 +380,8 @@ class Appr(ApprBase):
             # fea_in_ = fea_in_.reshape(-1, fea_in_.shape[-1])
             # self.update_cov(fea_in_, module.weight)
         
-        # else:
-            # print('comput_cov not implemented:',module) # Checked that this consists of only the Embedding layer
+        else:
+            print('comput_cov not implemented:',module) # Checked that this consists of only the Embedding layer
 
         torch.cuda.empty_cache()
         return None
@@ -480,6 +484,7 @@ class Adam(torch.optim.Optimizer):
         if closure is not None:
             loss = closure()
 
+        # no_adabop_params = 0
         for group in self.param_groups:
             svd = group['svd']
             for p in group['params']:
@@ -503,11 +508,14 @@ class Adam(torch.optim.Optimizer):
                             # print(update.shape, self.transforms[p].shape)
                             update_ = torch.matmul(update, self.transforms[p]) # torch.mm(update, self.transforms[p])
                         else:
+                            # print('self.transforms[p] is None')
+                            # no_adabop_params += 1
                             update_ = update
                         
                 else:
                     update_ = update
                 p.data.add_(update_)
+        # print('No Adabop update for :',no_adabop_params)
         return loss
 
     def get_correlation(self,closure = None):

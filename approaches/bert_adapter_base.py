@@ -105,6 +105,8 @@ class Appr(object):
             self.learner=None
             self.learner_old=model
             self.aux_net=None
+        if 'upgd' in args.baseline:
+            self.model_optimizer_param_state = None
 
         if args.baseline=='ewc' or args.baseline=='ewc_freeze' or args.baseline=='ewc_ancl':
             if self.args.use_ind_lamb_max==True:
