@@ -75,7 +75,7 @@ class Appr(ApprBase):
                         continue
                     i += 1
                     self.fea_in[p] = self.prev_task_fea_in[i]
-            print('\nCheck fea_in',len(self.fea_in))
+            # print('\nCheck fea_in',len(self.fea_in))
 
         
         all_targets = []
@@ -133,6 +133,7 @@ class Appr(ApprBase):
             # calc projections
             # with torch.no_grad(): # This doesn't makse sense. get_eigens() and get_transforms() require grad to exist
             print('TC Hist:',np.histogram(tc_vals))
+            np.save(self.args.my_save_path+'tc_vals.npy',tc_vals)
             self.update_optim_transforms()
 
 
@@ -542,7 +543,7 @@ class Adam(torch.optim.Optimizer):
                 if p.grad is None:
                     continue
                 thres = group['thres']
-                if self.eigens[p]['eigen_value'] is None or thres<0.01:  # For the params where we don't calc COV in compute_cov() (OR) thres is too low
+                if self.eigens[p]['eigen_value'] is None: # or thres<0.01:  # For the params where we don't calc COV in compute_cov() (OR) thres is too low
                     # print('skipping this p')
                     self.transforms[p] = None
                     continue
@@ -563,6 +564,7 @@ class Adam(torch.optim.Optimizer):
                 transform = torch.mm(basis, basis.transpose(1, 0))
                 self.transforms[p] = transform / torch.norm(transform)
                 self.transforms[p].detach_()
+                # print(self.transforms[p].shape, self.transforms[p].min(), self.transforms[p].max())
         print(len(self.transforms))
         # sys.exit()
 
@@ -583,7 +585,7 @@ class Adam(torch.optim.Optimizer):
                     excl_params += 1
                     eigen['eigen_value'],eigen['eigen_vector'] = None, None
                 else:
-                    print('At param ',i,' fea_in:',tc_lamb[i],fea_in[p],'\n')
+                    # print('At param ',i,' fea_in:',tc_lamb[i],fea_in[p],'\n')
                     _, eigen_value, eigen_vector = torch.svd(tc_lamb[i]*fea_in[p] + torch.eye(fea_in[p].size(0)).cuda()) # MS: Above original line looks wrong compared to eq 26 of paper
                     eigen['eigen_value'] = eigen_value
                     eigen['eigen_vector'] = eigen_vector
