@@ -96,8 +96,8 @@ do
 	best_lamb=0.83491158
 	
 	## Alpha lamb
-	alpha_lamb=0.011
-	alpha_lamb_i=1
+	alpha_lamb=0.01771561
+	alpha_lamb_i=6
 	found_best=false
 	while [ $found_best=false ]
 	do

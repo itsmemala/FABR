@@ -10,7 +10,7 @@ def main():
     parser.add_argument('--dataset', type=str, default='')
     parser.add_argument('--max_lr_id', type=int, default='')
     parser.add_argument('--tid', type=int, default=None)
-    parser.add_argument('--choose_second_best', type=bool, default=False)
+    parser.add_argument('--choose_second_best', type=str, default='False')
     args = parser.parse_args()
     
     best_lr_id, best_perf = 1, 0
@@ -24,8 +24,9 @@ def main():
             best_perf = task_f1
             best_lr_id = lr_id
     
-    if args.choose_second_best:
-        best_lr_id = np.argsort(all_perf)[-2]
+    if args.choose_second_best=='True':
+        print('Choosing second best',args.choose_second_best,type(args.choose_second_best))
+        best_lr_id = np.argsort(all_perf)[-2]+1
         best_perf = all_perf[best_lr_id]
     
     # write to file

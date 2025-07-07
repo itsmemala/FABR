@@ -67,8 +67,8 @@ do
 	best_lr_id=1
 
 	## Lamb
-	lamb=77.30662811
-	lamb_i=30
+	lamb=62.6183687691 #77.30662811
+	lamb_i=32 #30
 	found_best=false
 	while [ $found_best=false ]
 	do

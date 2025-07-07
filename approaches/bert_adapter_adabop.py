@@ -547,10 +547,12 @@ class Adam(torch.optim.Optimizer):
                     # print('skipping this p')
                     self.transforms[p] = None
                     continue
-                ind = self.eigens[p]['eigen_value'] <= self.eigens[p]['eigen_value'][-1] * thres # MS: Does not work - will choose only the last eigen value always, or None if thres<1?!
-                # thres = int(self.eigens[p]['eigen_value'].shape[0] * thres)
-                # ind = [True if i < thres else False for i in range(self.eigens[p]['eigen_value'].shape[0])]  # MS: Take top-K eigen values using 0<thres<=1
-                # ind = torch.tensor(ind)
+                # ind = self.eigens[p]['eigen_value'] <= self.eigens[p]['eigen_value'][-1] * thres # MS: Does not work - will choose only the last eigen value always, or None if thres<1?!
+                thres = int(self.eigens[p]['eigen_value'].shape[0] * thres) # 20 = 100 * 0.2
+                # ind = [True if i < thres else False for i in range(self.eigens[p]['eigen_value'].shape[0])]
+                thres = self.eigens[p]['eigen_value'].shape[0] - thres # 80 = 100 - 20
+                ind = [True if i >= thres else False for i in range(self.eigens[p]['eigen_value'].shape[0])]  # MS: Take bottom-K eigen values (corresponding to null space) using 0<thres<=1
+                ind = torch.tensor(ind)
                 print('reserving basis {}/{}; cond: {}, radio:{}'.format(
                     ind.sum(), self.eigens[p]['eigen_value'].shape[0],
                     self.eigens[p]['eigen_value'][0] /
