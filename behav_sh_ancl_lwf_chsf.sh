@@ -8,10 +8,10 @@ randid=$2 #10
 seed=$3 #0
 dataset='annomi'
 lr_array=(0.00003 0.0003 0.003 0.03)
+start_lamb=$4
 decay=0.9
-acc_drop_threshold=$4
+acc_drop_threshold=$5
 growth=0.1
-start_lamb=1000
 start_alpha_lamb=0.01
 res_path="/home/local/data/ms/fabr_data/BehavSH/BehavSH_ANCLLWF/${note}seed${seed}_${acc_drop_threshold}adt/BehavSH_ANCLLWF_t"
 
