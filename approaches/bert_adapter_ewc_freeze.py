@@ -1,4 +1,4 @@
-import sys,time
+import sys,time,datetime
 import numpy as np
 import torch
 import os
@@ -18,6 +18,7 @@ from torch.utils.data.distributed import DistributedSampler
 import torch.distributed as dist
 from torch.utils.data import TensorDataset, random_split
 import utils
+from utils import CPU_Unpickler
 # from seqeval.metrics import classification_report # Commented as it does not seem to be used
 import torch.nn.functional as F
 import nlp_data_utils as data_utils
@@ -54,6 +55,21 @@ class Appr(ApprBase):
             train_phases = ['mcl']
         
         for phase in train_phases:
+            if len(train_phases)==2 and t==self.args.start_at_task: # Only need to do this when loading from checkpoint to continue training
+                if phase=='fo' and 'LA_phase.1/' not in self.args.my_save_path:
+                    # Load results if LA training already done (from prev LA Hyp Search) and skip training
+                    fisher_old={}
+                    self.fisher_old={}
+                    for n,_ in self.model.named_parameters():
+                        fisher_old[n]=self.fisher[n].clone().cpu() ## Changes to make space on GPU: #1
+                        self.fisher_old[n]=self.fisher[n].detach().cpu()
+                    with open(self.args.la_model_path+'fisher_for_loss.pkl', 'rb') as handle:
+                        checkpoint_fisher_for_loss = CPU_Unpickler(handle).load()
+                    for n,_ in self.model.named_parameters():
+                        self.fisher_for_loss[n] = checkpoint_fisher_for_loss[n].cuda()
+                    print("\n\nLoaded LA results. We can skip LA training.\n\n")
+                    continue
+                
             # if phase=='mcl': # DEBUG
                 # print('\n ############# DEBUG GPU memory ########### \n')
                 # print(torch.cuda.memory_summary())
@@ -131,6 +147,11 @@ class Appr(ApprBase):
             else:
                 epochs = self.args.num_train_epochs
             
+            # train_epoch_func = self.train_epoch
+            train_epoch_func = self.train_epoch_cil if self.args.scenario=='cil' else self.train_epoch
+            
+            print('Started epochs at:',datetime.datetime.now())
+            
             # Loop epochs
             for e in range(int(epochs)):
                 # if phase=='fo' and e==0 and t==3:
@@ -152,16 +173,19 @@ class Appr(ApprBase):
                             # pickle.dump(grad_dir_lastart, fp)
             
                 # Train
-                clock0=time.time()
-                iter_bar = tqdm(train, desc='Train Iter (loss=X.XXX)')
-                global_step,step_wise_updates=self.train_epoch(t,train,iter_bar, optimizer,t_total,global_step,class_counts=class_counts,phase=phase,optimizer_param_keys=optimizer_param_keys)
-                clock1=time.time()
-
+                # clock0=time.time()
+                # iter_bar = tqdm(train, desc='Train Iter (loss=X.XXX)')
+                # global_step,step_wise_updates=train_epoch_func(t,train,iter_bar, optimizer,t_total,global_step,class_counts=class_counts,phase=phase,optimizer_param_keys=optimizer_param_keys)
+                global_step=train_epoch_func(t,train,optimizer,t_total,global_step,class_counts=class_counts,phase=phase,optimizer_param_keys=optimizer_param_keys)
+                # clock1=time.time()
+                # print('Finished train at:',datetime.datetime.now())
+                
                 train_loss,train_acc,train_f1_macro=self.eval(t,train,phase=phase)
-                clock2=time.time()
-                print('time: ',float((clock1-clock0)*10*25))
-                print('| Epoch {:3d}, time={:5.1f}ms/{:5.1f}ms | Train: loss={:.3f}, f1_avg={:5.1f}% |'.format(e+1,
-                    1000*self.train_batch_size*(clock1-clock0)/len(train),1000*self.train_batch_size*(clock2-clock1)/len(train),train_loss,100*train_f1_macro),end='')
+                # clock2=time.time()
+                # print('time: ',float((clock1-clock0)*10*25))
+                # print('| Epoch {:3d}, time={:5.1f}ms/{:5.1f}ms | Train: loss={:.3f}, f1_avg={:5.1f}% |'.format(e+1,
+                    # 1000*self.train_batch_size*(clock1-clock0)/len(train),1000*self.train_batch_size*(clock2-clock1)/len(train),train_loss,100*train_f1_macro),end='')
+                print('| Epoch {:3d} | Train: loss={:.3f}, f1_avg={:5.1f}% |'.format(e+1,train_loss,100*train_f1_macro),end='')
                 train_loss_save.append(train_loss)
                 train_acc_save.append(train_acc)
                 train_f1_macro_save.append(train_f1_macro)
@@ -199,6 +223,9 @@ class Appr(ApprBase):
 
                 print()
 
+            print('Finished all epochs at:',datetime.datetime.now())
+            # sys.exit()
+            
             try:
                 best_index = valid_loss_save.index(best_loss)
                 # best_index = valid_f1_macro_save.index(best_f1)
@@ -293,7 +320,7 @@ class Appr(ApprBase):
                         self.fisher[n]=(self.fisher[n]+fisher_old[n]*t)/(t+1)       # Checked: it is better than the other option
                         #self.fisher[n]=0.5*(self.fisher[n]+fisher_old[n])
                     elif self.args.fisher_combine=='max':
-                        self.fisher[n]=torch.maximum(self.fisher[n],fisher_old[n])
+                        self.fisher[n]=torch.maximum(self.fisher[n],fisher_old[n].cuda())
                 # with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_fisher_task'+str(t)+'.pkl', 'wb') as fp:
                     # pickle.dump(self.fisher, fp)
 
@@ -375,6 +402,44 @@ class Appr(ApprBase):
             global_step += 1          
 
         return global_step,np.array(step_wise_updates)
+    
+    # def train_epoch_cil(self,t,data,iter_bar,optimizer,t_total,global_step,class_counts,phase=None,optimizer_param_keys=None):
+    def train_epoch_cil(self,t,data,optimizer,t_total,global_step,class_counts,phase=None,optimizer_param_keys=None):
+        self.num_labels = self.taskcla[t][1]
+        self.model.train()
+        # for step, batch in enumerate(iter_bar):
+        for step, batch in enumerate(data):
+            batch = [
+                bat.to(self.device, non_blocking=True) if bat is not None else None for bat in batch]
+            input_ids, segment_ids, input_mask, targets, tasks= batch
+
+            output_dict = self.model.forward(input_ids, segment_ids, input_mask)
+            # Forward
+            output=output_dict['y']
+            
+            # if 'cil' in self.args.scenario and self.training_multi:
+                # loss=self.criterion_train(tasks,output_dict['y'],targets,class_counts)
+            # else:
+                # loss=self.criterion(t,output,targets,class_counts=class_counts,phase=phase)
+            loss=self.criterion(t,output,targets,class_counts=class_counts,phase=phase)
+
+            # iter_bar.set_description('Train Iter (loss=%5.3f)' % loss.item())
+            loss.backward()
+
+            # if self.args.remove_lr_schedule:
+                # lr_this_step = self.args.learning_rate
+            # else:  
+                # lr_this_step = self.args.learning_rate * \
+                           # self.warmup_linear(global_step/t_total, self.args.warmup_proportion)
+            lr_this_step = self.args.learning_rate * \
+                           self.warmup_linear(global_step/t_total, self.args.warmup_proportion)
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = lr_this_step
+            _,updates = optimizer.step()
+            optimizer.zero_grad()
+            global_step += 1          
+
+        return global_step
 
     def criterion_train(self,tasks,outputs,targets,class_counts): # Copied from bert_adapter_seq.py, for multi-task model training during CL
         loss=0

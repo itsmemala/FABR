@@ -66,6 +66,7 @@ def asc_config(parser):
     # FABR/LA dev args
     parser.add_argument('--only_mcl',default=False,type=bool,required=False,help='(default=%(default)s)')
     parser.add_argument('--save_model_path',default=None,type=str,help="Path to save model at end of task")
+    parser.add_argument('--la_model_path',default=None,type=str,help="Path to model initialisation")
     parser.add_argument('--start_model_path',default=None,type=str,help="Path to model initialisation")
     parser.add_argument('--start_at_task',default=None,type=int,help="Start at specific task id")
     parser.add_argument('--plot_lambs',default=None,type=list_of_ints,required=False,help='(default=%(default)s)')

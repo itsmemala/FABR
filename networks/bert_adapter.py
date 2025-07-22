@@ -63,6 +63,8 @@ class Net(torch.nn.Module):
                 self.last.append(torch.nn.Linear(args.bert_hidden_size,n))
         elif 'cil' in args.scenario:
             self.last=torch.nn.Linear(args.bert_hidden_size,sum([n for t,n in self.taskcla]))
+        
+        self.classifier = self.classifier_cil if 'cil' in args.scenario else self.classifier_all
 
 
         print('BERT ADAPTER')
@@ -107,7 +109,7 @@ class Net(torch.nn.Module):
 
         return pooled_output
     
-    def classifier(self,pooled_output, fa_method=None, tid=None):
+    def classifier_all(self,pooled_output, fa_method=None, tid=None):
         output_dict = {}
 
 
@@ -128,6 +130,23 @@ class Net(torch.nn.Module):
             # print(pooled_output.shape)
             # print(output_dict['y'][tid].shape)
             return output_dict['y'][tid]
+
+        return output_dict
+    
+    def classifier_cil(self,pooled_output, fa_method=None, tid=None):
+        output_dict = {}
+
+
+        y = self.last(pooled_output)
+
+        output_dict['y'] = y
+        output_dict['normalized_pooled_rep'] = F.normalize(pooled_output, dim=1)
+        
+        # if fa_method=='ig':
+            # # print(input_ids.shape)
+            # # print(pooled_output.shape)
+            # # print(output_dict['y'][tid].shape)
+            # return output_dict['y'][tid]
 
         return output_dict
     

@@ -100,8 +100,8 @@ do
 	best_lamb_i=1
 	
 	## Lamb Down
-	lamb_down=0.9
-	alpha_lamb_i=1
+	lamb_down=0.59049
+	alpha_lamb_i=5
 	found_best=false
 	while [ $found_best=false ]
 	do
@@ -206,4 +206,4 @@ done
 
 # CUDA_VISIBLE_DEVICES=1 bash FABR//intent_sh_la_mas_chsf_nol1_custom_autolambup_searchlambdown_pdmfrac.sh random0 0 0 4.50567991 1641.28483697 1.0 1.0 1.0 True
 # CUDA_VISIBLE_DEVICES=0 bash FABR//intent_sh_la_mas_chsf_nol1_custom_autolambup_searchlambdown_pdmfrac.sh random3 3 0 6.85163861 77.30662811 1.0 1.0 1.0 True
-# CUDA_VISIBLE_DEVICES=0 bash FABR//intent_sh_la_mas_chsf_nol1_custom_autolambup_searchlambdown_pdmfrac.sh random6 6 0 1823.64981886 2026.27757651 1.0 1.0 1.0 True
+# CUDA_VISIBLE_DEVICES=1 bash FABR//intent_sh_la_mas_chsf_nol1_custom_autolambup_searchlambdown_pdmfrac-rand6.sh random6 6 0 1823.64981886 2026.27757651 1.0 1.0 0.9 True
