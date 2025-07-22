@@ -343,22 +343,22 @@ class Appr(ApprBase):
                 self.la_model=utils.get_model(self.model)
                 utils.set_model_(self.model,self.mcl_model) # Reset to main model after fisher overlap check
             
-            if phase=='mcl' and t>0 and self.args.only_mcl==False:
-                wd_aux = 0
-                wd_old = 0
-                wd_old_magn = {}
-                for n,param in self.model.named_parameters():
-                    if 'output.adapter' in n or 'output.LayerNorm' in n or (self.args.modify_fisher_last==True and 'last' in n):
-                        wd_aux += torch.sum((param.detach() - self.la_model[n].detach())**2).item()
-                        wd_old += torch.sum((param.detach() - self.mcl_model[n].detach())**2).item()
-                        # wd_old_magn[n] = math.sqrt(torch.sum((param.detach() - self.mcl_model[n].detach())**2).item())
-                        wd_old_magn[n] = (param.detach() - self.mcl_model[n].detach())**2
-                wd_aux = math.sqrt(wd_aux)
-                wd_old = math.sqrt(wd_old)
-                np.savetxt(save_path+str(args.note)+'_seed'+str(args.seed)+'_task'+str(t)+'wd.txt',np.array([wd_aux,wd_old]),'%.4f',delimiter='\t')
-                if self.args.save_wd_old_magn:
-                    with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_task'+str(t)+'_wd_old_magn.pkl', 'wb') as fp:
-                        pickle.dump(wd_old_magn, fp)
+            # if phase=='mcl' and t>0 and self.args.only_mcl==False: # Commented this when skipping LA phase during lamb up lamb down search
+                # wd_aux = 0
+                # wd_old = 0
+                # wd_old_magn = {}
+                # for n,param in self.model.named_parameters():
+                    # if 'output.adapter' in n or 'output.LayerNorm' in n or (self.args.modify_fisher_last==True and 'last' in n):
+                        # wd_aux += torch.sum((param.detach() - self.la_model[n].detach())**2).item()
+                        # wd_old += torch.sum((param.detach() - self.mcl_model[n].detach())**2).item()
+                        # # wd_old_magn[n] = math.sqrt(torch.sum((param.detach() - self.mcl_model[n].detach())**2).item())
+                        # wd_old_magn[n] = (param.detach() - self.mcl_model[n].detach())**2
+                # wd_aux = math.sqrt(wd_aux)
+                # wd_old = math.sqrt(wd_old)
+                # np.savetxt(save_path+str(args.note)+'_seed'+str(args.seed)+'_task'+str(t)+'wd.txt',np.array([wd_aux,wd_old]),'%.4f',delimiter='\t')
+                # if self.args.save_wd_old_magn:
+                    # with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_task'+str(t)+'_wd_old_magn.pkl', 'wb') as fp:
+                        # pickle.dump(wd_old_magn, fp)
                 
         return
 
