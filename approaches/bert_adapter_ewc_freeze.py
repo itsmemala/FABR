@@ -320,7 +320,7 @@ class Appr(ApprBase):
                         self.fisher[n]=(self.fisher[n]+fisher_old[n]*t)/(t+1)       # Checked: it is better than the other option
                         #self.fisher[n]=0.5*(self.fisher[n]+fisher_old[n])
                     elif self.args.fisher_combine=='max':
-                        self.fisher[n]=torch.maximum(self.fisher[n],fisher_old[n].cuda())
+                        self.fisher[n]=torch.maximum(self.fisher[n].cuda(),fisher_old[n].cuda())
                 # with open(save_path+str(args.note)+'_seed'+str(args.seed)+'_fisher_task'+str(t)+'.pkl', 'wb') as fp:
                     # pickle.dump(self.fisher, fp)
 
