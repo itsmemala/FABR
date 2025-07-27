@@ -129,3 +129,7 @@ done
 # CUDA_VISIBLE_DEVICES=0 bash intent_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac.sh random0 0 0 0.32346185 1641.28483697 1.0 1.0 0.9 True 0.2
 # CUDA_VISIBLE_DEVICES=1 bash intent_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac.sh random3 3 0 6.85163861 77.30662811 1.0 1.0 0.9 True 0.2
 # CUDA_VISIBLE_DEVICES=1 bash intent_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac.sh random6 6 0 1823.64981886 2026.27757651 1.0 1.0 0.9 True 0.2
+
+# bash FABR//intent_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac.sh random0 0 0 0.32346185 1641.28483697 1.0 1.0 0.9 True 0.1
+# bash FABR//intent_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac.sh random3 3 0 6.85163861 77.30662811 1.0 1.0 0.9 True 0.1
+# bash FABR//intent_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac.sh random6 6 0 1823.64981886 2026.27757651 1.0 1.0 0.9 True 0.1
