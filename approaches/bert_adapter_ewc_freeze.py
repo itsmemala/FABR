@@ -148,7 +148,7 @@ class Appr(ApprBase):
                 epochs = self.args.num_train_epochs
             
             # train_epoch_func = self.train_epoch
-            train_epoch_func = self.train_epoch_cil if self.args.scenario=='cil' else self.train_epoch
+            train_epoch_func = self.train_epoch_cil if self.args.scenario=='cil' else self.train_epoch_dil if self.args.scenario=='dil' else self.train_epoch
             
             print('Started epochs at:',datetime.datetime.now())
             
@@ -317,7 +317,7 @@ class Appr(ApprBase):
                 # Watch out! We do not want to keep t models (or fisher diagonals) in memory, therefore we have to merge fisher diagonals
                 for n,_ in self.model.named_parameters():
                     if self.args.fisher_combine=='avg': #default
-                        self.fisher[n]=(self.fisher[n]+fisher_old[n]*t)/(t+1)       # Checked: it is better than the other option
+                        self.fisher[n]=(self.fisher[n].cuda()+fisher_old[n].cuda()*t)/(t+1)       # Checked: it is better than the other option
                         #self.fisher[n]=0.5*(self.fisher[n]+fisher_old[n])
                     elif self.args.fisher_combine=='max':
                         self.fisher[n]=torch.maximum(self.fisher[n].cuda(),fisher_old[n].cuda())
@@ -362,6 +362,80 @@ class Appr(ApprBase):
                 
         return
 
+    def train_epoch_dil(self,t,data,optimizer,t_total,global_step,class_counts,phase=None,optimizer_param_keys=None):
+        self.num_labels = self.taskcla[t][1]
+        self.model.train()
+        step_wise_updates = []
+        # for step, batch in enumerate(iter_bar):
+        for step, batch in enumerate(data):
+            # print('step: ',step)
+            batch = [
+                bat.to(self.device, non_blocking=True) if bat is not None else None for bat in batch]
+            input_ids, segment_ids, input_mask, targets, tasks= batch
+
+            output_dict = self.model.forward(input_ids, segment_ids, input_mask)
+            # Forward
+            output=output_dict['y']
+            
+            loss=self.criterion(t,output,targets,class_counts=class_counts,phase=phase)
+
+            # iter_bar.set_description('Train Iter (loss=%5.3f)' % loss.item())
+            loss.backward()
+
+            # if self.args.remove_lr_schedule:
+                # lr_this_step = self.args.learning_rate
+            # else:  
+                # lr_this_step = self.args.learning_rate * \
+                           # self.warmup_linear(global_step/t_total, self.args.warmup_proportion)
+            lr_this_step = self.args.learning_rate * \
+                           self.warmup_linear(global_step/t_total, self.args.warmup_proportion)
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = lr_this_step
+            _,updates = optimizer.step()
+            optimizer.zero_grad()
+            global_step += 1          
+
+        return global_step
+    
+    # def train_epoch_cil(self,t,data,iter_bar,optimizer,t_total,global_step,class_counts,phase=None,optimizer_param_keys=None):
+    def train_epoch_cil(self,t,data,optimizer,t_total,global_step,class_counts,phase=None,optimizer_param_keys=None):
+        self.num_labels = self.taskcla[t][1]
+        self.model.train()
+        # for step, batch in enumerate(iter_bar):
+        for step, batch in enumerate(data):
+            batch = [
+                bat.to(self.device, non_blocking=True) if bat is not None else None for bat in batch]
+            input_ids, segment_ids, input_mask, targets, tasks= batch
+
+            output_dict = self.model.forward(input_ids, segment_ids, input_mask)
+            # Forward
+            output=output_dict['y']
+            
+            # if 'cil' in self.args.scenario and self.training_multi:
+                # loss=self.criterion_train(tasks,output_dict['y'],targets,class_counts)
+            # else:
+                # loss=self.criterion(t,output,targets,class_counts=class_counts,phase=phase)
+            loss=self.criterion(t,output,targets,class_counts=class_counts,phase=phase)
+
+            # iter_bar.set_description('Train Iter (loss=%5.3f)' % loss.item())
+            loss.backward()
+
+            # if self.args.remove_lr_schedule:
+                # lr_this_step = self.args.learning_rate
+            # else:  
+                # lr_this_step = self.args.learning_rate * \
+                           # self.warmup_linear(global_step/t_total, self.args.warmup_proportion)
+            lr_this_step = self.args.learning_rate * \
+                           self.warmup_linear(global_step/t_total, self.args.warmup_proportion)
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = lr_this_step
+            _,updates = optimizer.step()
+            optimizer.zero_grad()
+            global_step += 1          
+
+        return global_step
+
+    # ORIG
     def train_epoch(self,t,data,iter_bar,optimizer,t_total,global_step,class_counts,phase=None,optimizer_param_keys=None):
         self.num_labels = self.taskcla[t][1]
         self.model.train()
@@ -402,44 +476,7 @@ class Appr(ApprBase):
             global_step += 1          
 
         return global_step,np.array(step_wise_updates)
-    
-    # def train_epoch_cil(self,t,data,iter_bar,optimizer,t_total,global_step,class_counts,phase=None,optimizer_param_keys=None):
-    def train_epoch_cil(self,t,data,optimizer,t_total,global_step,class_counts,phase=None,optimizer_param_keys=None):
-        self.num_labels = self.taskcla[t][1]
-        self.model.train()
-        # for step, batch in enumerate(iter_bar):
-        for step, batch in enumerate(data):
-            batch = [
-                bat.to(self.device, non_blocking=True) if bat is not None else None for bat in batch]
-            input_ids, segment_ids, input_mask, targets, tasks= batch
 
-            output_dict = self.model.forward(input_ids, segment_ids, input_mask)
-            # Forward
-            output=output_dict['y']
-            
-            # if 'cil' in self.args.scenario and self.training_multi:
-                # loss=self.criterion_train(tasks,output_dict['y'],targets,class_counts)
-            # else:
-                # loss=self.criterion(t,output,targets,class_counts=class_counts,phase=phase)
-            loss=self.criterion(t,output,targets,class_counts=class_counts,phase=phase)
-
-            # iter_bar.set_description('Train Iter (loss=%5.3f)' % loss.item())
-            loss.backward()
-
-            # if self.args.remove_lr_schedule:
-                # lr_this_step = self.args.learning_rate
-            # else:  
-                # lr_this_step = self.args.learning_rate * \
-                           # self.warmup_linear(global_step/t_total, self.args.warmup_proportion)
-            lr_this_step = self.args.learning_rate * \
-                           self.warmup_linear(global_step/t_total, self.args.warmup_proportion)
-            for param_group in optimizer.param_groups:
-                param_group['lr'] = lr_this_step
-            _,updates = optimizer.step()
-            optimizer.zero_grad()
-            global_step += 1          
-
-        return global_step
 
     def criterion_train(self,tasks,outputs,targets,class_counts): # Copied from bert_adapter_seq.py, for multi-task model training during CL
         loss=0
