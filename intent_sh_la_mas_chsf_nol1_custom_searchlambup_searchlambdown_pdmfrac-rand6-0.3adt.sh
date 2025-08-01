@@ -21,6 +21,7 @@ res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_Custom_ss_$
 
 past_lr=0.0003,0.0003,0.00003,0.00003,0.00003,0.00003
 past_lamb=0,28.24295365,28.2429537,0.229376,0.09395241
+best_lamb=0.09395241
 start_model_path="${res_path}4.5.LA_phase.27/"
 
 id_array=(5)
