@@ -17,27 +17,15 @@ lr_array=(0.00003 0.0003) #(0.00003 0.0003 0.003 0.03)
 decay=0.9
 acc_drop_threshold=${10}
 growth=0.8
-res_path="/home/local/data/ms/fabr_data/BehavSH/BehavSH_LAMAS_NoL1_Custom_ss_${pdm_frac}pdmfrac${no_frel_cut_max}/${note}seed${seed}_${acc_drop_threshold}adt/BehavSH_LAMAS_t"
+res_path="/home/local/data/ms/fabr_data/BehavSH/BehavSH_LAMAS_NoL1_Custom_cus_${pdm_frac}pdmfrac${no_frel_cut_max}/${note}seed${seed}_${acc_drop_threshold}adt/BehavSH_LAMAS_t"
+start_res_path="/home/local/data/ms/fabr_data/BehavSH/BehavSH_LAMAS_NoL1_Custom_ss_${pdm_frac}pdmfrac${no_frel_cut_max}/${note}seed${seed}_${acc_drop_threshold}adt/BehavSH_LAMAS_t"
 
-id=0
-printf "\n\nRunning search for task 0\n\n"
-lr_id=0
-for lr in "${lr_array[@]}"
-do
-	((lr_id++))
-	printf "\n\nLR Iteration $lr\n\n"
-	mkdir -p  ${res_path}${id}_gold.${lr_id}/
-	python  FABR//run.py --bert_model 'bert-base-uncased' --experiment annomi --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --use_cls_wgts True --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --learning_rate $lr --fisher_combine max --break_after_task 0 --my_save_path ${res_path}${id}_gold.${lr_id}/ --only_mcl True
-done
+past_lr=0.0003,0.0003,0.00003
+past_lamb=0,0.00563921,0.00563921
+best_lamb=0.00563921
+start_model_path="${start_res_path}2.1.LA_phase.27/"
 
-python3 FABR/return_best_lr.py --my_save_path ${res_path}${id}_gold --rand_idx $randid --seed $seed --dataset $dataset --max_lr_id $lr_id --tid $id
-best_lr_id=$?
-past_lr=${lr_array[$best_lr_id-1]}  # -1 for array indexing
-past_lamb=0
-
-start_model_path="${res_path}${id}_gold.${best_lr_id}/"
-
-id_array=(1 2 3 4 5)
+id_array=(3 4 5)
 for id in "${id_array[@]}"
 do
 	printf "\n\nRunning search for task $id\n\n"
@@ -119,15 +107,3 @@ do
 		
 	start_model_path="${res_path}${id}.${best_lamb_i}.LA_phase.${best_alpha_lamb_i}/"
 done
-
-# CUDA_VISIBLE_DEVICES=0 bash behav_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac.sh random0 0 0 0.58149737 10.0 1.0 1.0 0.9 True 0.3
-# CUDA_VISIBLE_DEVICES=1 bash behav_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac.sh random10 10 0 984.15 1500 1.0 1.0 0.9 True 0.3
-# CUDA_VISIBLE_DEVICES=1 bash behav_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac.sh random13 13 0 0.2027556 10.0 1.0 1.0 0.9 True 0.3
-
-# CUDA_VISIBLE_DEVICES=1 bash behav_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac.sh random0 0 0 0.58149737 10.0 1.0 1.0 0.9 True 0.2
-# CUDA_VISIBLE_DEVICES=1 bash behav_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac.sh random10 10 0 984.15 1500 1.0 1.0 0.9 True 0.2
-# CUDA_VISIBLE_DEVICES=1 bash behav_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac.sh random13 13 0 0.2027556 10.0 1.0 1.0 0.9 True 0.2
-
-# CUDA_VISIBLE_DEVICES=0 bash behav_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac.sh random0 0 0 0.58149737 10.0 1.0 1.0 0.9 True 0.05
-# CUDA_VISIBLE_DEVICES=0 bash behav_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac.sh random10 10 0 984.15 1500 1.0 1.0 0.9 True 0.05
-# CUDA_VISIBLE_DEVICES=0 bash behav_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac.sh random13 13 0 0.0925554779 10.0 1.0 1.0 0.9 True 0.05

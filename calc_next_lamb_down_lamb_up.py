@@ -44,7 +44,7 @@ def main():
     l3_recent = l3[-10:]
     try:
         slope = np.polyfit(range(len(l3_recent)),l3_recent,1)[0]
-    except ValueError:
+    except (ValueError,SystemError):
         slope = 1 # In case of error (eg. len(l3)=1), skip slope evaluation and run next lamb_down
     
     if (task_f1 > baseline_f1) or (task_f1 == best_f1) or (slope < 0.003 and len(l3) > 15 and args.elasticity_up_mult < 0.1): # (Reached good perf) or (exhausted lamb_down and lamb_up search budget)

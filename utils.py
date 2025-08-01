@@ -410,6 +410,7 @@ def modified_fisher(fisher,fisher_old
         elasticity_down = elasticity_down
         elasticity_up = 1
           
+    print(frel_cut,elasticity_down_mult,elasticity_down_max_lamb)
     for n in fisher.keys():
         # print(n)
         # modified_fisher[n] = fisher_old[n] # This is for comparison without modifying fisher weights in the fo phase
@@ -438,7 +439,7 @@ def modified_fisher(fisher,fisher_old
                 elasticity_down = elasticity_down_min + elasticity_down_mult*(elasticity_down_max-elasticity_down_min)
                 # print("\n\nLamb_up bounding calc for",n,":",frel_cut,elasticity_down_min,elasticity_down_max,elasticity_down,"\n\n")
                 assert elasticity_down <= elasticity_down_max
-            assert elasticity_down >= elasticity_down_min
+            if elasticity_down is not None: assert elasticity_down >= elasticity_down_min
             
             modified_fisher[n] = fisher_old[n]
             

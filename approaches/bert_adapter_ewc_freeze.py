@@ -63,10 +63,23 @@ class Appr(ApprBase):
                     for n,_ in self.model.named_parameters():
                         fisher_old[n]=self.fisher[n].clone().cpu() ## Changes to make space on GPU: #1
                         self.fisher_old[n]=self.fisher[n].detach().cpu()
-                    with open(self.args.la_model_path+'fisher_for_loss.pkl', 'rb') as handle:
-                        checkpoint_fisher_for_loss = CPU_Unpickler(handle).load()
-                    for n,_ in self.model.named_parameters():
-                        self.fisher_for_loss[n] = checkpoint_fisher_for_loss[n].cuda()
+                    # with open(self.args.la_model_path+'fisher_for_loss.pkl', 'rb') as handle:
+                        # checkpoint_fisher_for_loss = CPU_Unpickler(handle).load()
+                    # for n,_ in self.model.named_parameters():
+                        # self.fisher_for_loss[n] = checkpoint_fisher_for_loss[n].cuda() # Need to re-calc this
+                    self.fisher_for_loss=utils.modified_fisher(self.fisher,fisher_old
+                    ,None,-1 #,train_f1_macro_save,best_index
+                    ,None,None #,self.model,self.model_old
+                    ,self.args.elasticity_down,self.args.elasticity_up,self.args.elasticity_down_max_lamb,self.args.elasticity_down_mult,self.args.pdm_frac
+                    ,self.args.freeze_cutoff
+                    ,self.args.learning_rate,self.lamb,self.args.use_ind_lamb_max
+                    ,adapt_type=self.args.adapt_type
+                    ,ktcf_wgt=self.args.ktcf_wgt
+                    ,ktcf_wgt_use_arel=self.args.ktcf_wgt_use_arel
+                    ,frel_cut=self.args.frel_cut, frel_cut_type=self.args.frel_cut_type, no_frel_cut_max=self.args.no_frel_cut_max
+                    ,modify_fisher_last=self.args.modify_fisher_last
+                    ,save_alpharel=self.args.save_alpharel
+                    ,save_path=save_path+str(args.note)+'_seed'+str(args.seed)+'model_'+str(t))
                     print("\n\nLoaded LA results. We can skip LA training.\n\n")
                     continue
                 
