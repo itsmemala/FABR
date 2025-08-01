@@ -19,11 +19,11 @@ acc_drop_threshold=${10}
 growth=0.8
 res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_Custom_ss_${pdm_frac}pdmfrac${no_frel_cut_max}/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_LAMAS_t"
 
-past_lr=0.0003,0.0003,0.00003
-past_lamb=0,28.24295365,0.00364353889
-start_model_path="${res_path}1.1.LA_phase.27/"
+past_lr=0.0003,0.0003,0.00003,0.00003
+past_lamb=0,28.24295365,0.00364353889,0.00364354
+start_model_path="${res_path}2.113.LA_phase.41/"
 
-id_array=(2)
+id_array=(3)
 for id in "${id_array[@]}"
 do
 	# best_lr_id=1
@@ -58,15 +58,15 @@ do
 	# fi
 	
 	best_lr_id=1
-	best_lamb=0.00364353889
-	best_lamb_i=113
+	best_lamb=0.00364354
+	best_lamb_i=1
 	
 	la_model_path="${res_path}${id}.${best_lamb_i}.LA_phase.1/"
 	
 	## Lamb Down
-	lamb_down=0.04398047
-	elasticity_up_mult=0.05
-	alpha_lamb_i=20
+	lamb_down=0.05497558
+	elasticity_up_mult=0.3
+	alpha_lamb_i=14
 	found_best=false
 	while [ $found_best=false ]
 	do
