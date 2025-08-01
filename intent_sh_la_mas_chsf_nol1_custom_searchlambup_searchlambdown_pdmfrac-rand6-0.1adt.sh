@@ -65,8 +65,8 @@ do
 	
 	## Lamb Down
 	lamb_down=0.05497558
-	elasticity_up_mult=0.3
-	alpha_lamb_i=14
+	elasticity_up_mult=0.1
+	alpha_lamb_i=18
 	found_best=false
 	while [ $found_best=false ]
 	do
