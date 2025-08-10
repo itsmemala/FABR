@@ -61,12 +61,12 @@ class Appr(ApprBase):
                     fisher_old={}
                     self.fisher_old={}
                     for n,_ in self.model.named_parameters():
-                        fisher_old[n]=self.fisher[n].clone().cpu() ## Changes to make space on GPU: #1
+                        fisher_old[n]=self.fisher[n].clone().cpu() ## Fisher at the end of task k-1 MCL phase
                         self.fisher_old[n]=self.fisher[n].detach().cpu()
-                    # with open(self.args.la_model_path+'fisher_for_loss.pkl', 'rb') as handle:
-                        # checkpoint_fisher_for_loss = CPU_Unpickler(handle).load()
-                    # for n,_ in self.model.named_parameters():
-                        # self.fisher_for_loss[n] = checkpoint_fisher_for_loss[n].cuda() # Need to re-calc this
+                    with open(self.args.la_model_path+'la_fisher.pkl', 'rb') as handle:  ## Fisher at the end of task k LA phase
+                        checkpoint_la_fisher = CPU_Unpickler(handle).load()
+                    for n,_ in self.model.named_parameters():
+                        self.fisher[n] = checkpoint_la_fisher[n].cuda()
                     self.fisher_for_loss=utils.modified_fisher(self.fisher,fisher_old
                     ,None,-1 #,train_f1_macro_save,best_index
                     ,None,None #,self.model,self.model_old
@@ -312,6 +312,8 @@ class Appr(ApprBase):
                     # ,grad_dir_lastart,grad_dir_laend,lastart_fisher
                     # ,save_path+str(args.note)+'_seed'+str(args.seed)+'model_'+str(t))
                 # else:
+                with open(args.my_save_path+'la_fisher.pkl', 'wb') as fp:
+                    pickle.dump(self.fisher, fp)                
                 self.fisher_for_loss=utils.modified_fisher(self.fisher,fisher_old
                 ,train_f1_macro_save,best_index
                 ,self.model,self.model_old

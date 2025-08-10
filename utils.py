@@ -403,14 +403,13 @@ def modified_fisher(fisher,fisher_old
             train_f1_diff=1
         elasticity_down = train_f1_diff if elasticity_down is None else elasticity_down
         elasticity_up = 1/(train_f1_diff) if elasticity_up is None else elasticity_up
-        print('Elasticity adaptation:',train_f1_diff,elasticity_down,elasticity_up)
+        # print('Elasticity adaptation:',train_f1_diff,elasticity_down,elasticity_up)
     elif adapt_type=='kt' or adapt_type=='kt_strict':
         elasticity_up = 1
     elif adapt_type=='ktcf':
         elasticity_down = elasticity_down
         elasticity_up = 1
           
-    print(frel_cut,elasticity_down_mult,elasticity_down_max_lamb)
     for n in fisher.keys():
         # print(n)
         # modified_fisher[n] = fisher_old[n] # This is for comparison without modifying fisher weights in the fo phase
@@ -422,7 +421,7 @@ def modified_fisher(fisher,fisher_old
         if 'output.adapter' in n or 'output.LayerNorm' in n or (modify_fisher_last==True and 'last' in n):
             # if 'last' in n:
                 # print('calculating for last layer...\n\n')
-            fisher_rel = fisher_old[n]/(fisher_old[n]+fisher[n]) # Relative importance
+            fisher_rel = fisher_old[n]/(fisher_old[n]+fisher[n]+0.0000000001) # Relative importance
             rel_fisher_counter[n] = fisher_rel
             
             if frel_cut_type=='pdm':
@@ -440,6 +439,8 @@ def modified_fisher(fisher,fisher_old
                 # print("\n\nLamb_up bounding calc for",n,":",frel_cut,elasticity_down_min,elasticity_down_max,elasticity_down,"\n\n")
                 assert elasticity_down <= elasticity_down_max
             if elasticity_down is not None: assert elasticity_down >= elasticity_down_min
+            
+            print(pdm_frac,frel_cut,n,elasticity_down_mult,elasticity_down_max_lamb,elasticity_up)
             
             modified_fisher[n] = fisher_old[n]
             
