@@ -17,7 +17,7 @@ lr_array=(0.00003 0.0003) #(0.00003 0.0003 0.003 0.03)
 decay=0.9
 acc_drop_threshold=${10}
 growth=0.8
-res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_Custom_ss_${pdm_frac}pdmfrac${no_frel_cut_max}_AvgPool/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_LAMAS_t"
+res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_Custom_ssFixed_${pdm_frac}pdmfrac${no_frel_cut_max}_AvgPool/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_LAMAS_t"
 
 id=0
 printf "\n\nRunning search for task 0\n\n"
