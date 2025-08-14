@@ -19,18 +19,17 @@ acc_drop_threshold=${10}
 growth=0.9
 res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_Custom_ssFixed_${pdm_frac}pdmfrac${no_frel_cut_max}/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_LAMAS_t"
 
-past_lr=0.00003,0.00003,0.0003
-past_lamb=0,4.49536009,2.94940576
-best_lamb=2.94940576
-start_model_path="${res_path}2.5.LA_phase.5/"
+past_lr=0.0003,0.00003
+past_lamb=0,0.04854989
+best_lamb=0.04854989
+start_model_path="${res_path}1.1.LA_phase.20/"
 
-# id_array=(1)
+# id_array=(2)
 # for id in "${id_array[@]}"
 # do
 	# printf "\n\nRunning search for task $id\n\n"
 	# lr_id=0
-	# t1_lr_array=(0.00003)
-	# for lr in "${t1_lr_array[@]}"
+	# for lr in "${lr_array[@]}"
 	# do
 		# ((lr_id++))
 		# printf "\n\nLR Iteration $lr\n\n"
@@ -50,10 +49,10 @@ start_model_path="${res_path}2.5.LA_phase.5/"
 		# start_lamb=$best_lamb
 	# fi
 	
-	# best_lr_id=1
+	# best_lr_id=2
 	
 	# # Lamb
-	# lamb=$start_lamb
+	# lamb=0.04854989
 	# lamb_i=0
 	# found_best=false
 	# while [ $found_best=false ]
@@ -77,13 +76,13 @@ start_model_path="${res_path}2.5.LA_phase.5/"
 	
 	# past_lamb="$past_lamb,$best_lamb"
 	
-	# # if [ "$id" -eq 1 ]; then
-		# # elasticity_up_max_lamb=`cat ${res_path}${id}_min_lamb_w_newtask_zero.txt`
-	# # fi
+	# if [ "$id" -eq 1 ]; then
+		# elasticity_up_max_lamb=`cat ${res_path}${id}_min_lamb_w_newtask_zero.txt`
+	# fi
 	
-	# # best_lr_id=1
-	# # best_lamb_i=1
-	# # best_lamb=4.49536009
+	# best_lr_id=2
+	# best_lamb=0.02322126
+	# best_lamb_i=8
 	
 	# la_model_path="${res_path}${id}.${best_lamb_i}.LA_phase.1/"
 	
@@ -114,7 +113,7 @@ start_model_path="${res_path}2.5.LA_phase.5/"
 	# start_model_path="${res_path}${id}.${best_lamb_i}.LA_phase.${best_alpha_lamb_i}/"
 # done
 
-id_array=(3 4 5)
+id_array=(2 3 4 5)
 for id in "${id_array[@]}"
 do
 	printf "\n\nRunning search for task $id\n\n"
@@ -138,7 +137,7 @@ do
 	if [ "$id" -gt 1 ]; then
 		start_lamb=$best_lamb
 	fi
-	
+
 	## Lamb
 	lamb=$start_lamb
 	lamb_i=0
