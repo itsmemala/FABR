@@ -252,7 +252,7 @@ class Appr(ApprBase):
             np.savetxt(save_path+args.experiment+'_'+args.approach+'_'+phase+'_valid_f1_macro_'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'.txt',valid_f1_macro_save,'%.4f',delimiter='\t')
 
             # Restore best
-            utils.set_model_(self.model,best_model)
+            if self.args.take_lastepoch_mcl==False: utils.set_model_(self.model,best_model)
             
             # if self.args.save_metadata=='all'and phase=='fo' and t==3:
                 # # Attributions
