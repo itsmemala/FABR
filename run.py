@@ -258,6 +258,7 @@ for t,ncla in taskcla:
     train_sampler = RandomSampler(train)
     train_dataloader = DataLoader(train, sampler=train_sampler, batch_size=args.train_batch_size, pin_memory=True)
 
+    args.eval_batch_size = args.train_batch_size
     valid_sampler = SequentialSampler(valid)
     valid_dataloader = DataLoader(valid, sampler=valid_sampler, batch_size=args.eval_batch_size, pin_memory=True)
 
