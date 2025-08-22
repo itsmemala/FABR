@@ -55,7 +55,7 @@ class Appr(ApprBase):
             train_phases = ['mcl']
         
         for phase in train_phases:
-            if len(train_phases)==2 and t==self.args.start_at_task: # Only need to do this when loading from checkpoint to continue training
+            if len(train_phases)==2 and t==self.args.start_at_task and self.args.la_model_path is not None: # Only need to do this when loading from checkpoint to continue training
                 if phase=='fo' and 'LA_phase.1/' not in self.args.my_save_path:
                     # Load results if LA training already done (from prev LA Hyp Search) and skip training
                     fisher_old={}
