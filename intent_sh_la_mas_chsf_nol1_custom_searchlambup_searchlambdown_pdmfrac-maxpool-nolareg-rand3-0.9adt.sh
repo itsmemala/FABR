@@ -105,9 +105,9 @@ do
 	la_model_path="${res_path}${id}.${best_lamb_i}.LA_phase.1/"
 	
 	## Lamb Down
-	lamb_down=0.2
+	lamb_down=0.01
 	elasticity_up_mult=1.0
-	alpha_lamb_i=2
+	alpha_lamb_i=11
 	found_best=false
 	while [ $found_best=false ]
 	do

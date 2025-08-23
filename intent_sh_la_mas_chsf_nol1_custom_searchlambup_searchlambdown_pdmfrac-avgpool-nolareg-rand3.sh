@@ -17,12 +17,13 @@ lr_array=(0.00003 0.0003) #(0.00003 0.0003 0.003 0.03)
 decay=0.9
 acc_drop_threshold=${10}
 growth=0.9
-res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_Custom_ssFixedLrP10_${pdm_frac}pdmfrac${no_frel_cut_max}_AvgPoolNoLAReg/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_LAMAS_t"
+res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_Custom_ssFixedLrP10_ChkLamb_${pdm_frac}pdmfrac${no_frel_cut_max}_AvgPoolNoLAReg/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_LAMAS_t"
 
 # id=0
 # printf "\n\nRunning search for task 0\n\n"
 # lr_id=0
-# for lr in "${lr_array[@]}"
+# t0_lr_array=(0.00003)
+# for lr in "${t0_lr_array[@]}"
 # do
 # 	((lr_id++))
 # 	printf "\n\nLR Iteration $lr\n\n"
@@ -35,17 +36,17 @@ res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_Custom_ssFi
 # past_lr=${lr_array[$best_lr_id-1]}  # -1 for array indexing
 # past_lamb=0
 
-past_lr=0.00003,0.00003,0.00003,0.0003,0.00003
-past_lamb=0,4.495360095,4.495360095,4.495360095,2.1501168
-best_lamb=2.1501168
-# start_model_path="${res_path}2.1.LA_phase.6/"
-start_model_path="${res_path}3.1.LA_phase.1/"
+past_lr=0.00003,0.00003
+past_lamb=0,4.99484455
+# best_lamb=
+start_model_path="${res_path}0_gold.1/"
 
-id_array=(4)
+id_array=(1)
 for id in "${id_array[@]}"
 do
 	# printf "\n\nRunning search for task $id\n\n"
 	# lr_id=0
+	# # t1_lr_array=(0.00003)
 	# for lr in "${lr_array[@]}"
 	# do
 	# 	((lr_id++))
@@ -81,11 +82,11 @@ do
 	# 	python3 FABR/calc_next_lamb.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --lamb_i $lamb_i --lamb $lamb --decay $decay --acc_drop_threshold $acc_drop_threshold --tid $id
 	# 	found_best=`cat ${res_path}${id}.${lamb_i}_foundbestlamb.txt`
 	# 	python3 FABR/plot_lamb_results.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --lamb_i $lamb_i --lamb $lamb --acc_drop_threshold $acc_drop_threshold --tid $id
-	# 	if [ $found_best = found ]; then
-	# 		best_lamb=$lamb
-	# 		best_lamb_i=$lamb_i
-	# 		break
-	# 	fi
+		# if [ $found_best = found ]; then
+			# best_lamb=$lamb
+			# best_lamb_i=$lamb_i
+			# break
+		# fi
 	# 	lamb=`cat ${res_path}${id}_next_lamb.txt`
 	# done
 	
@@ -96,15 +97,15 @@ do
 	# # fi
 
 	best_lr_id=1
-	best_lamb=2.1501168
-	best_lamb_i=8
+	best_lamb=4.99484455
+	best_lamb_i=1
 	
 	la_model_path="${res_path}${id}.${best_lamb_i}.LA_phase.1/"
 	
 	## Lamb Down
-	lamb_down=0.05
+	lamb_down=0.8
 	elasticity_up_mult=1.0
-	alpha_lamb_i=11
+	alpha_lamb_i=2
 	found_best=false
 	while [ $found_best=false ]
 	do
@@ -128,7 +129,7 @@ do
 	start_model_path="${res_path}${id}.${best_lamb_i}.LA_phase.${best_alpha_lamb_i}/"
 done
 
-id_array=(5)
+id_array=(2 3 4 5)
 for id in "${id_array[@]}"
 do
 	printf "\n\nRunning search for task $id\n\n"
@@ -224,5 +225,7 @@ done
 # bash intent_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac-avgpool-nolareg.sh random6 6 0 28.24295365 246.34804902 1.0 1.0 0.9 True 0.1
 
 ###############################################################
-# bash intent_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac-avgpool-nolareg.sh random3 3 0 4.49536009 77.30662811 1.0 1.0 0.8 True 0.1
-# bash intent_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac-avgpool-nolareg.sh random6 6 0 28.24295365 246.34804902 1.0 1.0 0.8 True 0.1
+# bash intent_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac-avgpool-nolareg.sh random3 3 0 4.99484455 77.30662811 1.0 1.0 0.8 True 0.1 #4.49536009
+
+###############################################################
+# bash intent_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac-avgpool-nolareg.sh random3 3 0 4.49536009 77.30662811 1.0 1.0 0.7 True 0.1

@@ -39,12 +39,13 @@ res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_Custom_ssFi
 # past_lr=${lr_array[$best_lr_id-1]}  # -1 for array indexing
 # past_lamb=0
 
-past_lr=0.00003,0.00003,0.00003
-past_lamb=0,4.495360095,4.495360095
+past_lr=0.00003,0.00003,0.00003,0.0003
+past_lamb=0,4.495360095,4.495360095,4.495360095
 best_lamb=4.49536009
-start_model_path="${res_path}1.1.LA_phase.1/"
+# start_model_path="${res_path}1.1.LA_phase.1/"
+start_model_path="${res_path}2.1.LA_phase.15/"
 
-id_array=(2)
+id_array=(3)
 for id in "${id_array[@]}"
 do
 	# printf "\n\nRunning search for task $id\n\n"
@@ -98,16 +99,16 @@ do
 	# 	# elasticity_up_max_lamb=`cat ${res_path}${id}_min_lamb_w_newtask_zero.txt`
 	# # fi
 	
-	best_lr_id=1
-	best_lamb=4.49536009
+	best_lr_id=2
+	best_lamb=4.495360095
 	best_lamb_i=1
 
 	la_model_path="${res_path}${id}.${best_lamb_i}.LA_phase.1/"
 	
 	## Lamb Down
-	lamb_down=0.1
+	lamb_down=0.5
 	elasticity_up_mult=1.0
-	alpha_lamb_i=9
+	alpha_lamb_i=1
 	found_best=false
 	while [ $found_best=false ]
 	do
@@ -131,7 +132,7 @@ do
 	start_model_path="${res_path}${id}.${best_lamb_i}.LA_phase.${best_alpha_lamb_i}/"
 done
 
-id_array=(3 4 5)
+id_array=(4 5)
 for id in "${id_array[@]}"
 do
 	printf "\n\nRunning search for task $id\n\n"
