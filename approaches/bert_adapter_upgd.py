@@ -276,6 +276,7 @@ class UPGD(torch.optim.Optimizer):
                 avg_utility.mul_(group["beta_utility"]).add_(
                     -p.grad.data * p.data, alpha=1 - group["beta_utility"]
                 )
+                # utility = (beta*utility) + (1-beta)(-grad*weight)
                 current_util_max = avg_utility.max()
                 if current_util_max > global_max_util:
                     global_max_util = current_util_max

@@ -69,6 +69,9 @@ elif args.experiment=='bert_news':
 elif args.experiment=='annomi':
     args.ntasks=6
     from dataloaders import bert_annomi as dataloader
+elif args.experiment=='sent_mix':
+    args.ntasks=5
+    from dataloaders import bert_sent_mix as dataloader
 elif args.experiment=='hwu64':
     args.ntasks=6
     from dataloaders import bert_hwu64 as dataloader

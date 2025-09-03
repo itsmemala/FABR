@@ -22,7 +22,7 @@ elasticity_down_max_lamb=${10}
 elasticity_down_mult=${11}
 orig_id=${12}
 lamb_down=${13}
-res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_ORIG_LambUp.${orig_id}${name_ext}/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_LAMAS_t"
+res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_ORIG_LambUpFixedLrP20_NoLAReg.${orig_id}${name_ext}/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_LAMAS_t"
 
 # id=0
 # printf "\n\nRunning search for task 0\n\n"
@@ -101,12 +101,14 @@ do
 	past_lr="$t0_best_lr,$t1_best_lr"
 	past_lamb="0,$custom_max_lamb"
 	
+	la_model_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_EKTOFixedLrP20_NoLAReg.1.1/random3seed0_0.3adt/IntentSH_LAMAS_t1..LA_phase/"
+	
 	## With LA phase
 	custom_lr=$past_lr
 	custom_lamb=$past_lamb
 	printf "\n\nLA Phase\n\n"
 	mkdir -p ${res_path}${id}.${best_lamb_i}.LA_phase/
-	python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario cil --use_rbs True --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --custom_lr $custom_lr --custom_lamb $custom_lamb --fisher_combine max --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.LA_phase/ --start_at_task $id --start_model_path $start_model_path --adapt_type orig --elasticity_down_max_lamb $elasticity_down_max_lamb --elasticity_down_mult $elasticity_down_mult --elasticity_up $lamb_down --frel_cut $frel_cut
+	python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario cil --use_rbs True --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 25 --custom_lr $custom_lr --custom_lamb $custom_lamb --fisher_combine max --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.LA_phase/ --start_at_task $id --start_model_path $start_model_path --adapt_type orig --elasticity_down_max_lamb $elasticity_down_max_lamb --elasticity_down_mult $elasticity_down_mult --elasticity_up $lamb_down --frel_cut $frel_cut --no_reg_in_LA True --la_model_path $la_model_path
 		
 	start_model_path="${res_path}${id}.${best_lamb_i}.LA_phase/"
 done

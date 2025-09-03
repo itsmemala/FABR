@@ -14,7 +14,7 @@ lr_array=(0.00003 0.0003 0.003 0.03)
 decay=0.9
 acc_drop_threshold=0.3
 growth=0.1
-res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_ACFO.1${name_ext}/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_LAMAS_t"
+res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_ACFOFixedLrP20_NoLAReg.1${name_ext}/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_LAMAS_t"
 base_res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1/${note}seed${seed}_${acc_drop_threshold}adt/IntentSH_LAMAS_t"
 
 # id=0
@@ -94,12 +94,14 @@ do
 	past_lr=0.0003,0.00003
 	past_lamb="0,$custom_max_lamb"
 	
+	la_model_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_EKTOFixedLrP20_NoLAReg.1.1/random3seed0_0.3adt/IntentSH_LAMAS_t1..LA_phase/"
+	
 	## With LA phase
 	custom_lr=$past_lr
 	custom_lamb=$past_lamb
 	printf "\n\nLA Phase\n\n"
 	mkdir -p ${res_path}${id}.${best_lamb_i}.LA_phase/
-	CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario cil --use_rbs True --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 5 --custom_lr $custom_lr --custom_lamb $custom_lamb --fisher_combine max --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.LA_phase/ --start_at_task $id --start_model_path $start_model_path --adapt_type orig_avoidcfonly --elasticity_down 2 --frel_cut $frel_cut
+	CUDA_VISIBLE_DEVICES=0 python  FABR//run.py --bert_model 'bert-base-uncased' --experiment hwu64 --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario cil --use_rbs True --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 25 --custom_lr $custom_lr --custom_lamb $custom_lamb --fisher_combine max --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.LA_phase/ --start_at_task $id --start_model_path $start_model_path --adapt_type orig_avoidcfonly --elasticity_down 2 --frel_cut $frel_cut --no_reg_in_LA True --la_model_path $la_model_path
 		
 	start_model_path="${res_path}${id}.${best_lamb_i}.LA_phase/"
 done

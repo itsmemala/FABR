@@ -1,0 +1,8 @@
+IMDB Movies:
+https://www.geeksforgeeks.org/nlp/dataset-for-sentiment-analysis/
+
+Twitter:
+https://www.kaggle.com/datasets/kazanova/sentiment140?resource=download
+
+Finance Headlines:
+https://www.kaggle.com/datasets/ankurzing/sentiment-analysis-for-financial-news

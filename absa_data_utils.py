@@ -246,6 +246,45 @@ class MIProcessor(DataProcessor):
                 InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples     
 
+class SentMixProcessor(DataProcessor):
+    """Processor for the SemEval Aspect Sentiment Classification."""
+
+    def get_train_examples(self, data_dir, fn="train.json"):
+        """See base class."""
+        examples = self._create_examples(
+            self._read_json(os.path.join(data_dir, fn)), "train")
+        return examples
+        # return examples[100:200] + examples[-200:][:100] # Use this for taking different subsets of 100 samples per class
+        # return examples[:100] + examples[-100:]
+
+    def get_dev_examples(self, data_dir, fn="dev.json"):
+        """See base class."""
+        return self._create_examples(
+            self._read_json(os.path.join(data_dir, fn)), "dev")
+    
+    def get_test_examples(self, data_dir, fn="test.json"):
+        """See base class."""
+        return self._create_examples(
+            self._read_json(os.path.join(data_dir, fn)), "test")
+
+    def get_labels(self):
+        """See base class."""
+        return ["positive", "negative"]
+    
+    def _create_examples(self, lines, set_type):
+        """Creates examples for the training and dev sets."""
+        examples = []
+        for (i, ids) in enumerate(lines):
+            guid = "%s-%s" % (set_type, ids )
+            # text_a = lines[ids]['term']
+            # text_b = lines[ids]['sentence']
+            text_a=lines[ids]['sentence']
+            text_b=None
+            label = lines[ids]['polarity']
+            examples.append(
+                InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+        return examples
+
 
 class IntentProcessor(DataProcessor):
     """Processor for the HWU64 Intent Classification."""

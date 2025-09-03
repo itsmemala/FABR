@@ -38,8 +38,9 @@ res_path="/home/local/data/ms/fabr_data/IntentSH/IntentSH_LAMAS_NoL1_Custom_ssFi
 
 past_lr=0.00003,0.00003
 past_lamb=0,4.99484455
-# best_lamb=
+best_lamb=4.99484455
 start_model_path="${res_path}0_gold.1/"
+# start_model_path="${res_path}1.1.LA_phase.3/"
 
 id_array=(1)
 for id in "${id_array[@]}"
@@ -82,11 +83,11 @@ do
 	# 	python3 FABR/calc_next_lamb.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --lamb_i $lamb_i --lamb $lamb --decay $decay --acc_drop_threshold $acc_drop_threshold --tid $id
 	# 	found_best=`cat ${res_path}${id}.${lamb_i}_foundbestlamb.txt`
 	# 	python3 FABR/plot_lamb_results.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --lamb_i $lamb_i --lamb $lamb --acc_drop_threshold $acc_drop_threshold --tid $id
-		# if [ $found_best = found ]; then
-			# best_lamb=$lamb
-			# best_lamb_i=$lamb_i
-			# break
-		# fi
+	# 	if [ $found_best = found ]; then
+	# 		best_lamb=$lamb
+	# 		best_lamb_i=$lamb_i
+	# 		break
+	# 	fi
 	# 	lamb=`cat ${res_path}${id}_next_lamb.txt`
 	# done
 	
@@ -103,9 +104,9 @@ do
 	la_model_path="${res_path}${id}.${best_lamb_i}.LA_phase.1/"
 	
 	## Lamb Down
-	lamb_down=0.8
+	lamb_down=0.7
 	elasticity_up_mult=1.0
-	alpha_lamb_i=2
+	alpha_lamb_i=3
 	found_best=false
 	while [ $found_best=false ]
 	do

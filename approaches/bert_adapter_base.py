@@ -334,7 +334,7 @@ class Appr(object):
             if (phase=='fo' and self.args.no_reg_in_LA==True) or phase is None:
                 pass
             else:
-                fisher = self.fisher if self.fisher_for_loss is None else self.fisher_for_loss # baseline:self.fisher, LA:self.fisher_for_loss
+                fisher = self.fisher if (self.fisher_for_loss is None or len(self.fisher_for_loss.keys())==0) else self.fisher_for_loss # baseline:self.fisher, LA:self.fisher_for_loss
                 if self.args.use_ind_lamb_max==True:
                     for (name,param),(_,param_old) in zip(self.model.named_parameters(),self.model_old.named_parameters()):
                         loss_reg+=torch.sum(self.lamb[name]*fisher[name]*(param_old-param).pow(2))/2
