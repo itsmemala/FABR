@@ -9,7 +9,8 @@ def get_f1_at_each_step(path):
             inner_list = [float(elt.strip()) for elt in line.split('\t')]
             list_of_lists.append(inner_list)
     f1_matrix = np.array(list_of_lists)
-    return [np.mean(f1_matrix[i,:i+1]) for i in range(6)]
+    # return [np.mean(f1_matrix[i,:i+1]) for i in range(6)]
+    return [np.mean(f1_matrix[i,:i+1]) for i in range(len(f1_matrix))]
 
 def get_forg_at_each_step(path):
     list_of_lists = []
@@ -19,7 +20,8 @@ def get_forg_at_each_step(path):
             list_of_lists.append(inner_list)
     f1_matrix = np.array(list_of_lists)
     bwt = [0]
-    for i in [1,2,3,4,5]:
+    # for i in [1,2,3,4,5]:
+    for i in range(1,len(f1_matrix)):
         temp_bwt=[]
         for j in range(i):
             temp_bwt.append(f1_matrix[i,j]-f1_matrix[i-1,j])
@@ -33,7 +35,8 @@ def get_new_at_each_step(path):
             inner_list = [float(elt.strip()) for elt in line.split('\t')]
             list_of_lists.append(inner_list)
     f1_matrix = np.array(list_of_lists)
-    return [f1_matrix[i,i] for i in range(6)]
+    # return [f1_matrix[i,i] for i in range(6)]
+    return [f1_matrix[i,i] for i in range(len(f1_matrix))]
 
 def get_overall_f1(path):
     list_of_lists = []
@@ -52,7 +55,8 @@ def get_overall_f1_all(path,t=6):
             list_of_lists.append(inner_list)
     f1_matrix = np.array(list_of_lists)
     if t==6:
-      return np.mean(f1_matrix[5,:])
+    #   return np.mean(f1_matrix[5,:])
+        return np.mean(f1_matrix[len(f1_matrix)-1,:])
     else: # t is a list
       return np.mean([f1_matrix[5,i] for i in t])
 
@@ -76,8 +80,10 @@ def get_forgetting_all(path,t=6):
             list_of_lists.append(inner_list)
     f1_matrix = np.array(list_of_lists)
     temp_forgetting = []
-    for i in range(5):
-        temp_forgetting.append(np.max(f1_matrix[i:-1,i])-f1_matrix[5,i])
+    # for i in range(5):
+        # temp_forgetting.append(np.max(f1_matrix[i:-1,i])-f1_matrix[5,i])
+    for i in range(len(f1_matrix)-1):
+        temp_forgetting.append(np.max(f1_matrix[i:-1,i])-f1_matrix[len(f1_matrix)-1,i])
     if t==6:
         return np.mean(temp_forgetting)
     else: # t is a list
@@ -99,7 +105,8 @@ def get_newtask_all(path,t=6):
             inner_list = [float(elt.strip()) for elt in line.split('\t')]
             list_of_lists.append(inner_list)
     f1_matrix = np.array(list_of_lists)
-    new_task = [f1_matrix[i,i] for i in range(6)]
+    # new_task = [f1_matrix[i,i] for i in range(6)]
+    new_task = [f1_matrix[i,i] for i in range(len(f1_matrix))]
     if t==6:
         return np.mean(new_task)
     else:

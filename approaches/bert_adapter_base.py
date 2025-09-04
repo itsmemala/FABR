@@ -204,6 +204,8 @@ class Appr(object):
                     self.criterion=self.criterion_ewc_freeze_l2
                 else:
                     self.criterion=self.criterion_ewc_freeze
+        elif args.baseline=='mtl' or args.baseline=='seq':
+            self.criterion=self.criterion_ce_only
         else:
             self.criterion=self.criterion_all
         print('BERT ADAPTER BASE')
@@ -426,6 +428,13 @@ class Appr(object):
         
         else:
             return loss_ce+loss_reg
+    
+    def criterion_ce_only(self,t,output,targets,class_counts=None,phase=None, outputs_cur1=None, targets_old=None, outputs_cur2=None, targets_aux=None):
+        if 'cil' in self.args.scenario and self.args.use_rbs:
+            loss_ce = self.ce(t,output,targets,class_counts)
+        else:
+            loss_ce = self.ce(output,targets)
+        return loss_ce
     
     def criterion_all(self,t,output,targets,class_counts=None,phase=None, outputs_cur1=None, targets_old=None, outputs_cur2=None, targets_aux=None):
         # Regularization for all previous tasks

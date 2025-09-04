@@ -1,0 +1,3 @@
+Beauty		Clothing_Shoes_and_Jewelry		Movie		Twitter	Finance
+Finance		Clothing_Shoes_and_Jewelry	Beauty	Twitter		Movie
+Movie	Twitter	Clothing_Shoes_and_Jewelry		Finance		Beauty
