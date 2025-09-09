@@ -47,6 +47,8 @@ class Appr(ApprBase):
             train_phases = ['mcl']
         elif t==0 and self.args.regularize_t0==True:
             train_phases = ['fo','mcl']
+        # if self.args.only_mcl==True:
+            # train_phases = ['mcl']
         
         for phase in train_phases:
             if phase=='fo':
