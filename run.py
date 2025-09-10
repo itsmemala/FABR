@@ -57,6 +57,20 @@ else: print('[CUDA unavailable]'); sys.exit()
 if 'bert_adapter' in args.backbone:
     args.apply_bert_output = True
     args.apply_bert_attention_output = True
+
+# Args -- CTR
+# Source: https://github.com/ZixuanKe/PyContinual/blob/54dd15de566b110c9bc8d8316205de63a4805190/src/load_base_args.py
+# if args.baseline == 'ctr':
+if args.approach=='ctr':
+    args.apply_bert_output = True
+    args.apply_bert_attention_output = True
+    args.build_adapter_capsule_mask = True
+    args.apply_one_layer_shared = True
+    args.use_imp = True
+    args.transfer_route = True
+    args.share_conv = True
+    args.larger_as_share = True
+    # args.adapter_size = True
 ########################################################################################################################
 
 # Args -- Experiment
@@ -82,6 +96,8 @@ if args.approach=='ctr':
     from approaches import bert_adapter_capsule_mask as approach
 elif args.approach=='taskdrop':
     from approaches import taskdrop as approach
+elif args.approach=='bert_gru_kan_ncl':
+    from approaches import bert_rnn_kan_ncl as approach
 if args.backbone == 'bert_adapter':
     if args.baseline == 'ewc':
         from approaches import bert_adapter_ewc as approach
@@ -117,6 +133,10 @@ if args.backbone == 'bert_adapter':
 # # Args -- Network
 if 'ctr' in args.approach:
     from networks import bert_adapter_capsule_mask as network
+elif 'bert_gru_kan' in args.approach:
+    from networks import bert_gru_kan as network
+elif 'taskdrop' in args.approach:
+    from networks import taskdrop as network
 elif args.approach=='mtl_bert_fine_tune' or args.approach=='bert_fine_tune':
     from networks import bert as network
 #
@@ -325,7 +345,12 @@ for t,ncla in taskcla:
         appr.multi_model = appr.la_model
         appr.training_multi = False
     else:
-        appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path,train,valid)
+        if 'ctr' in args.approach:
+            appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path)
+        elif 'kan' in args.approach or 'taskdrop' in args.approach:
+            appr.train(task,train_dataloader,valid_dataloader,args,my_save_path)
+        else:
+            appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path,train,valid)
     
     
 
@@ -364,7 +389,10 @@ for t,ncla in taskcla:
         test_sampler = SequentialSampler(test)
         test_dataloader = DataLoader(test, sampler=test_sampler, batch_size=args.eval_batch_size, pin_memory=True)
 
-        test_loss,test_acc,test_f1=appr.eval(eval_head,test_dataloader)
+        if 'kan' in args.approach:
+            test_loss,test_acc,test_f1=appr.eval(eval_head,test_dataloader,'mcl')
+        else:
+            test_loss,test_acc,test_f1=appr.eval(eval_head,test_dataloader)
         print('>>> Test on task {:2d} - {:15s}: loss={:.3f}, acc={:5.1f}% <<<'.format(u,data[u]['name'],test_loss,100*test_acc))
         acc[t,u]=test_acc
         lss[t,u]=test_loss
