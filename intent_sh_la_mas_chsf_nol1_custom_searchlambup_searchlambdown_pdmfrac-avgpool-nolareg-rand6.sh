@@ -228,8 +228,8 @@ do
 	# done
 
 	## Lamb
-	lamb=125.0
-	lamb_i=7
+	lamb=175.0
+	lamb_i=8
 	found_best=false
 	while [ $found_best=false ]
 	do
