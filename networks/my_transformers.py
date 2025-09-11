@@ -371,8 +371,11 @@ class MyBertOutput(BertOutput):
             elif self.args.build_adapter_capsule:
                 hidden_states = self.adapter_capsule(hidden_states,t,s)
 
-
+        # print('before',hidden_states)
+        # sys.exit()
         hidden_states = self.LayerNorm(hidden_states + input_tensor)
+        # print('after',hidden_states)
+        # sys.exit()
 
         if self.args.apply_bert_output:
             if self.args.build_adapter_capsule_mask: return {'outputs':hidden_states}
@@ -481,6 +484,9 @@ class MyBertLayer(BertLayer):
                     t=t,s=s,
                 )
                 layer_output=output_dict['outputs']
+                # print(self.chunk_size_feed_forward)
+                # print(layer_output)
+                # sys.exit()
 
             elif self.args.build_adapter_owm:
                 output_dict = apply_chunking_to_forward(
@@ -527,6 +533,8 @@ class MyBertLayer(BertLayer):
                 output_dict = self.output(intermediate_output, attention_output,
                                            t=t,s=s,)
                 layer_output=output_dict['outputs']
+                # print(layer_output)
+                # sys.exit()
 
             elif self.args.build_adapter_capsule:
                 layer_output = self.output(intermediate_output, attention_output,
@@ -573,7 +581,7 @@ class MyBertEncoder(BertEncoder):
                     return module(*inputs, output_attentions)
 
                 return custom_forward
-
+            # print('Here1')
             layer_outputs = torch.utils.checkpoint.checkpoint(
                 create_custom_forward(layer_module),
                 hidden_states,
@@ -583,7 +591,7 @@ class MyBertEncoder(BertEncoder):
                 encoder_attention_mask,
             )
         else:
-
+            
             if self.args.build_adapter_owm:
                 output_dict = layer_module(
                     hidden_states,
@@ -593,6 +601,7 @@ class MyBertEncoder(BertEncoder):
                     encoder_attention_mask,
                     output_attentions
                 )
+                # print('Here2')
                 layer_outputs = output_dict['outputs']
                 x_list.append(output_dict['x_list'])
                 h_list.append(output_dict['h_list'])
@@ -607,9 +616,11 @@ class MyBertEncoder(BertEncoder):
                     output_attentions,
                     t=t,s=s
                 )
+                # print('Here3')
                 layer_outputs = output_dict['outputs']
 
             elif self.args.build_adapter_capsule:
+                # print('Here4')
                 layer_outputs = layer_module(
                     hidden_states,
                     attention_mask,
@@ -621,6 +632,7 @@ class MyBertEncoder(BertEncoder):
                 )
 
             else:
+                # print('Here5')
                 layer_outputs = layer_module(
                     hidden_states,
                     attention_mask,
@@ -671,6 +683,8 @@ class MyBertEncoder(BertEncoder):
                           t=t,s=s,x_list=x_list,h_list=h_list
                         )
             hidden_states = layer_outputs[0]
+            # print(i,hidden_states)
+            # sys.exit()
 
             if output_attentions:
                 all_self_attentions = all_self_attentions + (layer_outputs[1],)
@@ -802,6 +816,8 @@ class MyBertModel(BertModel):
                                 encoder_hidden_states,encoder_extended_attention_mask,output_attentions,
                                 output_hidden_states,return_dict,t=t,s=s,x_list=x_list,h_list=h_list)
 
+        # print(encoder_outputs[0])
+        # sys.exit()
         sequence_output = encoder_outputs[0]
         pooled_output = self.pooler(sequence_output) if self.pooler is not None else None
 
@@ -843,7 +859,7 @@ class MyBertModel(BertModel):
                 output_hidden_states=output_hidden_states,
                 return_dict=return_dict,x_list=x_list,h_list=h_list
             )
-
+            # print('Here1')
             encoder_outputs=output_dict['outputs']
             x_list=output_dict['x_list']
             h_list=output_dict['h_list']
@@ -859,10 +875,11 @@ class MyBertModel(BertModel):
                 output_hidden_states=output_hidden_states,
                 return_dict=return_dict, t=t,s=s
             )
-
+            # print('Here2')
             encoder_outputs=output_dict['outputs']
 
         elif self.args.build_adapter_capsule:
+            # print('Here3')
             encoder_outputs = self.encoder(
                 embedding_output,
                 attention_mask=extended_attention_mask,
@@ -874,6 +891,7 @@ class MyBertModel(BertModel):
                 return_dict=return_dict, t=t,s=s,
             )
         else:
+            # print('Here4')
             encoder_outputs = self.encoder(
                 embedding_output,
                 attention_mask=extended_attention_mask,

@@ -104,6 +104,8 @@ class BertAdapterCapsuleMaskImp(BertAdapterMask):
 
 
         h = x + capsule_output #skip-connection
+        # print(h,x,capsule_output)
+        # sys.exit()
 
         # task specifc
         gfc1,gfc2=self.mask(t=t,s=s)
@@ -141,11 +143,14 @@ class CapsNetImp(nn.Module):
 
     def forward(self, t, x,s):
         semantic_output = self.semantic_capsules(t,x,s,'semantic')
+        # print('before',semantic_output)
         if self.config.transfer_route:
             transfer_output = self.transfer_capsules(t,semantic_output,s,'transfer_route')
         else:
             transfer_output = self.transfer_capsules(t,semantic_output,s,'transfer')
 
+        # print('after',transfer_output)
+        # sys.exit()
         tsv_output = self.tsv_capsules(t,transfer_output,s,'tsv')
         return tsv_output
 
@@ -276,6 +281,7 @@ class CapsuleLayerImp(nn.Module): #it has its own number of capsule for output
             return outputs
 
         elif layer_type=='transfer_route':
+                # print('during1',x)
                 batch_size = x.size(0)
                 x = x.contiguous().view(batch_size*self.config.max_seq_length,-1,self.config.semantic_cap_size)
 
@@ -297,14 +303,17 @@ class CapsuleLayerImp(nn.Module): #it has its own number of capsule for output
 
                         feature = outputs_list[pre_t]
                         feature= feature.contiguous().view(batch_size,self.config.max_seq_length,self.config.num_semantic_cap*self.config.semantic_cap_size)
+                        # if pre_t==1: print(pre_t,feature,cur_v)
                         # z = [F.tanh(conv(feature.transpose(1, 2))) for conv in self.convs1]  # [(N,Co,L), ...]*len(Ks)
                         y = [F.relu(conv(feature.transpose(1, 2)) + self.fc_cur(cur_v).unsqueeze(2)) for conv in self.convs2] #mix information
+                        # if pre_t==1: print(pre_t,[conv(feature.transpose(1, 2)) for conv in self.convs2])
                         # z = [i*j for i, j in zip(z, y)]
                         # z = [F.max_pool1d(i, i.size(2)).squeeze(2) for i in z]  # [(N,Co), ...]*len(Ks)
                         z = [F.max_pool1d(i, i.size(2)).squeeze(2) for i in y]  # [(N,Co), ...]*len(Ks)
 
                         z = torch.cat(z, 1)
                         z= z.view(batch_size,self.Co*self.len_ks,1)
+                        # print(pre_t,z)
                         sim_attn.append(self.fc_sim(z.squeeze(-1)).unsqueeze(-1))
                         decision_learner = self.convs4(z).squeeze(-1)
 
@@ -319,6 +328,7 @@ class CapsuleLayerImp(nn.Module): #it has its own number of capsule for output
                 # decision_maker = torch.ones_like(decision_maker)
                 sim_attn = torch.cat(sim_attn, 2) #TODO: Normalized the similarity
 
+                # print('during2',self.tsv[t],sim_attn,self.config.ntasks)
                 vote_outputs = (self.tsv[t].data.view(1,1,-1,1,1) *
                     sim_attn.repeat(self.config.max_seq_length,1,1)
                                 .view(self.config.num_semantic_cap,-1,self.config.ntasks,1,self.config.semantic_cap_size) *
@@ -326,7 +336,7 @@ class CapsuleLayerImp(nn.Module): #it has its own number of capsule for output
                                 .view(1,-1,self.config.ntasks,1,1) *
                     priors).sum(dim=2, keepdim=True) #route
 
-
+                # print('during3',vote_outputs)
                 h_output = vote_outputs.view(batch_size,self.config.max_seq_length,-1)
                 # print('h_output: ',h_output.size())
                 if self.config.larger_as_list:
@@ -337,7 +347,9 @@ class CapsuleLayerImp(nn.Module): #it has its own number of capsule for output
                     h_output= self.larger(h_output)
                     glarger=self.mask(t=t,s=s)
                     h_output=h_output*glarger.expand_as(h_output)
-
+                
+                # print('after',h_output)
+                # sys.exit()
                 return h_output
 
 

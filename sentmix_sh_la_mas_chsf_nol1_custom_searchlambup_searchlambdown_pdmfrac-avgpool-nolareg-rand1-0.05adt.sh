@@ -419,35 +419,235 @@ do
 
 	la_model_path="${res_path}${id}.${best_lamb_i}.LA_phase.1/"
 	
-	## Lamb Down
-	lamb_down=1.0
-	elasticity_up_mult=1.0
-	alpha_lamb_i=0
-	found_best=false
-	while [ $found_best=false ]
-	do
-		((alpha_lamb_i++))
-		custom_lr=$past_lr
-		custom_lamb=$past_lamb
-		printf "\n\nLA Phase\n\n"
-		mkdir -p ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/
-		python  FABR//run.py --bert_model 'bert-base-uncased' --experiment sent_mix --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 20 --custom_lr $custom_lr --custom_lamb $custom_lamb --fisher_combine avg --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/ --start_at_task $id --start_model_path $start_model_path --elasticity_down_max_lamb $elasticity_up_max_lamb --elasticity_down_mult $elasticity_up_mult --elasticity_up $lamb_down --frel_cut_type pdm --pdm_frac $pdm_frac --no_frel_cut_max $no_frel_cut_max --la_model_path $la_model_path --no_reg_in_LA True
-		python3 FABR/calc_next_lamb_down_lamb_up.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lr_id $best_lr_id --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --elasticity_up_mult $elasticity_up_mult --growth $growth --tid $id
-		found_best=`cat ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}_foundbestlambdown.txt`
-		python3 FABR/plot_lamb_down_results.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --tid $id
-		# if [ $found_best = found ]; then
-		# 	best_alpha_lamb_i=$alpha_lamb_i
-		# 	break
-		# fi
-		# lamb_down=`cat ${res_path}${id}_next_lamb_down.txt`
-		# elasticity_up_mult=`cat ${res_path}${id}_next_lamb_up.txt`
-		break
-	done
+	# ## Lamb Down
+	# lamb_down=1.0
+	# elasticity_up_mult=1.0
+	# alpha_lamb_i=0
+	# found_best=false
+	# while [ $found_best=false ]
+	# do
+	# 	((alpha_lamb_i++))
+	# 	custom_lr=$past_lr
+	# 	custom_lamb=$past_lamb
+	# 	printf "\n\nLA Phase\n\n"
+	# 	mkdir -p ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/
+	# 	python  FABR//run.py --bert_model 'bert-base-uncased' --experiment sent_mix --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 20 --custom_lr $custom_lr --custom_lamb $custom_lamb --fisher_combine avg --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/ --start_at_task $id --start_model_path $start_model_path --elasticity_down_max_lamb $elasticity_up_max_lamb --elasticity_down_mult $elasticity_up_mult --elasticity_up $lamb_down --frel_cut_type pdm --pdm_frac $pdm_frac --no_frel_cut_max $no_frel_cut_max --la_model_path $la_model_path --no_reg_in_LA True
+	# 	python3 FABR/calc_next_lamb_down_lamb_up.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lr_id $best_lr_id --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --elasticity_up_mult $elasticity_up_mult --growth $growth --tid $id
+	# 	found_best=`cat ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}_foundbestlambdown.txt`
+	# 	python3 FABR/plot_lamb_down_results.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --tid $id
+	# 	# if [ $found_best = found ]; then
+	# 	# 	best_alpha_lamb_i=$alpha_lamb_i
+	# 	# 	break
+	# 	# fi
+	# 	# lamb_down=`cat ${res_path}${id}_next_lamb_down.txt`
+	# 	# elasticity_up_mult=`cat ${res_path}${id}_next_lamb_up.txt`
+	# 	break
+	# done
+
+	# ## Lamb Down
+	# lamb_down=0.5
+	# elasticity_up_mult=1.0
+	# alpha_lamb_i=1
+	# found_best=false
+	# while [ $found_best=false ]
+	# do
+	# 	((alpha_lamb_i++))
+	# 	custom_lr=$past_lr
+	# 	custom_lamb=$past_lamb
+	# 	printf "\n\nLA Phase\n\n"
+	# 	mkdir -p ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/
+	# 	python  FABR//run.py --bert_model 'bert-base-uncased' --experiment sent_mix --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 20 --custom_lr $custom_lr --custom_lamb $custom_lamb --fisher_combine avg --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/ --start_at_task $id --start_model_path $start_model_path --elasticity_down_max_lamb $elasticity_up_max_lamb --elasticity_down_mult $elasticity_up_mult --elasticity_up $lamb_down --frel_cut_type pdm --pdm_frac $pdm_frac --no_frel_cut_max $no_frel_cut_max --la_model_path $la_model_path --no_reg_in_LA True
+	# 	python3 FABR/calc_next_lamb_down_lamb_up.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lr_id $best_lr_id --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --elasticity_up_mult $elasticity_up_mult --growth $growth --tid $id
+	# 	found_best=`cat ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}_foundbestlambdown.txt`
+	# 	python3 FABR/plot_lamb_down_results.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --tid $id
+	# 	# if [ $found_best = found ]; then
+	# 	# 	best_alpha_lamb_i=$alpha_lamb_i
+	# 	# 	break
+	# 	# fi
+	# 	# lamb_down=`cat ${res_path}${id}_next_lamb_down.txt`
+	# 	# elasticity_up_mult=`cat ${res_path}${id}_next_lamb_up.txt`
+	# 	break
+	# done
+
+	# ## Lamb Down
+	# lamb_down=0.1
+	# elasticity_up_mult=1.0
+	# alpha_lamb_i=2
+	# found_best=false
+	# while [ $found_best=false ]
+	# do
+	# 	((alpha_lamb_i++))
+	# 	custom_lr=$past_lr
+	# 	custom_lamb=$past_lamb
+	# 	printf "\n\nLA Phase\n\n"
+	# 	mkdir -p ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/
+	# 	python  FABR//run.py --bert_model 'bert-base-uncased' --experiment sent_mix --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 20 --custom_lr $custom_lr --custom_lamb $custom_lamb --fisher_combine avg --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/ --start_at_task $id --start_model_path $start_model_path --elasticity_down_max_lamb $elasticity_up_max_lamb --elasticity_down_mult $elasticity_up_mult --elasticity_up $lamb_down --frel_cut_type pdm --pdm_frac $pdm_frac --no_frel_cut_max $no_frel_cut_max --la_model_path $la_model_path --no_reg_in_LA True
+	# 	python3 FABR/calc_next_lamb_down_lamb_up.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lr_id $best_lr_id --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --elasticity_up_mult $elasticity_up_mult --growth $growth --tid $id
+	# 	found_best=`cat ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}_foundbestlambdown.txt`
+	# 	python3 FABR/plot_lamb_down_results.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --tid $id
+	# 	# if [ $found_best = found ]; then
+	# 	# 	best_alpha_lamb_i=$alpha_lamb_i
+	# 	# 	break
+	# 	# fi
+	# 	# lamb_down=`cat ${res_path}${id}_next_lamb_down.txt`
+	# 	# elasticity_up_mult=`cat ${res_path}${id}_next_lamb_up.txt`
+	# 	break
+	# done
+
+	# ## Lamb Down
+	# lamb_down=0.5
+	# elasticity_up_mult=0.5
+	# alpha_lamb_i=3
+	# found_best=false
+	# while [ $found_best=false ]
+	# do
+	# 	((alpha_lamb_i++))
+	# 	custom_lr=$past_lr
+	# 	custom_lamb=$past_lamb
+	# 	printf "\n\nLA Phase\n\n"
+	# 	mkdir -p ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/
+	# 	python  FABR//run.py --bert_model 'bert-base-uncased' --experiment sent_mix --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 20 --custom_lr $custom_lr --custom_lamb $custom_lamb --fisher_combine avg --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/ --start_at_task $id --start_model_path $start_model_path --elasticity_down_max_lamb $elasticity_up_max_lamb --elasticity_down_mult $elasticity_up_mult --elasticity_up $lamb_down --frel_cut_type pdm --pdm_frac $pdm_frac --no_frel_cut_max $no_frel_cut_max --la_model_path $la_model_path --no_reg_in_LA True
+	# 	python3 FABR/calc_next_lamb_down_lamb_up.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lr_id $best_lr_id --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --elasticity_up_mult $elasticity_up_mult --growth $growth --tid $id
+	# 	found_best=`cat ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}_foundbestlambdown.txt`
+	# 	python3 FABR/plot_lamb_down_results.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --tid $id
+	# 	# if [ $found_best = found ]; then
+	# 	# 	best_alpha_lamb_i=$alpha_lamb_i
+	# 	# 	break
+	# 	# fi
+	# 	# lamb_down=`cat ${res_path}${id}_next_lamb_down.txt`
+	# 	# elasticity_up_mult=`cat ${res_path}${id}_next_lamb_up.txt`
+	# 	break
+	# done
+
+	# ## Lamb Down
+	# lamb_down=0.5
+	# elasticity_up_mult=0.1
+	# alpha_lamb_i=4
+	# found_best=false
+	# while [ $found_best=false ]
+	# do
+	# 	((alpha_lamb_i++))
+	# 	custom_lr=$past_lr
+	# 	custom_lamb=$past_lamb
+	# 	printf "\n\nLA Phase\n\n"
+	# 	mkdir -p ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/
+	# 	python  FABR//run.py --bert_model 'bert-base-uncased' --experiment sent_mix --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 20 --custom_lr $custom_lr --custom_lamb $custom_lamb --fisher_combine avg --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/ --start_at_task $id --start_model_path $start_model_path --elasticity_down_max_lamb $elasticity_up_max_lamb --elasticity_down_mult $elasticity_up_mult --elasticity_up $lamb_down --frel_cut_type pdm --pdm_frac $pdm_frac --no_frel_cut_max $no_frel_cut_max --la_model_path $la_model_path --no_reg_in_LA True
+	# 	python3 FABR/calc_next_lamb_down_lamb_up.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lr_id $best_lr_id --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --elasticity_up_mult $elasticity_up_mult --growth $growth --tid $id
+	# 	found_best=`cat ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}_foundbestlambdown.txt`
+	# 	python3 FABR/plot_lamb_down_results.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --tid $id
+	# 	# if [ $found_best = found ]; then
+	# 	# 	best_alpha_lamb_i=$alpha_lamb_i
+	# 	# 	break
+	# 	# fi
+	# 	# lamb_down=`cat ${res_path}${id}_next_lamb_down.txt`
+	# 	# elasticity_up_mult=`cat ${res_path}${id}_next_lamb_up.txt`
+	# 	break
+	# done
+
+	# ## Lamb Down
+	# lamb_down=0.5
+	# elasticity_up_mult=0.05
+	# alpha_lamb_i=5
+	# found_best=false
+	# while [ $found_best=false ]
+	# do
+	# 	((alpha_lamb_i++))
+	# 	custom_lr=$past_lr
+	# 	custom_lamb=$past_lamb
+	# 	printf "\n\nLA Phase\n\n"
+	# 	mkdir -p ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/
+	# 	python  FABR//run.py --bert_model 'bert-base-uncased' --experiment sent_mix --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 20 --custom_lr $custom_lr --custom_lamb $custom_lamb --fisher_combine avg --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/ --start_at_task $id --start_model_path $start_model_path --elasticity_down_max_lamb $elasticity_up_max_lamb --elasticity_down_mult $elasticity_up_mult --elasticity_up $lamb_down --frel_cut_type pdm --pdm_frac $pdm_frac --no_frel_cut_max $no_frel_cut_max --la_model_path $la_model_path --no_reg_in_LA True
+	# 	python3 FABR/calc_next_lamb_down_lamb_up.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lr_id $best_lr_id --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --elasticity_up_mult $elasticity_up_mult --growth $growth --tid $id
+	# 	found_best=`cat ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}_foundbestlambdown.txt`
+	# 	python3 FABR/plot_lamb_down_results.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --tid $id
+	# 	# if [ $found_best = found ]; then
+	# 	# 	best_alpha_lamb_i=$alpha_lamb_i
+	# 	# 	break
+	# 	# fi
+	# 	# lamb_down=`cat ${res_path}${id}_next_lamb_down.txt`
+	# 	# elasticity_up_mult=`cat ${res_path}${id}_next_lamb_up.txt`
+	# 	break
+	# done
+
+	# ## Lamb Down
+	# lamb_down=0.5
+	# elasticity_up_mult=0.01
+	# alpha_lamb_i=6
+	# found_best=false
+	# while [ $found_best=false ]
+	# do
+	# 	((alpha_lamb_i++))
+	# 	custom_lr=$past_lr
+	# 	custom_lamb=$past_lamb
+	# 	printf "\n\nLA Phase\n\n"
+	# 	mkdir -p ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/
+	# 	python  FABR//run.py --bert_model 'bert-base-uncased' --experiment sent_mix --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 20 --custom_lr $custom_lr --custom_lamb $custom_lamb --fisher_combine avg --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/ --start_at_task $id --start_model_path $start_model_path --elasticity_down_max_lamb $elasticity_up_max_lamb --elasticity_down_mult $elasticity_up_mult --elasticity_up $lamb_down --frel_cut_type pdm --pdm_frac $pdm_frac --no_frel_cut_max $no_frel_cut_max --la_model_path $la_model_path --no_reg_in_LA True
+	# 	python3 FABR/calc_next_lamb_down_lamb_up.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lr_id $best_lr_id --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --elasticity_up_mult $elasticity_up_mult --growth $growth --tid $id
+	# 	found_best=`cat ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}_foundbestlambdown.txt`
+	# 	python3 FABR/plot_lamb_down_results.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --tid $id
+	# 	# if [ $found_best = found ]; then
+	# 	# 	best_alpha_lamb_i=$alpha_lamb_i
+	# 	# 	break
+	# 	# fi
+	# 	# lamb_down=`cat ${res_path}${id}_next_lamb_down.txt`
+	# 	# elasticity_up_mult=`cat ${res_path}${id}_next_lamb_up.txt`
+	# 	break
+	# done
+
+	# # Lamb Down
+	# lamb_down=0.5
+	# elasticity_up_mult=0.005
+	# alpha_lamb_i=7
+	# found_best=false
+	# while [ $found_best=false ]
+	# do
+	# 	((alpha_lamb_i++))
+	# 	custom_lr=$past_lr
+	# 	custom_lamb=$past_lamb
+	# 	printf "\n\nLA Phase\n\n"
+	# 	mkdir -p ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/
+	# 	python  FABR//run.py --bert_model 'bert-base-uncased' --experiment sent_mix --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 20 --custom_lr $custom_lr --custom_lamb $custom_lamb --fisher_combine avg --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/ --start_at_task $id --start_model_path $start_model_path --elasticity_down_max_lamb $elasticity_up_max_lamb --elasticity_down_mult $elasticity_up_mult --elasticity_up $lamb_down --frel_cut_type pdm --pdm_frac $pdm_frac --no_frel_cut_max $no_frel_cut_max --la_model_path $la_model_path --no_reg_in_LA True
+	# 	python3 FABR/calc_next_lamb_down_lamb_up.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lr_id $best_lr_id --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --elasticity_up_mult $elasticity_up_mult --growth $growth --tid $id
+	# 	found_best=`cat ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}_foundbestlambdown.txt`
+	# 	python3 FABR/plot_lamb_down_results.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --tid $id
+	# 	# if [ $found_best = found ]; then
+	# 	# 	best_alpha_lamb_i=$alpha_lamb_i
+	# 	# 	break
+	# 	# fi
+	# 	# lamb_down=`cat ${res_path}${id}_next_lamb_down.txt`
+	# 	# elasticity_up_mult=`cat ${res_path}${id}_next_lamb_up.txt`
+	# 	break
+	# done
+
+	# ## Lamb Down
+	# lamb_down=0.5
+	# elasticity_up_mult=0.001
+	# alpha_lamb_i=8
+	# found_best=false
+	# while [ $found_best=false ]
+	# do
+	# 	((alpha_lamb_i++))
+	# 	custom_lr=$past_lr
+	# 	custom_lamb=$past_lamb
+	# 	printf "\n\nLA Phase\n\n"
+	# 	mkdir -p ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/
+	# 	python  FABR//run.py --bert_model 'bert-base-uncased' --experiment sent_mix --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 20 --custom_lr $custom_lr --custom_lamb $custom_lamb --fisher_combine avg --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/ --start_at_task $id --start_model_path $start_model_path --elasticity_down_max_lamb $elasticity_up_max_lamb --elasticity_down_mult $elasticity_up_mult --elasticity_up $lamb_down --frel_cut_type pdm --pdm_frac $pdm_frac --no_frel_cut_max $no_frel_cut_max --la_model_path $la_model_path --no_reg_in_LA True
+	# 	python3 FABR/calc_next_lamb_down_lamb_up.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lr_id $best_lr_id --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --elasticity_up_mult $elasticity_up_mult --growth $growth --tid $id
+	# 	found_best=`cat ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}_foundbestlambdown.txt`
+	# 	python3 FABR/plot_lamb_down_results.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --tid $id
+	# 	# if [ $found_best = found ]; then
+	# 	# 	best_alpha_lamb_i=$alpha_lamb_i
+	# 	# 	break
+	# 	# fi
+	# 	# lamb_down=`cat ${res_path}${id}_next_lamb_down.txt`
+	# 	# elasticity_up_mult=`cat ${res_path}${id}_next_lamb_up.txt`
+	# 	break
+	# done
 
 	## Lamb Down
 	lamb_down=0.5
-	elasticity_up_mult=1.0
-	alpha_lamb_i=1
+	elasticity_up_mult=0.001
+	alpha_lamb_i=9
 	found_best=false
 	while [ $found_best=false ]
 	do
@@ -456,7 +656,7 @@ do
 		custom_lamb=$past_lamb
 		printf "\n\nLA Phase\n\n"
 		mkdir -p ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/
-		python  FABR//run.py --bert_model 'bert-base-uncased' --experiment sent_mix --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 20 --custom_lr $custom_lr --custom_lamb $custom_lamb --fisher_combine avg --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/ --start_at_task $id --start_model_path $start_model_path --elasticity_down_max_lamb $elasticity_up_max_lamb --elasticity_down_mult $elasticity_up_mult --elasticity_up $lamb_down --frel_cut_type pdm --pdm_frac $pdm_frac --no_frel_cut_max $no_frel_cut_max --la_model_path $la_model_path --no_reg_in_LA True
+		python  FABR//run.py --bert_model 'bert-base-uncased' --experiment sent_mix --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 35 --custom_lr $custom_lr --custom_lamb $custom_lamb --fisher_combine avg --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/ --start_at_task $id --start_model_path $start_model_path --elasticity_down_max_lamb $elasticity_up_max_lamb --elasticity_down_mult $elasticity_up_mult --elasticity_up $lamb_down --frel_cut_type pdm --pdm_frac $pdm_frac --no_frel_cut_max $no_frel_cut_max --la_model_path $la_model_path --no_reg_in_LA True
 		python3 FABR/calc_next_lamb_down_lamb_up.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lr_id $best_lr_id --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --elasticity_up_mult $elasticity_up_mult --growth $growth --tid $id
 		found_best=`cat ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}_foundbestlambdown.txt`
 		python3 FABR/plot_lamb_down_results.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --tid $id
@@ -471,8 +671,8 @@ do
 
 	## Lamb Down
 	lamb_down=0.1
-	elasticity_up_mult=1.0
-	alpha_lamb_i=2
+	elasticity_up_mult=0.001
+	alpha_lamb_i=10
 	found_best=false
 	while [ $found_best=false ]
 	do
@@ -481,7 +681,57 @@ do
 		custom_lamb=$past_lamb
 		printf "\n\nLA Phase\n\n"
 		mkdir -p ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/
-		python  FABR//run.py --bert_model 'bert-base-uncased' --experiment sent_mix --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 20 --custom_lr $custom_lr --custom_lamb $custom_lamb --fisher_combine avg --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/ --start_at_task $id --start_model_path $start_model_path --elasticity_down_max_lamb $elasticity_up_max_lamb --elasticity_down_mult $elasticity_up_mult --elasticity_up $lamb_down --frel_cut_type pdm --pdm_frac $pdm_frac --no_frel_cut_max $no_frel_cut_max --la_model_path $la_model_path --no_reg_in_LA True
+		python  FABR//run.py --bert_model 'bert-base-uncased' --experiment sent_mix --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 35 --custom_lr $custom_lr --custom_lamb $custom_lamb --fisher_combine avg --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/ --start_at_task $id --start_model_path $start_model_path --elasticity_down_max_lamb $elasticity_up_max_lamb --elasticity_down_mult $elasticity_up_mult --elasticity_up $lamb_down --frel_cut_type pdm --pdm_frac $pdm_frac --no_frel_cut_max $no_frel_cut_max --la_model_path $la_model_path --no_reg_in_LA True
+		python3 FABR/calc_next_lamb_down_lamb_up.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lr_id $best_lr_id --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --elasticity_up_mult $elasticity_up_mult --growth $growth --tid $id
+		found_best=`cat ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}_foundbestlambdown.txt`
+		python3 FABR/plot_lamb_down_results.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --tid $id
+		# if [ $found_best = found ]; then
+		# 	best_alpha_lamb_i=$alpha_lamb_i
+		# 	break
+		# fi
+		# lamb_down=`cat ${res_path}${id}_next_lamb_down.txt`
+		# elasticity_up_mult=`cat ${res_path}${id}_next_lamb_up.txt`
+		break
+	done
+
+	## Lamb Down
+	lamb_down=0.1
+	elasticity_up_mult=0.0001
+	alpha_lamb_i=11
+	found_best=false
+	while [ $found_best=false ]
+	do
+		((alpha_lamb_i++))
+		custom_lr=$past_lr
+		custom_lamb=$past_lamb
+		printf "\n\nLA Phase\n\n"
+		mkdir -p ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/
+		python  FABR//run.py --bert_model 'bert-base-uncased' --experiment sent_mix --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 35 --custom_lr $custom_lr --custom_lamb $custom_lamb --fisher_combine avg --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/ --start_at_task $id --start_model_path $start_model_path --elasticity_down_max_lamb $elasticity_up_max_lamb --elasticity_down_mult $elasticity_up_mult --elasticity_up $lamb_down --frel_cut_type pdm --pdm_frac $pdm_frac --no_frel_cut_max $no_frel_cut_max --la_model_path $la_model_path --no_reg_in_LA True
+		python3 FABR/calc_next_lamb_down_lamb_up.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lr_id $best_lr_id --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --elasticity_up_mult $elasticity_up_mult --growth $growth --tid $id
+		found_best=`cat ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}_foundbestlambdown.txt`
+		python3 FABR/plot_lamb_down_results.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --tid $id
+		# if [ $found_best = found ]; then
+		# 	best_alpha_lamb_i=$alpha_lamb_i
+		# 	break
+		# fi
+		# lamb_down=`cat ${res_path}${id}_next_lamb_down.txt`
+		# elasticity_up_mult=`cat ${res_path}${id}_next_lamb_up.txt`
+		break
+	done
+
+	## Lamb Down
+	lamb_down=0.01
+	elasticity_up_mult=0.0001
+	alpha_lamb_i=12
+	found_best=false
+	while [ $found_best=false ]
+	do
+		((alpha_lamb_i++))
+		custom_lr=$past_lr
+		custom_lamb=$past_lamb
+		printf "\n\nLA Phase\n\n"
+		mkdir -p ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/
+		python  FABR//run.py --bert_model 'bert-base-uncased' --experiment sent_mix --approach bert_adapter_ewc_freeze --imp function --baseline ewc_freeze --backbone bert_adapter --note $note --idrandom $randid --seed $seed --scenario dil --train_batch_size 128 --num_train_epochs 50 --valid_loss_es 0.002 --lr_patience 35 --custom_lr $custom_lr --custom_lamb $custom_lamb --fisher_combine avg --break_after_task $id --save_alpharel True --my_save_path ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}/ --start_at_task $id --start_model_path $start_model_path --elasticity_down_max_lamb $elasticity_up_max_lamb --elasticity_down_mult $elasticity_up_mult --elasticity_up $lamb_down --frel_cut_type pdm --pdm_frac $pdm_frac --no_frel_cut_max $no_frel_cut_max --la_model_path $la_model_path --no_reg_in_LA True
 		python3 FABR/calc_next_lamb_down_lamb_up.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lr_id $best_lr_id --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --elasticity_up_mult $elasticity_up_mult --growth $growth --tid $id
 		found_best=`cat ${res_path}${id}.${best_lamb_i}.LA_phase.${alpha_lamb_i}_foundbestlambdown.txt`
 		python3 FABR/plot_lamb_down_results.py --my_save_path ${res_path}${id} --rand_idx $randid --seed $seed --dataset $dataset --best_lamb_i $best_lamb_i --alpha_lamb_i $alpha_lamb_i --lamb_down $lamb_down --tid $id
@@ -498,5 +748,5 @@ do
 done
 
 ######################################################################
-# bash sentmix_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac-avgpool-nolareg-rand1-0.05adt.sh random0 0 0 500.0 10000.0 1.0 1.0 0.8 True 0.05
-# bash sentmix_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac-avgpool-nolareg-rand1-0.05adt.sh random0 0 0 500.0 5.0 1.0 1.0 0.8 True 0.05 # For t3 set lambda_max=5
+# bash sentmix_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac-avgpool-nolareg-rand1-0.05adt.sh random1 1 0 500.0 10000.0 1.0 1.0 0.8 True 0.05
+# bash sentmix_sh_la_mas_chsf_nol1_custom_searchlambup_searchlambdown_pdmfrac-avgpool-nolareg-rand1-0.05adt.sh random1 1 0 500.0 5.0 1.0 1.0 0.8 True 0.05 # For t3 set lambda_max=5

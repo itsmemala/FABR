@@ -292,6 +292,9 @@ class Appr(object):
 
         reg/=count
 
+        # print(outputs,targets)
+        # print(self.ce(outputs,targets),self.lamb,reg)
+
         return self.ce(outputs,targets)+self.lamb*reg,reg
 
 

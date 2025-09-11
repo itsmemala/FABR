@@ -69,6 +69,8 @@ class Net(torch.nn.Module):
                       targets=None,t=t,s=s)
 
         sequence_output, pooled_output = output_dict['outputs']
+        # print(sequence_output, pooled_output)
+        # sys.exit()
 
         pooled_output = self.dropout(pooled_output)
         y=[]

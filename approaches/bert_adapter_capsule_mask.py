@@ -135,7 +135,11 @@ class Appr(ApprBase):
             input_ids, segment_ids, input_mask, targets, _= batch
             s=(self.smax-1/self.smax)*step/len(data)+1/self.smax
 
+            # print(t,input_ids, segment_ids, input_mask,targets,s)
+            # sys.exit()
             output_dict = self.model.forward(t,input_ids, segment_ids, input_mask,targets,s=s)
+            # print(output_dict['y'])
+            # sys.exit()
             # Forward
             masks = output_dict['masks']
             if 'dil' in self.args.scenario:

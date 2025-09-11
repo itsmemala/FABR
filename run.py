@@ -419,7 +419,10 @@ for t,ncla in taskcla:
         valid_sampler = SequentialSampler(valid)
         valid_dataloader = DataLoader(valid, sampler=valid_sampler, batch_size=args.eval_batch_size, pin_memory=True)
 
-        valid_loss_val,valid_acc_val,valid_f1_val=appr.eval(eval_head,valid_dataloader)
+        if 'kan' in args.approach:
+            valid_loss_val,valid_acc_val,valid_f1_val=appr.eval(eval_head,valid_dataloader,'mcl')
+        else:
+            valid_loss_val,valid_acc_val,valid_f1_val=appr.eval(eval_head,valid_dataloader)
         valid_acc[t,u]=valid_acc_val
         valid_lss[t,u]=valid_loss_val
         valid_f1[t,u]=valid_f1_val
