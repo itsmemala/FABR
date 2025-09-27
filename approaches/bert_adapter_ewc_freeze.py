@@ -165,6 +165,17 @@ class Appr(ApprBase):
             
             print('Started epochs at:',datetime.datetime.now())
             
+            if phase=='fo':
+                output_features_start = []
+                print('Extracting Features at start.')
+                self.model.eval()
+                for step, batch in tqdm(enumerate(train)):
+                    # print('step: ',step)
+                    batch = [bat.to(self.device, non_blocking=True) if bat is not None else None for bat in batch]
+                    input_ids, segment_ids, input_mask, targets, tasks= batch
+                    output_features_start.append(self.model.features(input_ids, segment_ids, input_mask).detach().cpu().mean(dim=0))
+                output_features_start = torch.mean(torch.stack(output_features_start,dim=0),dim=0)[None,:]
+            
             # Loop epochs
             for e in range(int(epochs)):
                 # if phase=='fo' and e==0 and t==3:
@@ -253,6 +264,30 @@ class Appr(ApprBase):
 
             # Restore best
             if self.args.take_lastepoch_mcl==False: utils.set_model_(self.model,best_model)
+            
+            if phase=='fo':
+                output_features_end = []
+                print('Extracting Features at end.')
+                self.model.eval()
+                for step, batch in tqdm(enumerate(train)):
+                    # print('step: ',step)
+                    batch = [bat.to(self.device, non_blocking=True) if bat is not None else None for bat in batch]
+                    input_ids, segment_ids, input_mask, targets, tasks= batch
+                    output_features_end.append(self.model.features(input_ids, segment_ids, input_mask).detach().cpu().mean(dim=0))
+                output_features_end = torch.mean(torch.stack(output_features_end,dim=0),dim=0)[None,:]
+                print(output_features_start.shape,output_features_end.shape)
+                fd_cos = 1 - torch.nn.functional.cosine_similarity(output_features_start, output_features_end)
+                fd_euc = torch.cdist(output_features_start, output_features_end, p=2)
+                print('fd_cos:',fd_cos)
+                print('fd_euc:',fd_euc)
+            
+                wd=0
+                for n,param in self.model.named_parameters():
+                    if 'output.adapter' in n or 'output.LayerNorm' in n or (self.args.modify_fisher_last==True and 'last' in n):
+                        wd += torch.sum((param.detach() - self.mcl_model[n].detach())**2).item()
+                wd = math.sqrt(wd)
+                print('wd:',wd)
+                sys.exit()
             
             # if self.args.save_metadata=='all'and phase=='fo' and t==3:
                 # # Attributions

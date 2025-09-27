@@ -69,6 +69,7 @@ class Net(torch.nn.Module):
                       targets=None,t=t,s=s)
 
         sequence_output, pooled_output = output_dict['outputs']
+        pooled_output = torch.nan_to_num(pooled_output, nan=0.0)
         # print(sequence_output, pooled_output)
         # sys.exit()
 

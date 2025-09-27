@@ -270,6 +270,7 @@ for t,ncla in taskcla:
         task=t
 
         if t < len(taskcla)-1: continue #only want the last one
+        # if t < len(taskcla)-2: continue # For CIL MTL with 5tasks
 
     else:
         # Get data
@@ -352,8 +353,6 @@ for t,ncla in taskcla:
         else:
             appr.train(task,train_dataloader,valid_dataloader,args,num_train_steps,my_save_path,train,valid)
     
-    
-
     print('-'*100)
 
     # Plot loss along interpolation line
@@ -377,6 +376,7 @@ for t,ncla in taskcla:
     # Test
     # for u in range(t+1):
     for u in range(len(taskcla)):
+    # for u in range(len(taskcla)-1): # For CIL MTL with 5tasks
         
         if args.transfer_acc==False and u>t:
             continue
@@ -407,6 +407,7 @@ for t,ncla in taskcla:
     # Record Val
     print('Recording validation... ')
     for u in range(len(taskcla)):
+    # for u in range(len(taskcla)-1): # For CIL MTL with 5tasks
         
         if args.transfer_acc==False and u>t:
             continue

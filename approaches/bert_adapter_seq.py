@@ -77,6 +77,23 @@ class Appr(ApprBase):
         best_model=utils.get_model(self.model)
         patience=self.args.lr_patience
 
+        if t==1 and args.train_only_head:
+            for name,param in self.model.named_parameters():
+                if 'last' not in name:
+                    param.requires_grad = False
+
+        if t==1:
+            self.mcl_model=utils.get_model(self.model)
+            output_features_start = []
+            print('Extracting Features at start.')
+            self.model.eval()
+            for step, batch in tqdm(enumerate(train)):
+                # print('step: ',step)
+                batch = [bat.to(self.device, non_blocking=True) if bat is not None else None for bat in batch]
+                input_ids, segment_ids, input_mask, targets, tasks= batch
+                output_features_start.append(self.model.features(input_ids, segment_ids, input_mask).detach().cpu().mean(dim=0))
+            output_features_start = torch.mean(torch.stack(output_features_start,dim=0),dim=0)[None,:]
+
         # Loop epochs
         for e in range(int(self.args.num_train_epochs)):
             # Train
@@ -109,6 +126,33 @@ class Appr(ApprBase):
             # break
         # Restore best
         utils.set_model_(self.model,best_model)
+        
+        if t==1:
+            output_features_end = []
+            print('Extracting Features at end.')
+            self.model.eval()
+            for step, batch in tqdm(enumerate(train)):
+                # print('step: ',step)
+                batch = [bat.to(self.device, non_blocking=True) if bat is not None else None for bat in batch]
+                input_ids, segment_ids, input_mask, targets, tasks= batch
+                output_features_end.append(self.model.features(input_ids, segment_ids, input_mask).detach().cpu().mean(dim=0))
+            output_features_end = torch.mean(torch.stack(output_features_end,dim=0),dim=0)[None,:]
+            print(output_features_start.shape,output_features_end.shape)
+            fd_cos = 1 - torch.nn.functional.cosine_similarity(output_features_start, output_features_end)
+            fd_euc = torch.cdist(output_features_start, output_features_end, p=2)
+            print('fd_cos:',fd_cos)
+            print('fd_euc:',fd_euc)
+        
+            wd=0
+            for n,param in self.model.named_parameters():
+                if 'output.adapter' in n or 'output.LayerNorm' in n or 'last' in n:
+                    wd += torch.sum((param.detach() - self.mcl_model[n].detach())**2).item()
+            wd = math.sqrt(wd)
+            print('wd:',wd)
+        
+            np.savetxt(save_path+args.experiment+'_'+args.approach+'_t'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'_fd_cos.txt',fd_cos.numpy(),'%.4f',delimiter='\t')
+            np.savetxt(save_path+args.experiment+'_'+args.approach+'_t'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'_fd_euc.txt',fd_euc.numpy(),'%.4f',delimiter='\t')
+            np.savetxt(save_path+args.experiment+'_'+args.approach+'_t'+str(t)+'_'+str(args.note)+'_seed'+str(args.seed)+'_wd.txt',np.array([wd]),'%.4f',delimiter='\t')
         
         # Save model
         # torch.save(self.model.state_dict(), save_path+str(args.note)+'_seed'+str(args.seed)+'_model'+str(t))
@@ -243,6 +287,7 @@ class Appr(ApprBase):
             if 'cil' in self.args.scenario and self.args.use_rbs:
                 loss+=self.ce(t,output[idx,:],targets[idx],class_counts)*len(idx)
             else:
+                #print(t,output[idx,:],targets[idx])
                 loss+=self.ce(output[idx,:],targets[idx])*len(idx)                
             
             # loss2+=self.ce2(output[idx,:],targets[idx])*len(idx)

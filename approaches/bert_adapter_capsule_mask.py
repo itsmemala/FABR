@@ -23,6 +23,7 @@ sys.path.append("./approaches/base/")
 from .bert_adapter_mask_base import Appr as ApprBase
 from .my_optimization import BertAdam
 
+torch.set_default_dtype(torch.float64)
 
 class Appr(ApprBase):
 
@@ -138,8 +139,8 @@ class Appr(ApprBase):
             # print(t,input_ids, segment_ids, input_mask,targets,s)
             # sys.exit()
             output_dict = self.model.forward(t,input_ids, segment_ids, input_mask,targets,s=s)
-            # print(output_dict['y'])
-            # sys.exit()
+            print([torch.isnan(v).any() for v in output_dict['y']])
+            if step==5: sys.exit()
             # Forward
             masks = output_dict['masks']
             if 'dil' in self.args.scenario:
@@ -148,6 +149,7 @@ class Appr(ApprBase):
                 outputs=output_dict['y']
                 output = outputs[t]
             loss,_=self.hat_criterion_adapter(output,targets,masks)
+            print(loss)
 
             iter_bar.set_description('Train Iter (loss=%5.3f)' % loss.item())
             loss.backward()

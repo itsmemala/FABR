@@ -10,6 +10,7 @@ sys.path.append("./networks/base/")
 # from bayes_layer import BayesianLinear, BayesianConv2D
 from .bayes_layer import BayesianLinear, BayesianConv2D
 
+torch.set_default_dtype(torch.float64)
 
 class BertAdapter(nn.Module):
     def __init__(self, config):
@@ -152,6 +153,7 @@ class CapsNetImp(nn.Module):
         # print('after',transfer_output)
         # sys.exit()
         tsv_output = self.tsv_capsules(t,transfer_output,s,'tsv')
+        # tsv_output = torch.nan_to_num(tsv_output, nan=0.0)
         return tsv_output
 
 class CapsuleLayerImp(nn.Module): #it has its own number of capsule for output
@@ -286,6 +288,10 @@ class CapsuleLayerImp(nn.Module): #it has its own number of capsule for output
                 x = x.contiguous().view(batch_size*self.config.max_seq_length,-1,self.config.semantic_cap_size)
 
                 priors = x[None, :, :, None, :] @ self.route_weights[:, None, :, :, :]
+                # print(torch.isnan(priors).any())
+                # print(not torch.isfinite(priors).all())
+                priors = torch.nan_to_num(priors, posinf=torch.finfo(priors.dtype).max, neginf=torch.finfo(priors.dtype).min)
+                # print(not torch.isfinite(priors).all())
 
                 outputs_list = list(torch.unbind(priors,dim=2))
 
@@ -296,28 +302,48 @@ class CapsuleLayerImp(nn.Module): #it has its own number of capsule for output
                     #Regarding ASC, for numberical stable, I change relu to gelu
                         cur_v = outputs_list[t] #current_task
                         cur_v= cur_v.contiguous().view(batch_size,self.config.max_seq_length,self.config.num_semantic_cap*self.config.semantic_cap_size)
+                        # print(pre_t,torch.isnan(cur_v).any())
 
-                        aa = [F.relu(conv(cur_v.transpose(1, 2))) for conv in self.convs3]  # [(N,Co,L), ...]*len(Ks)
+                        # aa = [F.relu(conv(cur_v.transpose(1, 2))) for conv in self.convs3]  # [(N,Co,L), ...]*len(Ks)
+                        aa = [F.gelu(conv(cur_v.transpose(1, 2))) for conv in self.convs3]  # [(N,Co,L), ...]*len(Ks)
+                        # for a in aa:
+                            # print(pre_t,torch.isnan(a).any())
+                        # for a in aa:
+                            # print(pre_t,not torch.isfinite(a).all())
+                        aa = [torch.nan_to_num(a, posinf=torch.finfo(a.dtype).max, neginf=torch.finfo(a.dtype).min) for a in aa]
                         aa = [F.max_pool1d(a, a.size(2)).squeeze(2) for a in aa]
+                        # for a in aa:
+                            # print(pre_t,torch.isnan(a).any())
                         cur_v = torch.cat(aa, 1)
+                        # print(pre_t,torch.isnan(cur_v).any()) # All cur_v values contain Nan
 
                         feature = outputs_list[pre_t]
                         feature= feature.contiguous().view(batch_size,self.config.max_seq_length,self.config.num_semantic_cap*self.config.semantic_cap_size)
-                        # if pre_t==1: print(pre_t,feature,cur_v)
+                        # print(pre_t,torch.isnan(feature).any())
                         # z = [F.tanh(conv(feature.transpose(1, 2))) for conv in self.convs1]  # [(N,Co,L), ...]*len(Ks)
-                        y = [F.relu(conv(feature.transpose(1, 2)) + self.fc_cur(cur_v).unsqueeze(2)) for conv in self.convs2] #mix information
+                        # y = [F.relu(conv(feature.transpose(1, 2)) + self.fc_cur(cur_v).unsqueeze(2)) for conv in self.convs2] #mix information
+                        y = [F.gelu(conv(feature.transpose(1, 2)) + self.fc_cur(cur_v).unsqueeze(2)) for conv in self.convs2] #mix information
                         # if pre_t==1: print(pre_t,[conv(feature.transpose(1, 2)) for conv in self.convs2])
                         # z = [i*j for i, j in zip(z, y)]
                         # z = [F.max_pool1d(i, i.size(2)).squeeze(2) for i in z]  # [(N,Co), ...]*len(Ks)
+                        y = [torch.nan_to_num(a, posinf=torch.finfo(a.dtype).max, neginf=torch.finfo(a.dtype).min) for a in y]
                         z = [F.max_pool1d(i, i.size(2)).squeeze(2) for i in y]  # [(N,Co), ...]*len(Ks)
+                        # for i in y: # Several y and all z contain a Nan
+                            # print(pre_t,torch.isnan(i).any())
 
                         z = torch.cat(z, 1)
                         z= z.view(batch_size,self.Co*self.len_ks,1)
-                        # print(pre_t,z)
+                        # print(pre_t,z) # First few rows of z are Nans for all pre_t
                         sim_attn.append(self.fc_sim(z.squeeze(-1)).unsqueeze(-1))
+                        # print(pre_t,torch.isnan(z).any())
+                        print(pre_t,not torch.isfinite(z).all())
                         decision_learner = self.convs4(z).squeeze(-1)
-
+                        # print(pre_t,torch.isnan(decision_learner).any()) # This operation creates NaNs
+                        decision_learner = torch.nan_to_num(decision_learner, nan=torch.finfo(decision_learner.dtype).max)
+                        
+                        print('during2a',torch.isnan(decision_learner).any())
                         gumbel_one_hot =  F.gumbel_softmax(decision_learner,hard=True)
+                        # print(pre_t,torch.isnan(gumbel_one_hot).any())
                         # _,score = gumbel_one_hot.max(1) #hard attention gate, but not differciable
                         score = gumbel_one_hot[:,0] #hard attention gate, so that differeciable
                         decision_maker.append(score.view(-1,1))
@@ -327,8 +353,10 @@ class CapsuleLayerImp(nn.Module): #it has its own number of capsule for output
                 # print(decision_maker)
                 # decision_maker = torch.ones_like(decision_maker)
                 sim_attn = torch.cat(sim_attn, 2) #TODO: Normalized the similarity
+                sim_attn = torch.nan_to_num(sim_attn, nan=0.0)
 
-                # print('during2',self.tsv[t],sim_attn,self.config.ntasks)
+                print('during2b',torch.isnan(decision_maker).any())
+                print('during2c',torch.isnan(sim_attn).any()) # sim_attn is issue in 2nd step
                 vote_outputs = (self.tsv[t].data.view(1,1,-1,1,1) *
                     sim_attn.repeat(self.config.max_seq_length,1,1)
                                 .view(self.config.num_semantic_cap,-1,self.config.ntasks,1,self.config.semantic_cap_size) *
@@ -336,7 +364,7 @@ class CapsuleLayerImp(nn.Module): #it has its own number of capsule for output
                                 .view(1,-1,self.config.ntasks,1,1) *
                     priors).sum(dim=2, keepdim=True) #route
 
-                # print('during3',vote_outputs)
+                print('during3',torch.isnan(vote_outputs).any())
                 h_output = vote_outputs.view(batch_size,self.config.max_seq_length,-1)
                 # print('h_output: ',h_output.size())
                 if self.config.larger_as_list:
@@ -348,7 +376,8 @@ class CapsuleLayerImp(nn.Module): #it has its own number of capsule for output
                     glarger=self.mask(t=t,s=s)
                     h_output=h_output*glarger.expand_as(h_output)
                 
-                # print('after',h_output)
+                h_output = torch.nan_to_num(h_output, nan=0.0)
+                print('after',torch.isnan(h_output).any())
                 # sys.exit()
                 return h_output
 

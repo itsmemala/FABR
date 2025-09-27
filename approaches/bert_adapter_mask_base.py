@@ -290,7 +290,8 @@ class Appr(object):
                 reg+=m_value.sum()
                 count+=np.prod(m_value.size()).item()
 
-        reg/=count
+        reg/=(count+0.00000001)
+        reg = torch.nan_to_num(reg, posinf=torch.finfo(reg.dtype).max, neginf=torch.finfo(reg.dtype).min)
 
         # print(outputs,targets)
         # print(self.ce(outputs,targets),self.lamb,reg)

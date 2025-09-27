@@ -49,8 +49,10 @@ class Appr(ApprBase):
             train_phases = ['fo','mcl']
         # if self.args.only_mcl==True:
             # train_phases = ['mcl']
+        # train_phases = ['mcl']
         
         for phase in train_phases:
+            # print('\n\nPhase: ',phase,'\n\n')
             if phase=='fo':
                 mcl_model=utils.get_model(self.model) # Save the main model before commencing fisher overlap check
             

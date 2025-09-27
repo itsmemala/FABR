@@ -382,12 +382,15 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
     # for (i, label) in enumerate(label_list):
     #     label_map[label] = i
 
+    idrandom_cil_mtaseq = list(range(7,37,1))
+
     if dataset=='annomi' and convert_to_binary is None:
         label_map={'change': 0, 'sustain': 1, 'neutral': 2}
     elif dataset=='annomi' and convert_to_binary=='neutral_vs_other':
         label_map={'change': 0, 'sustain': 0, 'neutral': 1}
                     #####################################################
-    elif dataset=='hwu64' and idrandom in [0,1,2,3] and scenario=='cil':
+
+    elif dataset=='hwu64' and idrandom in [0,1,2,3]+idrandom_cil_mtaseq and scenario=='cil':
         label_map={'music':0, 'quirky':1, 'factoid':2, 'remove':3, 'negate':4
                 ,'praise':5, 'sendemail':6, 'explain':7, 'repeat':8, 'affirm':9
                 ,'radio':10, 'confirm':11, 'post':12, 'definition':13, 'dontcare':14
